@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <title>简单测试 Simple Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 16px;
+            cursor: pointer;
+            margin: 10px;
+            border-radius: 5px;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        #result {
+            margin-top: 20px;
+            padding: 20px;
+            background: #f4f4f4;
+            border-radius: 5px;
+            white-space: pre-wrap;
+            font-family: monospace;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 简单 API 测试 / Simple API Test</h1>
+    
+    <button onclick="testProducts()">测试产品 API / Test Products API</button>
+    <button onclick="testWithAuth()">带认证测试 / Test with Auth</button>
+    <button onclick="clearResult()">清除 / Clear</button>
+    
+    <div id="result"></div>
+
+    <script>
+        function showResult(message, isError = false) {
+            const result = document.getElementById('result');
+            result.textContent = message;
+            result.className = isError ? 'error' : 'success';
+        }
+
+        async function testProducts() {
+            showResult('正在测试... / Testing...');
+            
+            try {
+                console.log('🔍 Fetching products...');
+                
+                const response = await fetch('http://localhost:3000/api/products?page=1&limit=12');
+                
+                console.log('📊 Response status:', response.status);
+                console.log('📊 Response headers:', [...response.headers.entries()]);
+                
+                const data = await response.json();
+                
+                console.log('📦 Response data:', data);
+                
+                if (data.success) {
+                    const message = `✅ 成功！/ Success!\n\n` +
+                        `产品数量 / Products: ${data.products ? data.products.length : 0}\n` +
+                        `总数 / Total: ${data.total}\n` +
+                        `页数 / Pages: ${data.totalPages}\n\n` +
+                        `完整响应 / Full Response:\n${JSON.stringify(data, null, 2)}`;
+                    showResult(message);
+                } else {
+                    showResult(`❌ API 返回失败 / API returned failure:\n${JSON.stringify(data, null, 2)}`, true);
+                }
+            } catch (error) {
+                console.error('❌ Error:', error);
+                showResult(`❌ 错误 / Error:\n${error.message}\n\n${error.stack}`, true);
+            }
+        }
+
+        async function testWithAuth() {
+            showResult('正在测试带认证... / Testing with auth...');
+            
+            try {
+                // Get auth token from cookie
+                const cookies = document.cookie.split(';');
+                const authCookie = cookies.find(c => c.trim().startsWith('auth_token='));
+                const token = authCookie ? authCookie.split('=')[1] : null;
+                
+                console.log('🔑 Auth token:', token ? 'Found' : 'Not found');
+                
+                const headers = {
+                    'Content-Type': 'application/json'
+                };
+                
+                if (token) {
+                    headers['Authorization'] = `Bearer ${token}`;
+                }
+                
+                const response = await fetch('http://localhost:3000/api/products?page=1&limit=12', {
+                    headers,
+                    credentials: 'include'
+                });
+                
+                console.log('📊 Response status:', response.status);
+                
+                const data = await response.json();
+                
+                console.log('📦 Response data:', data);
+                
+                if (data.success) {
+                    const message = `✅ 成功！/ Success!\n\n` +
+                        `认证状态 / Auth: ${token ? '有 Token / Has token' : '无 Token / No token'}\n` +
+                        `产品数量 / Products: ${data.products ? data.products.length : 0}\n` +
+                        `总数 / Total: ${data.total}\n\n` +
+                        `产品列表 / Product List:\n` +
+                        data.products.map((p, i) => `${i + 1}. ${p.title} - $${p.price}`).join('\n');
+                    showResult(message);
+                } else {
+                    showResult(`❌ API 返回失败 / API returned failure:\n${JSON.stringify(data, null, 2)}`, true);
+                }
+            } catch (error) {
+                console.error('❌ Error:', error);
+                showResult(`❌ 错误 / Error:\n${error.message}`, true);
+            }
+        }
+
+        function clearResult() {
+            document.getElementById('result').textContent = '';
+            document.getElementById('result').className = '';
+        }
+
+        // Auto-test on load
+        window.addEventListener('load', () => {
+            console.log('🚀 Simple test page loaded');
+            console.log('📍 Current URL:', window.location.href);
+            console.log('🍪 Cookies:', document.cookie);
+        });
+    </script>
+</body>
+</html>

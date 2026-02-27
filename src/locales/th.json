@@ -1,0 +1,111 @@
+{
+  "common": {
+    "welcome": "ยินดีต้อนรับ",
+    "login": "เข้าสู่ระบบ",
+    "logout": "ออกจากระบบ",
+    "register": "ลงทะเบียน",
+    "search": "ค้นหา",
+    "filter": "กรอง",
+    "sort": "เรียงลำดับ",
+    "save": "บันทึก",
+    "cancel": "ยกเลิก",
+    "delete": "ลบ",
+    "edit": "แก้ไข",
+    "submit": "ส่ง",
+    "loading": "กำลังโหลด...",
+    "error": "ข้อผิดพลาด",
+    "success": "สำเร็จ"
+  },
+  "navigation": {
+    "home": "หน้าแรก",
+    "products": "สินค้า",
+    "myListings": "รายการของฉัน",
+    "messages": "ข้อความ",
+    "profile": "โปรไฟล์",
+    "favorites": "รายการโปรด",
+    "admin": "แผงควบคุมผู้ดูแล"
+  },
+  "auth": {
+    "signInWithGoogle": "เข้าสู่ระบบด้วย Google",
+    "signOut": "ออกจากระบบ",
+    "universityEmailRequired": "ต้องใช้อีเมลมหาวิทยาลัย",
+    "emailVerified": "ยืนยันอีเมลแล้ว",
+    "emailNotVerified": "ยังไม่ได้ยืนยันอีเมล",
+    "pleaseVerifyEmail": "กรุณายืนยันอีเมลมหาวิทยาลัยของคุณ"
+  },
+  "product": {
+    "title": "ชื่อ",
+    "description": "คำอธิบาย",
+    "price": "ราคา",
+    "condition": "สภาพ",
+    "location": "สถานที่",
+    "category": "หมวดหมู่",
+    "seller": "ผู้ขาย",
+    "status": "สถานะ",
+    "views": "จำนวนผู้เข้าชม",
+    "stock": "สต็อก",
+    "new": "ใหม่",
+    "used": "มือสอง",
+    "likeNew": "เหมือนใหม่",
+    "active": "ใช้งานอยู่",
+    "sold": "ขายแล้ว",
+    "inactive": "ไม่ใช้งาน",
+    "createListing": "สร้างรายการ",
+    "editListing": "แก้ไขรายการ",
+    "deleteListing": "ลบรายการ",
+    "markAsSold": "ทำเครื่องหมายว่าขายแล้ว",
+    "uploadImages": "อัปโหลดรูปภาพ",
+    "noProductsFound": "ไม่พบสินค้า"
+  },
+  "search": {
+    "searchProducts": "ค้นหาสินค้า",
+    "keyword": "คำค้นหา",
+    "priceRange": "ช่วงราคา",
+    "minPrice": "ราคาต่ำสุด",
+    "maxPrice": "ราคาสูงสุด",
+    "sortBy": "เรียงตาม",
+    "priceAscending": "ราคา: ต่ำไปสูง",
+    "priceDescending": "ราคา: สูงไปต่ำ",
+    "dateNewest": "ใหม่ที่สุดก่อน",
+    "dateOldest": "เก่าที่สุดก่อน"
+  },
+  "chat": {
+    "messages": "ข้อความ",
+    "sendMessage": "ส่งข้อความ",
+    "typeMessage": "พิมพ์ข้อความ...",
+    "noMessages": "ยังไม่มีข้อความ",
+    "chatWith": "แชทกับ",
+    "deleteChat": "ลบแชท",
+    "markAsRead": "ทำเครื่องหมายว่าอ่านแล้ว",
+    "translated": "แปลแล้ว",
+    "original": "ต้นฉบับ"
+  },
+  "profile": {
+    "myProfile": "โปรไฟล์ของฉัน",
+    "editProfile": "แก้ไขโปรไฟล์",
+    "name": "ชื่อ",
+    "email": "อีเมล",
+    "phone": "โทรศัพท์",
+    "preferredLanguage": "ภาษาที่ต้องการ",
+    "reputation": "ชื่อเสียง",
+    "reviews": "รีวิว",
+    "completedTransactions": "ธุรกรรมที่เสร็จสมบูรณ์",
+    "buyerRating": "คะแนนผู้ซื้อ",
+    "sellerRating": "คะแนนผู้ขาย"
+  },
+  "language": {
+    "english": "English (อังกฤษ)",
+    "thai": "ไทย",
+    "chinese": "中文 (จีน)",
+    "changeLanguage": "เปลี่ยนภาษา",
+    "languageUpdated": "อัปเดตการตั้งค่าภาษาแล้ว"
+  },
+  "errors": {
+    "somethingWentWrong": "เกิดข้อผิดพลาด",
+    "invalidInput": "ข้อมูลไม่ถูกต้อง",
+    "unauthorized": "ไม่ได้รับอนุญาต",
+    "notFound": "ไม่พบ",
+    "serverError": "ข้อผิดพลาดของเซิร์ฟเวอร์",
+    "networkError": "ข้อผิดพลาดของเครือข่าย"
+  }
+}

@@ -1,0 +1,111 @@
+{
+  "common": {
+    "welcome": "Welcome",
+    "login": "Login",
+    "logout": "Logout",
+    "register": "Register",
+    "search": "Search",
+    "filter": "Filter",
+    "sort": "Sort",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "submit": "Submit",
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success"
+  },
+  "navigation": {
+    "home": "Home",
+    "products": "Products",
+    "myListings": "My Listings",
+    "messages": "Messages",
+    "profile": "Profile",
+    "favorites": "Favorites",
+    "admin": "Admin Panel"
+  },
+  "auth": {
+    "signInWithGoogle": "Sign in with Google",
+    "signOut": "Sign Out",
+    "universityEmailRequired": "University email required",
+    "emailVerified": "Email verified",
+    "emailNotVerified": "Email not verified",
+    "pleaseVerifyEmail": "Please verify your university email"
+  },
+  "product": {
+    "title": "Title",
+    "description": "Description",
+    "price": "Price",
+    "condition": "Condition",
+    "location": "Location",
+    "category": "Category",
+    "seller": "Seller",
+    "status": "Status",
+    "views": "Views",
+    "stock": "Stock",
+    "new": "New",
+    "used": "Used",
+    "likeNew": "Like New",
+    "active": "Active",
+    "sold": "Sold",
+    "inactive": "Inactive",
+    "createListing": "Create Listing",
+    "editListing": "Edit Listing",
+    "deleteListing": "Delete Listing",
+    "markAsSold": "Mark as Sold",
+    "uploadImages": "Upload Images",
+    "noProductsFound": "No products found"
+  },
+  "search": {
+    "searchProducts": "Search Products",
+    "keyword": "Keyword",
+    "priceRange": "Price Range",
+    "minPrice": "Min Price",
+    "maxPrice": "Max Price",
+    "sortBy": "Sort By",
+    "priceAscending": "Price: Low to High",
+    "priceDescending": "Price: High to Low",
+    "dateNewest": "Newest First",
+    "dateOldest": "Oldest First"
+  },
+  "chat": {
+    "messages": "Messages",
+    "sendMessage": "Send Message",
+    "typeMessage": "Type a message...",
+    "noMessages": "No messages yet",
+    "chatWith": "Chat with",
+    "deleteChat": "Delete Chat",
+    "markAsRead": "Mark as Read",
+    "translated": "Translated",
+    "original": "Original"
+  },
+  "profile": {
+    "myProfile": "My Profile",
+    "editProfile": "Edit Profile",
+    "name": "Name",
+    "email": "Email",
+    "phone": "Phone",
+    "preferredLanguage": "Preferred Language",
+    "reputation": "Reputation",
+    "reviews": "Reviews",
+    "completedTransactions": "Completed Transactions",
+    "buyerRating": "Buyer Rating",
+    "sellerRating": "Seller Rating"
+  },
+  "language": {
+    "english": "English",
+    "thai": "ไทย (Thai)",
+    "chinese": "中文 (Chinese)",
+    "changeLanguage": "Change Language",
+    "languageUpdated": "Language preference updated"
+  },
+  "errors": {
+    "somethingWentWrong": "Something went wrong",
+    "invalidInput": "Invalid input",
+    "unauthorized": "Unauthorized",
+    "notFound": "Not found",
+    "serverError": "Server error",
+    "networkError": "Network error"
+  }
+}

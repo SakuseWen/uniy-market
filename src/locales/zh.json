@@ -1,0 +1,111 @@
+{
+  "common": {
+    "welcome": "欢迎",
+    "login": "登录",
+    "logout": "登出",
+    "register": "注册",
+    "search": "搜索",
+    "filter": "筛选",
+    "sort": "排序",
+    "save": "保存",
+    "cancel": "取消",
+    "delete": "删除",
+    "edit": "编辑",
+    "submit": "提交",
+    "loading": "加载中...",
+    "error": "错误",
+    "success": "成功"
+  },
+  "navigation": {
+    "home": "首页",
+    "products": "商品",
+    "myListings": "我的列表",
+    "messages": "消息",
+    "profile": "个人资料",
+    "favorites": "收藏",
+    "admin": "管理面板"
+  },
+  "auth": {
+    "signInWithGoogle": "使用 Google 登录",
+    "signOut": "登出",
+    "universityEmailRequired": "需要大学邮箱",
+    "emailVerified": "邮箱已验证",
+    "emailNotVerified": "邮箱未验证",
+    "pleaseVerifyEmail": "请验证您的大学邮箱"
+  },
+  "product": {
+    "title": "标题",
+    "description": "描述",
+    "price": "价格",
+    "condition": "状况",
+    "location": "位置",
+    "category": "类别",
+    "seller": "卖家",
+    "status": "状态",
+    "views": "浏览量",
+    "stock": "库存",
+    "new": "全新",
+    "used": "二手",
+    "likeNew": "几乎全新",
+    "active": "活跃",
+    "sold": "已售",
+    "inactive": "未激活",
+    "createListing": "创建列表",
+    "editListing": "编辑列表",
+    "deleteListing": "删除列表",
+    "markAsSold": "标记为已售",
+    "uploadImages": "上传图片",
+    "noProductsFound": "未找到商品"
+  },
+  "search": {
+    "searchProducts": "搜索商品",
+    "keyword": "关键词",
+    "priceRange": "价格范围",
+    "minPrice": "最低价格",
+    "maxPrice": "最高价格",
+    "sortBy": "排序方式",
+    "priceAscending": "价格：从低到高",
+    "priceDescending": "价格：从高到低",
+    "dateNewest": "最新优先",
+    "dateOldest": "最旧优先"
+  },
+  "chat": {
+    "messages": "消息",
+    "sendMessage": "发送消息",
+    "typeMessage": "输入消息...",
+    "noMessages": "暂无消息",
+    "chatWith": "与...聊天",
+    "deleteChat": "删除聊天",
+    "markAsRead": "标记为已读",
+    "translated": "已翻译",
+    "original": "原文"
+  },
+  "profile": {
+    "myProfile": "我的资料",
+    "editProfile": "编辑资料",
+    "name": "姓名",
+    "email": "邮箱",
+    "phone": "电话",
+    "preferredLanguage": "首选语言",
+    "reputation": "声誉",
+    "reviews": "评价",
+    "completedTransactions": "已完成交易",
+    "buyerRating": "买家评分",
+    "sellerRating": "卖家评分"
+  },
+  "language": {
+    "english": "English (英语)",
+    "thai": "ไทย (泰语)",
+    "chinese": "中文",
+    "changeLanguage": "更改语言",
+    "languageUpdated": "语言偏好已更新"
+  },
+  "errors": {
+    "somethingWentWrong": "出错了",
+    "invalidInput": "输入无效",
+    "unauthorized": "未授权",
+    "notFound": "未找到",
+    "serverError": "服务器错误",
+    "networkError": "网络错误"
+  }
+}

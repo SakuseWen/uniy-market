@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>前端测试 - Frontend Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h2 {
+            color: #333;
+            border-bottom: 2px solid #4CAF50;
+            padding-bottom: 10px;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        pre {
+            background: #f4f4f4;
+            padding: 15px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+        .product-card {
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 4px;
+            background: #fafafa;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 Uniy Market 前端测试 / Frontend Test</h1>
+
+    <div class="test-section">
+        <h2>1. 配置检查 / Configuration Check</h2>
+        <button onclick="testConfig()">测试配置 / Test Config</button>
+        <div id="configResult"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>2. API 连接测试 / API Connection Test</h2>
+        <button onclick="testAPI()">测试 API / Test API</button>
+        <div id="apiResult"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>3. 产品加载测试 / Products Loading Test</h2>
+        <button onclick="testProducts()">加载产品 / Load Products</button>
+        <div id="productsResult"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>4. 认证状态测试 / Auth Status Test</h2>
+        <button onclick="testAuth()">检查认证 / Check Auth</button>
+        <div id="authResult"></div>
+    </div>
+
+    <script src="/public/js/config.js"></script>
+    <script>
+        function showResult(elementId, message, type = 'info') {
+            const element = document.getElementById(elementId);
+            element.innerHTML = `<div class="status ${type}">${message}</div>`;
+        }
+
+        function testConfig() {
+            showResult('configResult', '正在检查配置... / Checking configuration...', 'info');
+            
+            try {
+                const checks = [];
+                
+                // Check if global objects exist
+                checks.push(`✅ window.API_CONFIG: ${window.API_CONFIG ? '存在 / Exists' : '❌ 缺失 / Missing'}`);
+                checks.push(`✅ window.APP_CONFIG: ${window.APP_CONFIG ? '存在 / Exists' : '❌ 缺失 / Missing'}`);
+                checks.push(`✅ window.STATE: ${window.STATE ? '存在 / Exists' : '❌ 缺失 / Missing'}`);
+                checks.push(`✅ window.getApiUrl: ${window.getApiUrl ? '存在 / Exists' : '❌ 缺失 / Missing'}`);
+                
+                // Check STATE properties
+                if (window.STATE) {
+                    checks.push(`<br><strong>STATE 对象 / STATE Object:</strong>`);
+                    checks.push(`- currentUser: ${window.STATE.currentUser || 'null'}`);
+                    checks.push(`- isAuthenticated: ${window.STATE.isAuthenticated}`);
+                    checks.push(`- currentLanguage: ${window.STATE.currentLanguage}`);
+                    checks.push(`- products: ${Array.isArray(window.STATE.products) ? `数组 (${window.STATE.products.length} 项) / Array (${window.STATE.products.length} items)` : '不是数组 / Not an array'}`);
+                }
+                
+                showResult('configResult', checks.join('<br>'), 'success');
+            } catch (error) {
+                showResult('configResult', `❌ 错误 / Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function testAPI() {
+            showResult('apiResult', '正在测试 API 连接... / Testing API connection...', 'info');
+            
+            try {
+                // Test health endpoint
+                const healthResponse = await fetch('/health');
+                const healthData = await healthResponse.json();
+                
+                let result = `<strong>健康检查 / Health Check:</strong><br>`;
+                result += `状态 / Status: ${healthResponse.ok ? '✅ OK' : '❌ Failed'}<br>`;
+                result += `<pre>${JSON.stringify(healthData, null, 2)}</pre>`;
+                
+                // Test products API
+                const productsResponse = await fetch('/api/products?page=1&limit=5');
+                const productsData = await productsResponse.json();
+                
+                result += `<br><strong>产品 API / Products API:</strong><br>`;
+                result += `状态 / Status: ${productsResponse.ok ? '✅ OK' : '❌ Failed'}<br>`;
+                result += `成功 / Success: ${productsData.success}<br>`;
+                result += `产品数量 / Product Count: ${productsData.products ? productsData.products.length : 0}<br>`;
+                result += `<pre>${JSON.stringify(productsData, null, 2)}</pre>`;
+                
+                showResult('apiResult', result, productsResponse.ok ? 'success' : 'error');
+            } catch (error) {
+                showResult('apiResult', `❌ 错误 / Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function testProducts() {
+            showResult('productsResult', '正在加载产品... / Loading products...', 'info');
+            
+            try {
+                const response = await fetch(window.getApiUrl('/api/products?page=1&limit=12'));
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${data.message || 'Unknown error'}`);
+                }
+                
+                if (!data.success) {
+                    throw new Error(data.message || 'API returned success: false');
+                }
+                
+                const products = data.products || [];
+                
+                let result = `<strong>✅ 成功加载 ${products.length} 个产品 / Successfully loaded ${products.length} products</strong><br><br>`;
+                
+                if (products.length > 0) {
+                    result += `<strong>产品列表 / Product List:</strong><br>`;
+                    products.forEach((product, index) => {
+                        result += `<div class="product-card">`;
+                        result += `<strong>${index + 1}. ${product.title}</strong><br>`;
+                        result += `ID: ${product.listingID}<br>`;
+                        result += `价格 / Price: $${product.price}<br>`;
+                        result += `状态 / Status: ${product.status}<br>`;
+                        result += `分类 / Category: ${product.category || 'N/A'}<br>`;
+                        result += `条件 / Condition: ${product.condition}<br>`;
+                        result += `位置 / Location: ${product.location}<br>`;
+                        result += `</div>`;
+                    });
+                } else {
+                    result += `<div class="status info">没有找到产品 / No products found</div>`;
+                }
+                
+                showResult('productsResult', result, 'success');
+            } catch (error) {
+                showResult('productsResult', `❌ 错误 / Error: ${error.message}<br><br>请检查：<br>1. 服务器是否运行 / Check if server is running<br>2. 数据库是否有数据 / Check if database has data<br>3. 浏览器控制台错误 / Check browser console for errors`, 'error');
+                console.error('Product loading error:', error);
+            }
+        }
+
+        async function testAuth() {
+            showResult('authResult', '正在检查认证状态... / Checking auth status...', 'info');
+            
+            try {
+                // Check cookies
+                const cookies = document.cookie.split(';').map(c => c.trim());
+                const authToken = cookies.find(c => c.startsWith('auth_token='));
+                
+                let result = `<strong>Cookie 检查 / Cookie Check:</strong><br>`;
+                result += `认证令牌 / Auth Token: ${authToken ? '✅ 存在 / Exists' : '❌ 不存在 / Not found'}<br>`;
+                
+                if (authToken) {
+                    result += `<br><strong>令牌值 / Token Value:</strong><br>`;
+                    result += `<pre>${authToken.substring(0, 50)}...</pre>`;
+                }
+                
+                // Check STATE
+                result += `<br><strong>STATE 检查 / STATE Check:</strong><br>`;
+                result += `isAuthenticated: ${window.STATE ? window.STATE.isAuthenticated : 'STATE not found'}<br>`;
+                result += `currentUser: ${window.STATE && window.STATE.currentUser ? JSON.stringify(window.STATE.currentUser) : 'null'}<br>`;
+                
+                // Try to fetch profile
+                if (authToken) {
+                    try {
+                        const profileResponse = await fetch('/api/auth/profile', {
+                            headers: {
+                                'Authorization': `Bearer ${authToken.split('=')[1]}`
+                            }
+                        });
+                        const profileData = await profileResponse.json();
+                        
+                        result += `<br><strong>个人资料 API / Profile API:</strong><br>`;
+                        result += `状态 / Status: ${profileResponse.ok ? '✅ OK' : '❌ Failed'}<br>`;
+                        result += `<pre>${JSON.stringify(profileData, null, 2)}</pre>`;
+                    } catch (error) {
+                        result += `<br>无法获取个人资料 / Cannot fetch profile: ${error.message}`;
+                    }
+                }
+                
+                showResult('authResult', result, authToken ? 'success' : 'info');
+            } catch (error) {
+                showResult('authResult', `❌ 错误 / Error: ${error.message}`, 'error');
+            }
+        }
+
+        // Auto-run config test on load
+        window.addEventListener('load', () => {
+            console.log('🧪 Frontend test page loaded');
+            console.log('Available global objects:', {
+                API_CONFIG: window.API_CONFIG,
+                APP_CONFIG: window.APP_CONFIG,
+                STATE: window.STATE,
+                getApiUrl: window.getApiUrl
+            });
+            testConfig();
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Login - Uniy Market</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .login-container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            max-width: 500px;
+            width: 100%;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 2rem;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 1rem;
+        }
+
+        .warning {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 30px;
+            color: #856404;
+        }
+
+        .warning strong {
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .user-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .user-card {
+            border: 2px solid #e9ecef;
+            border-radius: 15px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .user-card:hover {
+            border-color: #667eea;
+            background: #f8f9ff;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.1);
+        }
+
+        .user-card.admin {
+            border-color: #dc3545;
+        }
+
+        .user-card.admin:hover {
+            border-color: #dc3545;
+            background: #fff5f5;
+        }
+
+        .user-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: #667eea;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+
+        .user-card.admin .user-avatar {
+            background: #dc3545;
+        }
+
+        .user-info {
+            flex: 1;
+        }
+
+        .user-name {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .user-email {
+            color: #666;
+            font-size: 0.9rem;
+            margin-bottom: 5px;
+        }
+
+        .user-role {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .role-admin {
+            background: #dc3545;
+            color: white;
+        }
+
+        .role-user {
+            background: #28a745;
+            color: white;
+        }
+
+        .user-stats {
+            text-align: right;
+            font-size: 0.85rem;
+            color: #666;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+            color: #721c24;
+        }
+
+        .success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+            color: #155724;
+        }
+
+        .actions {
+            margin-top: 30px;
+            text-align: center;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 12px 24px;
+            background: #667eea;
+            color: white;
+            text-decoration: none;
+            border-radius: 10px;
+            font-weight: 500;
+            transition: background 0.3s ease;
+        }
+
+        .btn:hover {
+            background: #5a6fd8;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="header">
+            <h1>🎓 Test Login</h1>
+            <p>Select a test user to login to Uniy Market</p>
+        </div>
+
+        <div class="warning">
+            <strong>⚠️ Development Mode Only</strong>
+            This is a test login page for development purposes. In production, users would login through Google OAuth.
+        </div>
+
+        <div id="message"></div>
+
+        <div id="loading" class="loading">
+            Loading test users...
+        </div>
+
+        <div id="userList" class="user-list" style="display: none;">
+            <!-- Users will be loaded here -->
+        </div>
+
+        <div class="actions">
+            <a href="/public/app.html" class="btn">Go to Main App</a>
+            <a href="/public/index.html" class="btn btn-secondary">Back to Home</a>
+        </div>
+    </div>
+
+    <script>
+        let users = [];
+
+        async function loadUsers() {
+            try {
+                const response = await fetch('/api/test-auth/test-users');
+                const data = await response.json();
+
+                if (data.success) {
+                    users = data.users;
+                    displayUsers();
+                } else {
+                    showError('Failed to load test users');
+                }
+            } catch (error) {
+                console.error('Error loading users:', error);
+                showError('Error loading test users. Make sure the server is running.');
+            }
+        }
+
+        function displayUsers() {
+            const loading = document.getElementById('loading');
+            const userList = document.getElementById('userList');
+
+            loading.style.display = 'none';
+            userList.style.display = 'block';
+
+            userList.innerHTML = users.map(user => `
+                <div class="user-card ${user.role}" onclick="loginAsUser(${user.id})">
+                    <div class="user-avatar">
+                        ${user.name.split(' ').map(n => n[0]).join('')}
+                    </div>
+                    <div class="user-info">
+                        <div class="user-name">${user.name}</div>
+                        <div class="user-email">${user.email}</div>
+                        <span class="user-role role-${user.role}">${user.role.toUpperCase()}</span>
+                    </div>
+                    <div class="user-stats">
+                        ${user.university_verified ? '✅ Verified' : '❌ Not Verified'}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        async function loginAsUser(userId) {
+            try {
+                showMessage('Logging in...', 'info');
+
+                const response = await fetch('/api/test-auth/test-login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ userId })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showMessage(`Successfully logged in as ${data.user.name}!`, 'success');
+                    
+                    // Store user info in localStorage for the frontend
+                    localStorage.setItem('currentUser', JSON.stringify(data.user));
+                    localStorage.setItem('authToken', data.token);
+                    
+                    // Redirect to main app after a short delay
+                    setTimeout(() => {
+                        window.location.href = '/public/app.html';
+                    }, 1500);
+                } else {
+                    showError(data.message || 'Login failed');
+                }
+            } catch (error) {
+                console.error('Login error:', error);
+                showError('Login failed. Please try again.');
+            }
+        }
+
+        function showMessage(message, type = 'info') {
+            const messageDiv = document.getElementById('message');
+            messageDiv.innerHTML = `<div class="${type}">${message}</div>`;
+        }
+
+        function showError(message) {
+            showMessage(message, 'error');
+        }
+
+        // Load users when page loads
+        document.addEventListener('DOMContentLoaded', loadUsers);
+    </script>
+</body>
+</html>

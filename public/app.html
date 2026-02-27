@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Uniy Market - University Trading Platform</title>
+    <link rel="stylesheet" href="/public/css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- Skip to main content link for accessibility -->
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+    
+    <!-- Navigation Bar -->
+    <nav class="navbar" id="navbar" role="navigation" aria-label="Main navigation">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <i class="fas fa-graduation-cap" aria-hidden="true"></i>
+                <span>Uniy Market</span>
+            </div>
+            
+            <div class="nav-search" role="search">
+                <input type="text" 
+                       id="searchInput" 
+                       placeholder="Search products..." 
+                       class="search-input"
+                       aria-label="Search products">
+                <button id="searchBtn" 
+                        class="search-btn"
+                        aria-label="Search">
+                    <i class="fas fa-search" aria-hidden="true"></i>
+                </button>
+            </div>
+            
+            <div class="nav-actions">
+                <div class="language-switcher">
+                    <select id="languageSelect" 
+                            class="language-select"
+                            aria-label="Select language">
+                        <option value="en">English</option>
+                        <option value="th">ไทย</option>
+                        <option value="zh">中文</option>
+                    </select>
+                </div>
+                
+                <button id="postProductBtn" 
+                        class="btn btn-primary" 
+                        style="display: none;"
+                        aria-label="Post a new product">
+                    <i class="fas fa-plus" aria-hidden="true"></i>
+                    <span data-i18n="nav.postProduct">Post Product</span>
+                </button>
+                
+                <button id="chatBtn" 
+                        class="btn btn-icon" 
+                        style="display: none;"
+                        aria-label="Open messages">
+                    <i class="fas fa-comments" aria-hidden="true"></i>
+                    <span class="badge" id="chatBadge" style="display: none;" aria-live="polite">0</span>
+                </button>
+                
+                <button id="favoritesBtn" 
+                        class="btn btn-icon" 
+                        style="display: none;"
+                        aria-label="View favorites">
+                    <i class="fas fa-heart" aria-hidden="true"></i>
+                </button>
+                
+                <div class="user-menu" id="userMenu" style="display: none;">
+                    <button class="user-avatar" 
+                            id="userAvatar"
+                            aria-label="User menu"
+                            aria-haspopup="true"
+                            aria-expanded="false">
+                        <img src="" alt="User" id="userAvatarImg">
+                    </button>
+                    <div class="dropdown-menu" id="userDropdown" role="menu">
+                        <a href="#" id="profileLink" role="menuitem"><i class="fas fa-user" aria-hidden="true"></i> <span data-i18n="nav.profile">Profile</span></a>
+                        <a href="#" id="myProductsLink" role="menuitem"><i class="fas fa-box" aria-hidden="true"></i> <span data-i18n="nav.myProducts">My Products</span></a>
+                        <a href="#" id="transactionsLink" role="menuitem"><i class="fas fa-history" aria-hidden="true"></i> <span data-i18n="nav.transactions">Transactions</span></a>
+                        <a href="#" id="adminLink" style="display: none;" role="menuitem"><i class="fas fa-shield-alt" aria-hidden="true"></i> <span data-i18n="nav.admin">Admin Panel</span></a>
+                        <hr role="separator">
+                        <a href="#" id="logoutLink" role="menuitem"><i class="fas fa-sign-out-alt" aria-hidden="true"></i> <span data-i18n="nav.logout">Logout</span></a>
+                    </div>
+                </div>
+                
+                <button id="loginBtn" 
+                        class="btn btn-primary"
+                        aria-label="Login with Google">
+                    <i class="fab fa-google" aria-hidden="true"></i>
+                    <span data-i18n="nav.login">Login with Google</span>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content" id="main-content" role="main">
+        <!-- Home Page -->
+        <div id="homePage" class="page active">
+            <!-- Filters Section -->
+            <aside class="filters-sidebar">
+                <h3 data-i18n="filters.title">Filters</h3>
+                
+                <div class="filter-group">
+                    <label data-i18n="filters.category">Category</label>
+                    <select id="categoryFilter" class="filter-select">
+                        <option value="">All Categories</option>
+                        <option value="electronics">Electronics</option>
+                        <option value="books">Books</option>
+                        <option value="furniture">Furniture</option>
+                        <option value="clothing">Clothing</option>
+                        <option value="sports">Sports</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+                
+                <div class="filter-group">
+                    <label data-i18n="filters.condition">Condition</label>
+                    <select id="conditionFilter" class="filter-select">
+                        <option value="">All Conditions</option>
+                        <option value="new">New</option>
+                        <option value="like_new">Like New</option>
+                        <option value="good">Good</option>
+                        <option value="fair">Fair</option>
+                        <option value="poor">Poor</option>
+                    </select>
+                </div>
+                
+                <div class="filter-group">
+                    <label data-i18n="filters.priceRange">Price Range</label>
+                    <div class="price-inputs">
+                        <input type="number" id="minPrice" placeholder="Min" class="price-input">
+                        <span>-</span>
+                        <input type="number" id="maxPrice" placeholder="Max" class="price-input">
+                    </div>
+                </div>
+                
+                <div class="filter-group">
+                    <label data-i18n="filters.location">Location</label>
+                    <input type="text" id="locationFilter" placeholder="Enter location" class="filter-input">
+                </div>
+                
+                <div class="filter-group">
+                    <label data-i18n="filters.sortBy">Sort By</label>
+                    <select id="sortFilter" class="filter-select">
+                        <option value="date_desc">Newest First</option>
+                        <option value="date_asc">Oldest First</option>
+                        <option value="price_asc">Price: Low to High</option>
+                        <option value="price_desc">Price: High to Low</option>
+                    </select>
+                </div>
+                
+                <button id="applyFiltersBtn" class="btn btn-primary btn-block" data-i18n="filters.apply">Apply Filters</button>
+                <button id="clearFiltersBtn" class="btn btn-secondary btn-block" data-i18n="filters.clear">Clear Filters</button>
+            </aside>
+            
+            <!-- Products Grid -->
+            <div class="products-container">
+                <div class="products-header">
+                    <h2 data-i18n="home.title">Available Products</h2>
+                    <span id="productCount" class="product-count">0 products</span>
+                </div>
+                
+                <div id="productsGrid" class="products-grid">
+                    <!-- Products will be loaded here -->
+                </div>
+                
+                <div id="loadingSpinner" class="loading-spinner" style="display: none;">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    <p data-i18n="common.loading">Loading...</p>
+                </div>
+                
+                <div id="noProducts" class="no-products" style="display: none;">
+                    <i class="fas fa-box-open"></i>
+                    <p data-i18n="home.noProducts">No products found</p>
+                </div>
+                
+                <!-- Pagination -->
+                <div id="pagination" class="pagination" style="display: none;">
+                    <button id="prevPage" class="btn btn-secondary" disabled>
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                    <span id="pageInfo">Page 1 of 1</span>
+                    <button id="nextPage" class="btn btn-secondary" disabled>
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Product Detail Page -->
+        <div id="productDetailPage" class="page">
+            <div class="product-detail-container">
+                <button id="backToHomeBtn" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i>
+                    <span data-i18n="common.back">Back</span>
+                </button>
+                
+                <div id="productDetailContent">
+                    <!-- Product details will be loaded here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Post Product Page -->
+        <div id="postProductPage" class="page">
+            <div class="form-container">
+                <h2 data-i18n="postProduct.title">Post a Product</h2>
+                
+                <form id="postProductForm">
+                    <div class="form-group">
+                        <label for="productTitle" data-i18n="postProduct.titleLabel">Title *</label>
+                        <input type="text" id="productTitle" required maxlength="200" class="form-input">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="productDescription" data-i18n="postProduct.descriptionLabel">Description *</label>
+                        <textarea id="productDescription" required rows="5" class="form-textarea"></textarea>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="productPrice" data-i18n="postProduct.priceLabel">Price *</label>
+                            <input type="number" id="productPrice" required min="0" step="0.01" class="form-input">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="productCategory" data-i18n="postProduct.categoryLabel">Category *</label>
+                            <select id="productCategory" required class="form-select">
+                                <option value="">Select Category</option>
+                                <option value="electronics">Electronics</option>
+                                <option value="books">Books</option>
+                                <option value="furniture">Furniture</option>
+                                <option value="clothing">Clothing</option>
+                                <option value="sports">Sports</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="productCondition" data-i18n="postProduct.conditionLabel">Condition *</label>
+                            <select id="productCondition" required class="form-select">
+                                <option value="">Select Condition</option>
+                                <option value="new">New</option>
+                                <option value="like_new">Like New</option>
+                                <option value="good">Good</option>
+                                <option value="fair">Fair</option>
+                                <option value="poor">Poor</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="productLocation" data-i18n="postProduct.locationLabel">Location *</label>
+                            <input type="text" id="productLocation" required class="form-input">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="productImages" data-i18n="postProduct.imagesLabel">Images (Max 5)</label>
+                        <input type="file" id="productImages" accept="image/*" multiple class="form-file">
+                        <div id="imagePreview" class="image-preview"></div>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button type="button" id="cancelPostBtn" class="btn btn-secondary" data-i18n="common.cancel">Cancel</button>
+                        <button type="submit" class="btn btn-primary" data-i18n="postProduct.submit">Post Product</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- User Profile Page -->
+        <div id="profilePage" class="page">
+            <div id="profileContent">
+                <!-- Profile content will be loaded here -->
+            </div>
+        </div>
+
+        <!-- Chat Page -->
+        <div id="chatPage" class="page">
+            <div id="chatContent" class="chat-page-content">
+                <!-- Chat content will be loaded here -->
+            </div>
+        </div>
+
+        <!-- Admin Page -->
+        <div id="adminPage" class="page">
+            <div id="adminContent">
+                <!-- Admin content will be loaded here -->
+            </div>
+        </div>
+    </main>
+
+    <!-- Toast Notifications -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <!-- Modal -->
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <span class="modal-close">&times;</span>
+            <div id="modalBody"></div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.socket.io/4.7.4/socket.io.min.js"></script>
+    <script src="/public/js/config.js"></script>
+    <script src="/public/js/error-boundary.js"></script>
+    <script src="/public/js/lazy-load.js"></script>
+    <script src="/public/js/auth.js"></script>
+    <script src="/public/js/ui.js"></script>
+    <script src="/public/js/placeholders.js"></script>
+    <script src="/public/js/products.js"></script>
+    <script src="/public/js/i18n.js"></script>
+    <script src="/public/js/api.js"></script>
+    <script src="/public/js/chat.js"></script>
+    <script src="/public/js/profile.js"></script>
+    <script src="/public/js/admin.js"></script>
+    <script src="/public/js/app.js"></script>
+</body>
+</html>
