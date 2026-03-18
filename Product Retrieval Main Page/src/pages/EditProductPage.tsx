@@ -20,6 +20,7 @@ import { Toaster } from '../components/ui/sonner';
 import { productService } from '../services';
 import { useCategories } from '../hooks';
 import { useAuth } from '../services/authContext';
+import { compressImages } from '../lib/imageUtils';
 
 interface ProductImage {
   imageID: string;
@@ -131,23 +132,30 @@ export default function EditProductPage() {
   };
 
   // Handle image selection
-  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     if (newImages.length + files.length > 5) {
       toast.error('Maximum 5 images allowed');
       return;
     }
 
-    setNewImages(prev => [...prev, ...files]);
+    // 压缩图片后再添加
+    try {
+      const compressed = await compressImages(files);
+      setNewImages(prev => [...prev, ...compressed]);
 
-    // Create previews
-    files.forEach(file => {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setNewImagePreviews(prev => [...prev, reader.result as string]);
-      };
-      reader.readAsDataURL(file);
-    });
+      // Create previews
+      compressed.forEach(file => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          setNewImagePreviews(prev => [...prev, reader.result as string]);
+        };
+        reader.readAsDataURL(file);
+      });
+    } catch (error) {
+      console.error('Image compression error:', error);
+      toast.error('Failed to process images');
+    }
   };
 
   // Remove new image

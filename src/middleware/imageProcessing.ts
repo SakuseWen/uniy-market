@@ -16,7 +16,7 @@ const IMAGE_CONFIG = {
 };
 
 /**
- * Validate image dimensions
+ * Validate image dimensions (only rejects images that are too small)
  */
 async function validateImageDimensions(filePath: string): Promise<{ width: number; height: number; isValid: boolean; error?: string }> {
   try {
@@ -41,16 +41,7 @@ async function validateImageDimensions(filePath: string): Promise<{ width: numbe
       };
     }
 
-    // Check maximum dimensions (max 5000x5000)
-    if (metadata.width > 5000 || metadata.height > 5000) {
-      return {
-        width: metadata.width,
-        height: metadata.height,
-        isValid: false,
-        error: 'Image dimensions too large. Maximum size is 5000x5000 pixels'
-      };
-    }
-
+    // Large images will be auto-resized during optimization, no rejection needed
     return {
       width: metadata.width,
       height: metadata.height,

@@ -20,6 +20,7 @@ import { Toaster } from '../components/ui/sonner';
 import { productService } from '../services';
 import { useCategories } from '../hooks';
 import { useAuth } from '../services/authContext';
+import { compressImages } from '../lib/imageUtils';
 
 export default function CreateProductPage() {
   const navigate = useNavigate();
@@ -79,7 +80,7 @@ export default function CreateProductPage() {
   };
 
   // Handle image upload
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files) return;
 
@@ -88,17 +89,23 @@ export default function CreateProductPage() {
       return;
     }
 
-    const newImages = Array.from(files);
-    setImages(prev => [...prev, ...newImages]);
+    // 压缩图片后再添加
+    try {
+      const compressed = await compressImages(Array.from(files));
+      setImages(prev => [...prev, ...compressed]);
 
-    // Create previews
-    newImages.forEach(file => {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImagePreviews(prev => [...prev, reader.result as string]);
-      };
-      reader.readAsDataURL(file);
-    });
+      // Create previews
+      compressed.forEach(file => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          setImagePreviews(prev => [...prev, reader.result as string]);
+        };
+        reader.readAsDataURL(file);
+      });
+    } catch (error) {
+      console.error('Image compression error:', error);
+      toast.error('Failed to process images');
+    }
   };
 
   // Remove image
