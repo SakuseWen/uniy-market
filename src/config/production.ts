@@ -65,7 +65,7 @@ export const getProductionConfig = (): ProductionConfig => {
   return {
     port: parseInt(process.env['PORT'] || '3000', 10),
     nodeEnv: process.env['NODE_ENV'] || 'development',
-    databaseUrl: process.env['DATABASE_URL'] || './data/unity_market.db',
+    databaseUrl: process.env['DATABASE_URL'] || './data/uniy_market.db',
     jwtSecret: process.env['JWT_SECRET'] || '',
     jwtExpiresIn: process.env['JWT_EXPIRES_IN'] || '7d',
     sessionSecret: process.env['SESSION_SECRET'] || '',

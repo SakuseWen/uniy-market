@@ -135,7 +135,7 @@ npm run format
 ```env
 PORT=3000
 NODE_ENV=development
-DATABASE_URL=./data/unity_market.db
+DATABASE_URL=./data/uniy_market.db
 FRONTEND_URL=http://localhost:5173
 CORS_ORIGIN=http://localhost:3000,http://localhost:5173
 ```

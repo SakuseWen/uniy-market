@@ -17,7 +17,7 @@ import { Database } from 'sqlite3';
 import * as path from 'path';
 import * as fs from 'fs';
 
-const DB_PATH = path.join(__dirname, '../../data/unity_market.db');
+const DB_PATH = path.join(__dirname, '../../data/uniy_market.db');
 
 // 确保数据目录存在
 const dataDir = path.dirname(DB_PATH);

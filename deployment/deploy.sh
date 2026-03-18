@@ -91,14 +91,14 @@ run_tests() {
 backup_database() {
     echo "💾 备份数据库..."
     
-    if [ -f "../data/unity_market.db" ]; then
+    if [ -f "../data/uniy_market.db" ]; then
         backup_dir="../backups"
         mkdir -p "$backup_dir"
         
         timestamp=$(date +%Y%m%d_%H%M%S)
-        backup_file="$backup_dir/unity_market_${timestamp}.db"
+        backup_file="$backup_dir/uniy_market_${timestamp}.db"
         
-        cp "../data/unity_market.db" "$backup_file"
+        cp "../data/uniy_market.db" "$backup_file"
         echo -e "${GREEN}✅ 数据库已备份到: $backup_file${NC}"
     else
         echo -e "${YELLOW}⚠️  未找到数据库文件，跳过备份${NC}"
