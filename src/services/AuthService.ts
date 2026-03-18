@@ -21,7 +21,7 @@ export class AuthService {
 
   constructor() {
     this.userModel = new UserModel();
-    this.jwtSecret = process.env['JWT_SECRET'] || 'your-secret-key';
+    this.jwtSecret = process.env['JWT_SECRET'] || 'your-super-secret-jwt-key-change-this-in-production';
     this.jwtExpiresIn = process.env['JWT_EXPIRES_IN'] || '7d';
   }
 

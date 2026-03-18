@@ -232,13 +232,13 @@ export class ProductModel extends BaseModel {
     const offset = (page - 1) * limit;
 
     const products = await this.query(
-      'SELECT * FROM ProductListing WHERE sellerID = ? ORDER BY createdAt DESC LIMIT ? OFFSET ?',
-      [sellerID, limit, offset]
+      'SELECT * FROM ProductListing WHERE sellerID = ? AND status != ? ORDER BY createdAt DESC LIMIT ? OFFSET ?',
+      [sellerID, 'inactive', limit, offset]
     );
 
     const totalResult = await this.queryOne(
-      'SELECT COUNT(*) as count FROM ProductListing WHERE sellerID = ?',
-      [sellerID]
+      'SELECT COUNT(*) as count FROM ProductListing WHERE sellerID = ? AND status != ?',
+      [sellerID, 'inactive']
     );
 
     const total = totalResult?.count || 0;
@@ -308,7 +308,8 @@ export class ProductModel extends BaseModel {
    * Get all categories
    */
   async getCategories(): Promise<Category[]> {
-    return await this.query('SELECT * FROM Category WHERE isActive = 1 ORDER BY name ASC');
+    const categories = await this.query('SELECT DISTINCT catID as categoryID, name, nameEn, nameTh, nameZh, description, isActive FROM Category WHERE isActive = 1 ORDER BY name ASC');
+    return categories;
   }
 
   /**

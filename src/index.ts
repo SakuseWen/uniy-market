@@ -21,6 +21,7 @@ import { securityHeaders, contentSecurityPolicy, attachCsrfToken } from './middl
 
 // Import routes
 import authRoutes from './routes/auth';
+import authPasswordRoutes from './routes/authPassword';
 import testAuthRoutes from './routes/testAuth';
 // import universityRoutes from './routes/university'; // Temporarily disabled due to TS errors
 import productRoutes from './routes/product';
@@ -79,6 +80,7 @@ app.use(helmet({
     },
   } : false,
   crossOriginEmbedderPolicy: false,
+  crossOriginResourcePolicy: { policy: "cross-origin" },
 }));
 
 // Additional security headers
@@ -136,6 +138,7 @@ app.use(attachCsrfToken);
 
 // Static files
 app.use('/public', express.static(path.join(__dirname, '../public')));
+app.use('/uploads', express.static(path.join(__dirname, '../public/uploads')));
 
 // Serve app.html as the main application
 app.get('/', (_req, res) => {
@@ -177,6 +180,7 @@ app.get('/api', (_req, res) => {
 
 // Mount API routes
 app.use('/api/auth', authLimiter, authRoutes);
+app.use('/api/auth', authLimiter, authPasswordRoutes);
 app.use('/api/test-auth', testAuthRoutes); // Test authentication routes (development only)
 // app.use('/api/university', universityRoutes); // Temporarily disabled due to TS errors
 app.use('/api/products', apiLimiter, productRoutes);

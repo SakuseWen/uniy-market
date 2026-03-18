@@ -11,7 +11,7 @@ import jwt from 'jsonwebtoken';
 import { DatabaseManager } from '../config/database';
 
 const router = Router();
-const JWT_SECRET = process.env.JWT_SECRET || 'test-secret-key-for-development';
+const JWT_SECRET = process.env.JWT_SECRET || 'your-super-secret-jwt-key-change-this-in-production';
 
 // 获取所有测试用户
 router.get('/test-users', async (req: Request, res: Response) => {

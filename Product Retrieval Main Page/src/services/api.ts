@@ -31,12 +31,13 @@ apiClient.interceptors.request.use(
 apiClient.interceptors.response.use(
   (response) => response,
   (error: AxiosError) => {
+    // 不在这里自动重定向，让应用层处理 401 错误
+    // 这样可以显示错误提示而不是直接跳转
     if (error.response?.status === 401) {
       // Token 过期或无效，清除本地存储
       localStorage.removeItem('authToken');
-      localStorage.removeItem('user');
-      // 可以在这里触发重定向到登录页
-      window.location.href = '/login';
+      localStorage.removeItem('authUser');
+      // 让应用层决定是否重定向
     }
     return Promise.reject(error);
   }

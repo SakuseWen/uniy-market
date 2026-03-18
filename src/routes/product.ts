@@ -544,9 +544,28 @@ router.get('/seller/:sellerId',
 
       const result = await getProductModel().getProductsBySeller(sellerId!, page, limit);
 
+      // Enrich products with images and category information
+      const enrichedProducts = await Promise.all(
+        result.data.map(async (product) => {
+          const [images, category] = await Promise.all([
+            getProductModel().getProductImages(product.listingID),
+            getProductModel().getCategoryById(product.categoryID)
+          ]);
+
+          return {
+            ...product,
+            images,
+            category
+          };
+        })
+      );
+
       return res.json({
         success: true,
-        data: result
+        data: {
+          data: enrichedProducts,
+          pagination: result.pagination
+        }
       });
 
     } catch (error) {
@@ -751,7 +770,7 @@ router.post('/:id/images',
         const file = req.files[i];
         if (!file) continue; // Skip if file is undefined
         
-        // Store relative path from public directory
+        // Store relative path - should be accessible via /uploads/products/ (static file service at /public)
         const relativePath = `/uploads/products/${path.basename(file.path)}`;
         
         const imageData = {

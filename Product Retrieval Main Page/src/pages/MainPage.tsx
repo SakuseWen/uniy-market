@@ -20,11 +20,13 @@ import {
   SelectValue,
 } from '../components/ui/select';
 
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 import { Toaster } from '../components/ui/sonner';
+import { useAuth } from '../services/authContext';
 
 export default function MainPage() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   
   // Language state
   const [language, setLanguage] = useState<Language>('en');

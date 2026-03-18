@@ -104,4 +104,4 @@ Thumbs.db
 
 # Frontend build
 Product\ Retrieval\ Main\ Page/build/
-Product\ Retrieval\ Main\ Page/dist/
+Product\ Retrieval\ Main\ Page/dist/*.db

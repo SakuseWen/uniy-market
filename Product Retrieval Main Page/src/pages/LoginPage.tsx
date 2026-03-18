@@ -6,29 +6,64 @@ import { Label } from '../components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '../components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
 import { CheckCircle } from 'lucide-react';
+import { useAuth } from '../services/authContext';
 
 export default function LoginPage() {
   const navigate = useNavigate();
+  const { login } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [loginEmail, setLoginEmail] = useState('');
+  const [loginPassword, setLoginPassword] = useState('');
+  const [registerName, setRegisterName] = useState('');
+  const [registerEmail, setRegisterEmail] = useState('');
+  const [registerPassword, setRegisterPassword] = useState('');
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError('');
     setIsLoading(true);
-    // Simulate login API call
-    setTimeout(() => {
-      setIsLoading(false);
+    try {
+      await login(loginEmail, loginPassword);
       navigate('/');
-    }, 1500);
+    } catch (err) {
+      setError('Login failed. Please check your email and password.');
+      console.error('Login error:', err);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleRegister = (e: React.FormEvent) => {
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError('');
     setIsLoading(true);
-    // Simulate register API call
-    setTimeout(() => {
-      setIsLoading(false);
+    try {
+      const response = await fetch('http://localhost:3000/api/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: registerEmail,
+          name: registerName,
+          password: registerPassword,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Registration failed');
+      }
+
+      // Auto-login after registration
+      await login(registerEmail, registerPassword);
       navigate('/');
-    }, 1500);
+    } catch (err) {
+      setError('Registration failed. Please try again.');
+      console.error('Register error:', err);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -62,12 +97,19 @@ export default function LoginPage() {
               <CardContent>
                 <form onSubmit={handleLogin}>
                   <div className="space-y-4">
+                    {error && (
+                      <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-sm text-red-700">
+                        {error}
+                      </div>
+                    )}
                     <div className="space-y-2">
-                      <Label htmlFor="email">Email or Student ID</Label>
+                      <Label htmlFor="email">Email</Label>
                       <Input
                         id="email"
-                        type="text"
+                        type="email"
                         placeholder="student@university.edu"
+                        value={loginEmail}
+                        onChange={(e) => setLoginEmail(e.target.value)}
                         required
                       />
                     </div>
@@ -77,6 +119,8 @@ export default function LoginPage() {
                         id="password"
                         type="password"
                         placeholder="••••••••"
+                        value={loginPassword}
+                        onChange={(e) => setLoginPassword(e.target.value)}
                         required
                       />
                     </div>
@@ -145,21 +189,19 @@ export default function LoginPage() {
               <CardContent>
                 <form onSubmit={handleRegister}>
                   <div className="space-y-4">
+                    {error && (
+                      <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-sm text-red-700">
+                        {error}
+                      </div>
+                    )}
                     <div className="space-y-2">
                       <Label htmlFor="name">Full Name</Label>
                       <Input
                         id="name"
                         type="text"
                         placeholder="John Doe"
-                        required
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="student-id">Student/Staff ID</Label>
-                      <Input
-                        id="student-id"
-                        type="text"
-                        placeholder="STU123456"
+                        value={registerName}
+                        onChange={(e) => setRegisterName(e.target.value)}
                         required
                       />
                     </div>
@@ -169,6 +211,8 @@ export default function LoginPage() {
                         id="register-email"
                         type="email"
                         placeholder="student@university.edu"
+                        value={registerEmail}
+                        onChange={(e) => setRegisterEmail(e.target.value)}
                         required
                       />
                     </div>
@@ -178,6 +222,8 @@ export default function LoginPage() {
                         id="register-password"
                         type="password"
                         placeholder="••••••••"
+                        value={registerPassword}
+                        onChange={(e) => setRegisterPassword(e.target.value)}
                         required
                       />
                     </div>

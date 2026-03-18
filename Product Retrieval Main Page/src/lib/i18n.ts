@@ -140,6 +140,7 @@ export const translations = {
     detail: 'Detail',
     postQuestion: 'Post a question or comment...',
     noCommentsYet: 'No comments yet. Be the first to ask!',
+    logout: 'Logout',
   },
   zh: {
     // Header
@@ -420,6 +421,7 @@ export const translations = {
     detail: 'รายละเอียด',
     postQuestion: 'โพสต์คำถามหรือความคิดเห็น...',
     noCommentsYet: 'ยังไม่มีความคิดเห็น เป็นคนแรกที่ถาม!',
+    logout: 'ออกจากระบบ',
   },
 };
 

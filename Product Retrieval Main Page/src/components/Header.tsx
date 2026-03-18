@@ -1,4 +1,4 @@
-import { Bell, User } from 'lucide-react';
+import { Bell, User, LogOut } from 'lucide-react';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
 import {
@@ -10,6 +10,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { Language, translate } from '../lib/i18n';
 import { useNavigate } from 'react-router';
+import { useAuth } from '../services/authContext';
 
 interface HeaderProps {
   language: Language;
@@ -21,6 +22,20 @@ interface HeaderProps {
 export function Header({ language, onLanguageChange, userVerified, unreadMessages }: HeaderProps) {
   const t = (key: any) => translate(language, key);
   const navigate = useNavigate();
+  const { user, isAuthenticated, logout } = useAuth();
+
+  const handleAvatarClick = () => {
+    if (isAuthenticated) {
+      navigate('/my-page');
+    } else {
+      navigate('/login');
+    }
+  };
+
+  const handleLogout = () => {
+    logout();
+    navigate('/');
+  };
 
   return (
     <header className="sticky top-0 z-50 bg-white border-b">
@@ -40,7 +55,7 @@ export function Header({ language, onLanguageChange, userVerified, unreadMessage
               <a href="#" className="hover:text-blue-600 transition-colors" onClick={() => navigate('/')}>
                 {t('home')}
               </a>
-              <a href="#" className="hover:text-blue-600 transition-colors">
+              <a href="#" className="hover:text-blue-600 transition-colors" onClick={() => navigate('/my-page')}>
                 {t('myPage')}
               </a>
               <a href="#" className="hover:text-blue-600 transition-colors">
@@ -95,16 +110,51 @@ export function Header({ language, onLanguageChange, userVerified, unreadMessage
               </DropdownMenuContent>
             </DropdownMenu>
 
-            {/* User Avatar */}
-            <Avatar className="w-8 h-8 cursor-pointer hover:opacity-80 hover:scale-105 transition-all duration-200" onClick={() => navigate('/login')}>
-              <AvatarImage src="" />
-              <AvatarFallback>
-                <User className="w-4 h-4" />
-              </AvatarFallback>
-            </Avatar>
+            {/* User Avatar with Dropdown */}
+            {isAuthenticated ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="w-8 h-8 p-0 rounded-full"
+                  >
+                    <Avatar className="w-8 h-8">
+                      <AvatarImage src="" />
+                      <AvatarFallback>
+                        {user?.name?.charAt(0).toUpperCase() || 'U'}
+                      </AvatarFallback>
+                    </Avatar>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={() => navigate('/my-page')}>
+                    <User className="w-4 h-4 mr-2" />
+                    {t('myPage')}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleLogout}>
+                    <LogOut className="w-4 h-4 mr-2" />
+                    {t('logout') || 'Logout'}
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <Avatar 
+                className="w-8 h-8 cursor-pointer hover:opacity-80 hover:scale-105 transition-all duration-200" 
+                onClick={handleAvatarClick}
+              >
+                <AvatarImage src="" />
+                <AvatarFallback>
+                  <User className="w-4 h-4" />
+                </AvatarFallback>
+              </Avatar>
+            )}
 
             {/* Post Item Button */}
-            <Button className="hidden lg:flex bg-gradient-to-r from-blue-500 to-purple-600">
+            <Button 
+              className="hidden lg:flex bg-gradient-to-r from-blue-500 to-purple-600"
+              onClick={() => navigate('/create-product')}
+            >
               {t('postItemCTA')}
             </Button>
           </div>

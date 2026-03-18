@@ -224,6 +224,8 @@ export async function processUploadedImages(req: Request, res: Response, next: N
  */
 export async function deleteImageFile(imagePath: string): Promise<boolean> {
   try {
+    // imagePath is like /uploads/products/filename
+    // We need to construct the full path: ../public/uploads/products/filename
     const fullPath = path.join(__dirname, '../../public', imagePath);
     await fs.unlink(fullPath);
     return true;

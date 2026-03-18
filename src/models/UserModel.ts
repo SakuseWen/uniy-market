@@ -5,15 +5,15 @@ export class UserModel extends BaseModel {
   /**
    * Create a new user
    */
-  async createUser(userData: Omit<User, 'userID' | 'createdAt' | 'updatedAt'>): Promise<User> {
+  async createUser(userData: Omit<User, 'userID' | 'createdAt' | 'updatedAt'> & { password?: string }): Promise<User> {
     const userID = this.generateId('user_');
     const now = new Date().toISOString();
 
     const result = await this.execute(
       `INSERT INTO User (
         userID, email, name, phone, profileImage, isVerified, 
-        preferredLanguage, isAdmin, status, createdAt, updatedAt
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        preferredLanguage, isAdmin, status, password, createdAt, updatedAt
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         userID,
         userData.email,
@@ -22,8 +22,9 @@ export class UserModel extends BaseModel {
         userData.profileImage || null,
         userData.isVerified,
         userData.preferredLanguage,
-        userData.isAdmin,
-        userData.status,
+        userData.isAdmin || false,
+        userData.status || 'active',
+        userData.password || null,
         now,
         now
       ]

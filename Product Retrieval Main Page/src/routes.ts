@@ -2,6 +2,9 @@ import { createBrowserRouter } from 'react-router';
 import MainPage from './pages/MainPage';
 import LoginPage from './pages/LoginPage';
 import ChatPage from './pages/ChatPage';
+import CreateProductPage from './pages/CreateProductPage';
+import UserProfilePage from './pages/UserProfilePage';
+import EditProductPage from './pages/EditProductPage';
 
 export const router = createBrowserRouter([
   {
@@ -15,5 +18,17 @@ export const router = createBrowserRouter([
   {
     path: '/chat/:sellerId',
     Component: ChatPage,
+  },
+  {
+    path: '/create-product',
+    Component: CreateProductPage,
+  },
+  {
+    path: '/my-page',
+    Component: UserProfilePage,
+  },
+  {
+    path: '/edit-product/:productId',
+    Component: EditProductPage,
   },
 ]);

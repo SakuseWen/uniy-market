@@ -112,7 +112,22 @@ export function useCategories() {
         setLoading(true);
         setError(null);
         const data = await productService.getCategories();
-        setCategories(data);
+        console.log('Fetched categories:', data);
+        
+        // Remove duplicates based on name
+        const uniqueMap = new Map<string, { categoryID: number; name: string }>();
+        data.forEach((cat: any) => {
+          if (cat.name && !uniqueMap.has(cat.name)) {
+            uniqueMap.set(cat.name, {
+              categoryID: cat.categoryID,
+              name: cat.name
+            });
+          }
+        });
+        
+        const uniqueCategories = Array.from(uniqueMap.values());
+        console.log('Unique categories:', uniqueCategories);
+        setCategories(uniqueCategories);
       } catch (err: any) {
         console.error('Failed to fetch categories:', err);
         setError(err.response?.data?.error?.message || 'Failed to load categories');
