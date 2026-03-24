@@ -542,7 +542,7 @@ router.get('/seller/:sellerId',
         });
       }
 
-      const result = await getProductModel().getProductsBySeller(sellerId!, page, limit);
+      const result = await getProductModel().getProductsBySeller(sellerId!, page, limit, req.query['includeInactive'] === 'true');
 
       // Enrich products with images and category information
       const enrichedProducts = await Promise.all(

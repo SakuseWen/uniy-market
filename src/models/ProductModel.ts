@@ -228,19 +228,28 @@ export class ProductModel extends BaseModel {
   /**
    * Get products by seller ID
    */
-  async getProductsBySeller(sellerID: string, page: number = 1, limit: number = 20): Promise<PaginatedResponse<ProductListing>> {
+  async getProductsBySeller(sellerID: string, page: number = 1, limit: number = 20, includeInactive: boolean = false): Promise<PaginatedResponse<ProductListing>> {
     const offset = (page - 1) * limit;
 
-    const products = await this.query(
-      'SELECT * FROM ProductListing WHERE sellerID = ? AND status != ? ORDER BY createdAt DESC LIMIT ? OFFSET ?',
-      [sellerID, 'inactive', limit, offset]
-    );
+    let query: string;
+    let countQuery: string;
+    let params: any[];
+    let countParams: any[];
 
-    const totalResult = await this.queryOne(
-      'SELECT COUNT(*) as count FROM ProductListing WHERE sellerID = ? AND status != ?',
-      [sellerID, 'inactive']
-    );
+    if (includeInactive) {
+      query = 'SELECT * FROM ProductListing WHERE sellerID = ? ORDER BY createdAt DESC LIMIT ? OFFSET ?';
+      params = [sellerID, limit, offset];
+      countQuery = 'SELECT COUNT(*) as count FROM ProductListing WHERE sellerID = ?';
+      countParams = [sellerID];
+    } else {
+      query = 'SELECT * FROM ProductListing WHERE sellerID = ? AND status != ? ORDER BY createdAt DESC LIMIT ? OFFSET ?';
+      params = [sellerID, 'inactive', limit, offset];
+      countQuery = 'SELECT COUNT(*) as count FROM ProductListing WHERE sellerID = ? AND status != ?';
+      countParams = [sellerID, 'inactive'];
+    }
 
+    const products = await this.query(query, params);
+    const totalResult = await this.queryOne(countQuery, countParams);
     const total = totalResult?.count || 0;
 
     return {

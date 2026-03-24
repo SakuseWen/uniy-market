@@ -62,7 +62,7 @@ function MyPage() {
         if (!user?.userID) {
           throw new Error('User ID not found');
         }
-        const response = await productService.getUserProducts(user.userID);
+        const response = await productService.getUserProducts(user.userID, 1, 20, true);
         setProducts((response.data as any) || []);
       } catch (error: any) {
         console.error('Fetch products error:', error);
