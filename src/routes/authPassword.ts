@@ -2,9 +2,12 @@ import express from 'express';
 import { body, validationResult } from 'express-validator';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import fs from 'fs';
+import path from 'path';
 import { UserModel } from '../models/UserModel';
 import { DatabaseManager } from '../config/database';
 import { generateVerificationCode, sendVerificationEmail } from '../services/emailService';
+import { authenticateToken } from '../middleware/auth';
 
 const router = express.Router();
 let userModel: UserModel | null = null;
@@ -127,6 +130,8 @@ router.post('/login',
             name: user.name,
             profileImage: user.profileImage,
             bio: user.bio,
+            eduVerified: user.eduVerified || false,
+            eduEmail: user.eduEmail || null,
             isVerified: user.isVerified,
             isAdmin: user.isAdmin,
             preferredLanguage: user.preferredLanguage,
@@ -180,9 +185,9 @@ router.post('/register',
 
       const { email, name, password } = req.body;
 
-      // Check if user already exists
+      // Check if user already exists (only verified users block re-registration)
       const existingUser = await getUserModel().getUserByEmail(email);
-      if (existingUser) {
+      if (existingUser && existingUser.isVerified) {
         return res.status(400).json({
           success: false,
           error: {
@@ -194,27 +199,27 @@ router.post('/register',
         });
       }
 
+      // If unverified user exists, delete it so they can re-register
+      if (existingUser && !existingUser.isVerified) {
+        const db = DatabaseManager.getInstance().getDatabase();
+        await db.run('DELETE FROM User WHERE userID = ?', [existingUser.userID]);
+      }
+
       // Hash password
       const hashedPassword = await bcrypt.hash(password, 10);
 
-      // Create user
-      const userID = `user_${Date.now()}`;
-      const newUser = await getUserModel().createUser({
-        userID,
-        email,
-        name,
-        password: hashedPassword,
-        isVerified: false, // Require email verification
-        preferredLanguage: 'en',
-      });
-
-      // Generate and store verification code
+      // Don't create user yet - store registration data in VerificationCode metadata
       const code = generateVerificationCode();
       const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString(); // 10 minutes
       const db = DatabaseManager.getInstance().getDatabase();
+
+      // Invalidate old codes for this email
+      await db.run('UPDATE VerificationCode SET used = 1 WHERE email = ? AND used = 0', [email]);
+
+      const metadata = JSON.stringify({ name, password: hashedPassword });
       await db.run(
-        'INSERT INTO VerificationCode (email, code, expiresAt) VALUES (?, ?, ?)',
-        [email, code, expiresAt]
+        'INSERT INTO VerificationCode (email, code, metadata, expiresAt) VALUES (?, ?, ?, ?)',
+        [email, code, metadata, expiresAt]
       );
 
       // Send verification email
@@ -223,7 +228,7 @@ router.post('/register',
       return res.status(201).json({
         success: true,
         data: {
-          email: newUser.email,
+          email,
           requiresVerification: true,
         },
         message: 'Registration successful. Please check your email for verification code.'
@@ -277,13 +282,28 @@ router.post('/verify-code',
       // Mark code as used
       await db.run('UPDATE VerificationCode SET used = 1 WHERE id = ?', [record.id]);
 
-      // Mark user as verified
-      const user = await getUserModel().getUserByEmail(email);
-      if (!user) {
+      // Check if this is a registration verification (has metadata) or other verification
+      let user = await getUserModel().getUserByEmail(email);
+
+      if (!user && record.metadata) {
+        // Registration flow: create user now
+        const meta = JSON.parse(record.metadata);
+        const userID = `user_${Date.now()}`;
+        user = await getUserModel().createUser({
+          userID,
+          email,
+          name: meta.name,
+          password: meta.password,
+          isVerified: true,
+          preferredLanguage: 'en',
+        });
+      } else if (user && !user.isVerified) {
+        // Existing unverified user (legacy) - mark as verified
+        await getUserModel().updateUser(user.userID, { isVerified: true } as any);
+        user = { ...user, isVerified: true };
+      } else if (!user) {
         return res.status(404).json({ success: false, error: { code: 'USER_NOT_FOUND', message: 'User not found' } });
       }
-
-      await getUserModel().updateUser(user.userID, { isVerified: true } as any);
 
       // Generate JWT token for auto-login
       const token = jwt.sign(
@@ -296,7 +316,7 @@ router.post('/verify-code',
         success: true,
         data: {
           token,
-          user: { userID: user.userID, email: user.email, name: user.name, profileImage: user.profileImage, bio: user.bio, isVerified: true, isAdmin: user.isAdmin, preferredLanguage: user.preferredLanguage }
+          user: { userID: user.userID, email: user.email, name: user.name, profileImage: user.profileImage, bio: (user as any).bio, eduVerified: (user as any).eduVerified || false, eduEmail: (user as any).eduEmail || null, isVerified: true, isAdmin: user.isAdmin, preferredLanguage: user.preferredLanguage }
         },
         message: 'Email verified successfully'
       });
@@ -322,23 +342,38 @@ router.post('/resend-code',
       }
 
       const { email } = req.body;
-      const user = await getUserModel().getUserByEmail(email);
-      if (!user) {
-        return res.status(404).json({ success: false, error: { code: 'USER_NOT_FOUND', message: 'User not found' } });
-      }
+      const db = DatabaseManager.getInstance().getDatabase();
 
-      if (user.isVerified) {
+      // Check if there's a pending verification for this email
+      const pendingCode = await db.get(
+        'SELECT * FROM VerificationCode WHERE email = ? AND used = 0 ORDER BY createdAt DESC LIMIT 1',
+        [email]
+      );
+
+      // Also check if user already exists and is verified
+      const user = await getUserModel().getUserByEmail(email);
+      if (user && user.isVerified) {
         return res.status(400).json({ success: false, error: { code: 'ALREADY_VERIFIED', message: 'Email is already verified' } });
       }
 
-      // Invalidate old codes
-      const db = DatabaseManager.getInstance().getDatabase();
+      if (!pendingCode && !user) {
+        return res.status(404).json({ success: false, error: { code: 'NO_PENDING_REGISTRATION', message: 'No pending registration found for this email' } });
+      }
+
+      // Invalidate old codes but preserve metadata from the latest one
+      const latestCode = await db.get(
+        'SELECT metadata FROM VerificationCode WHERE email = ? AND metadata IS NOT NULL ORDER BY createdAt DESC LIMIT 1',
+        [email]
+      );
       await db.run('UPDATE VerificationCode SET used = 1 WHERE email = ? AND used = 0', [email]);
 
-      // Generate new code
+      // Generate new code, carry over metadata
       const code = generateVerificationCode();
       const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString();
-      await db.run('INSERT INTO VerificationCode (email, code, expiresAt) VALUES (?, ?, ?)', [email, code, expiresAt]);
+      await db.run(
+        'INSERT INTO VerificationCode (email, code, metadata, expiresAt) VALUES (?, ?, ?, ?)',
+        [email, code, latestCode?.metadata || null, expiresAt]
+      );
 
       const sent = await sendVerificationEmail(email, code);
       if (!sent) {
@@ -349,6 +384,238 @@ router.post('/resend-code',
     } catch (error) {
       console.error('Resend code error:', error);
       return res.status(500).json({ success: false, error: { code: 'RESEND_FAILED', message: 'Failed to resend code' } });
+    }
+  }
+);
+
+/**
+ * @route   POST /api/auth/delete-account/send-code
+ * @desc    Send verification code for account deletion
+ * @access  Private
+ */
+router.post('/delete-account/send-code', authenticateToken, async (req: express.Request, res: express.Response) => {
+  try {
+    const user = (req as any).user;
+    const db = DatabaseManager.getInstance().getDatabase();
+
+    // Invalidate old codes
+    await db.run('UPDATE VerificationCode SET used = 1 WHERE email = ? AND used = 0', [user.email]);
+
+    // Generate new code
+    const code = generateVerificationCode();
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString();
+    await db.run('INSERT INTO VerificationCode (email, code, expiresAt) VALUES (?, ?, ?)', [user.email, code, expiresAt]);
+
+    const sent = await sendVerificationEmail(user.email, code);
+    if (!sent) {
+      return res.status(500).json({ success: false, error: { code: 'EMAIL_FAILED', message: 'Failed to send verification email' } });
+    }
+
+    return res.json({ success: true, message: 'Verification code sent' });
+  } catch (error) {
+    console.error('Delete account send code error:', error);
+    return res.status(500).json({ success: false, error: { code: 'SEND_CODE_FAILED', message: 'Failed to send code' } });
+  }
+});
+
+/**
+ * @route   POST /api/auth/delete-account/confirm
+ * @desc    Confirm account deletion with verification code
+ * @access  Private
+ */
+router.post('/delete-account/confirm',
+  authenticateToken,
+  [body('code').isLength({ min: 6, max: 6 }).withMessage('6-digit code is required')],
+  async (req: express.Request, res: express.Response) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({ success: false, error: { code: 'VALIDATION_ERROR', message: 'Invalid code' } });
+      }
+
+      const user = (req as any).user;
+      const { code } = req.body;
+      const db = DatabaseManager.getInstance().getDatabase();
+
+      // Verify code
+      const record = await db.get(
+        'SELECT * FROM VerificationCode WHERE email = ? AND code = ? AND used = 0 AND expiresAt > ? ORDER BY createdAt DESC LIMIT 1',
+        [user.email, code, new Date().toISOString()]
+      );
+      if (!record) {
+        return res.status(400).json({ success: false, error: { code: 'INVALID_CODE', message: 'Invalid or expired verification code' } });
+      }
+
+      // Mark code as used
+      await db.run('UPDATE VerificationCode SET used = 1 WHERE id = ?', [record.id]);
+
+      // Delete avatar file from disk
+      if (user.profileImage && user.profileImage.startsWith('/uploads/avatars/')) {
+        try { fs.unlinkSync(path.join(__dirname, '../../public', user.profileImage)); } catch (_e) { /* ignore */ }
+      }
+
+      // Delete product image files from disk
+      const productImages = await db.all(
+        `SELECT pi.imagePath FROM ProductImage pi
+         JOIN ProductListing pl ON pi.listingID = pl.listingID
+         WHERE pl.sellerID = ?`, [user.userID]
+      );
+      for (const img of productImages) {
+        if (img.imagePath) {
+          try { fs.unlinkSync(path.join(__dirname, '../../public', img.imagePath)); } catch (_e) { /* ignore */ }
+        }
+      }
+
+      // Hard delete user - CASCADE will handle related records
+      await db.run('DELETE FROM User WHERE userID = ?', [user.userID]);
+
+      // Also clean up verification codes
+      await db.run('DELETE FROM VerificationCode WHERE email = ?', [user.email]);
+
+      return res.json({ success: true, message: 'Account deleted successfully' });
+    } catch (error) {
+      console.error('Delete account confirm error:', error);
+      return res.status(500).json({ success: false, error: { code: 'DELETE_FAILED', message: 'Failed to delete account' } });
+    }
+  }
+);
+
+/**
+ * @route   POST /api/auth/edu-verify/send-code
+ * @desc    Send verification code to education email
+ * @access  Private
+ */
+router.post('/edu-verify/send-code',
+  authenticateToken,
+  [body('eduEmail').isEmail().withMessage('Valid education email is required')],
+  async (req: express.Request, res: express.Response) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({ success: false, error: { code: 'VALIDATION_ERROR', message: 'Invalid email' } });
+      }
+
+      const user = (req as any).user;
+      const { eduEmail } = req.body;
+
+      // Check if already edu verified
+      if (user.eduVerified) {
+        return res.status(400).json({ success: false, error: { code: 'ALREADY_EDU_VERIFIED', message: 'Education already verified' } });
+      }
+
+      // Check if email domain looks like an education domain
+      const domain = eduEmail.split('@')[1]?.toLowerCase() || '';
+      const eduDomains = ['.edu', '.ac.', '.edu.', '.school', '.university'];
+      const isEduDomain = eduDomains.some((d: string) => domain.includes(d));
+      if (!isEduDomain) {
+        return res.status(400).json({ success: false, error: { code: 'NOT_EDU_EMAIL', message: 'This does not appear to be an education email address' } });
+      }
+
+      const db = DatabaseManager.getInstance().getDatabase();
+
+      // Check if this edu email is already verified by another account
+      const existingEdu = await db.get(
+        'SELECT userID FROM User WHERE eduEmail = ? AND eduVerified = 1 AND userID != ?',
+        [eduEmail, user.userID]
+      );
+      if (existingEdu) {
+        return res.status(400).json({ success: false, error: { code: 'EDU_EMAIL_ALREADY_USED', message: 'This education email is already verified by another account' } });
+      }
+
+      // Invalidate old codes
+      await db.run('UPDATE VerificationCode SET used = 1 WHERE email = ? AND used = 0', [eduEmail]);
+
+      // Generate and send code
+      const code = generateVerificationCode();
+      const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString();
+      const metadata = JSON.stringify({ type: 'edu_verify', userID: user.userID });
+      await db.run(
+        'INSERT INTO VerificationCode (email, code, metadata, expiresAt) VALUES (?, ?, ?, ?)',
+        [eduEmail, code, metadata, expiresAt]
+      );
+
+      const sent = await sendVerificationEmail(eduEmail, code);
+      if (!sent) {
+        return res.status(500).json({ success: false, error: { code: 'EMAIL_FAILED', message: 'Failed to send verification email' } });
+      }
+
+      return res.json({ success: true, message: 'Verification code sent to education email' });
+    } catch (error) {
+      console.error('Edu verify send code error:', error);
+      return res.status(500).json({ success: false, error: { code: 'SEND_CODE_FAILED', message: 'Failed to send code' } });
+    }
+  }
+);
+
+/**
+ * @route   POST /api/auth/edu-verify/confirm
+ * @desc    Confirm education email verification
+ * @access  Private
+ */
+router.post('/edu-verify/confirm',
+  authenticateToken,
+  [
+    body('eduEmail').isEmail().withMessage('Valid education email is required'),
+    body('code').isLength({ min: 6, max: 6 }).withMessage('6-digit code is required'),
+  ],
+  async (req: express.Request, res: express.Response) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({ success: false, error: { code: 'VALIDATION_ERROR', message: 'Invalid input' } });
+      }
+
+      const user = (req as any).user;
+      const { eduEmail, code } = req.body;
+      const db = DatabaseManager.getInstance().getDatabase();
+
+      // Verify code
+      const record = await db.get(
+        'SELECT * FROM VerificationCode WHERE email = ? AND code = ? AND used = 0 AND expiresAt > ? ORDER BY createdAt DESC LIMIT 1',
+        [eduEmail, code, new Date().toISOString()]
+      );
+      if (!record) {
+        return res.status(400).json({ success: false, error: { code: 'INVALID_CODE', message: 'Invalid or expired verification code' } });
+      }
+
+      // Mark code as used
+      await db.run('UPDATE VerificationCode SET used = 1 WHERE id = ?', [record.id]);
+
+      // Check if this edu email is already verified by another account
+      const existingEdu = await db.get(
+        'SELECT userID FROM User WHERE eduEmail = ? AND eduVerified = 1 AND userID != ?',
+        [eduEmail, user.userID]
+      );
+      if (existingEdu) {
+        return res.status(400).json({ success: false, error: { code: 'EDU_EMAIL_ALREADY_USED', message: 'This education email is already verified by another account' } });
+      }
+
+      // Update user edu verification status
+      await getUserModel().updateUser(user.userID, { eduVerified: true, eduEmail } as any);
+
+      const updatedUser = await getUserModel().getUserById(user.userID);
+
+      return res.json({
+        success: true,
+        data: {
+          user: {
+            userID: updatedUser!.userID,
+            email: updatedUser!.email,
+            name: updatedUser!.name,
+            profileImage: updatedUser!.profileImage,
+            bio: updatedUser!.bio,
+            eduVerified: true,
+            eduEmail,
+            isVerified: updatedUser!.isVerified,
+            isAdmin: updatedUser!.isAdmin,
+            preferredLanguage: updatedUser!.preferredLanguage,
+          }
+        },
+        message: 'Education email verified successfully'
+      });
+    } catch (error) {
+      console.error('Edu verify confirm error:', error);
+      return res.status(500).json({ success: false, error: { code: 'VERIFICATION_FAILED', message: 'Failed to verify education email' } });
     }
   }
 );

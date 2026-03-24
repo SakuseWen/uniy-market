@@ -7,6 +7,8 @@ export interface User {
   phone?: string;
   profileImage?: string;
   bio?: string;
+  eduVerified?: boolean;
+  eduEmail?: string;
   isVerified: boolean;
   preferredLanguage: 'en' | 'th' | 'zh';
   isAdmin: boolean;

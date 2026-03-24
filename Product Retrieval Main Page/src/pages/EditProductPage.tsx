@@ -75,7 +75,6 @@ export default function EditProductPage() {
   const [newImagePreviews, setNewImagePreviews] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [userVerified] = useState(true);
   const [imagesToDelete, setImagesToDelete] = useState<string[]>([]);
 
   // Fetch product data
@@ -233,7 +232,6 @@ export default function EditProductPage() {
         <Header
           language={language}
           onLanguageChange={handleLanguageChange}
-          userVerified={userVerified}
           unreadMessages={0}
         />
         <div className="flex items-center justify-center py-16">
@@ -251,7 +249,6 @@ export default function EditProductPage() {
         <Header
           language={language}
           onLanguageChange={handleLanguageChange}
-          userVerified={userVerified}
           unreadMessages={0}
         />
         <div className="container mx-auto px-4 py-8">
@@ -272,7 +269,6 @@ export default function EditProductPage() {
       <Header
         language={language}
         onLanguageChange={handleLanguageChange}
-        userVerified={userVerified}
         unreadMessages={0}
       />
 

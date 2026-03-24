@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router';
 import { Header } from '../components/Header';
+import { AvatarCropper } from '../components/AvatarCropper';
 import { translate } from '../lib/i18n';
 import { useLanguage } from '../lib/LanguageContext';
 import { Button } from '../components/ui/button';
@@ -10,7 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs'
 import { Avatar, AvatarFallback, AvatarImage } from '../components/ui/avatar';
 import { Input } from '../components/ui/input';
 import { Textarea } from '../components/ui/textarea';
-import { ArrowLeft, Edit2, Trash2, Loader2, Camera } from 'lucide-react';
+import { ArrowLeft, Edit2, Trash2, Loader2, Camera, GraduationCap, UserX } from 'lucide-react';
 import { toast } from 'sonner';
 import { Toaster } from '../components/ui/sonner';
 import { productService } from '../services';
@@ -25,6 +26,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '../components/ui/alert-dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../components/ui/dialog';
 
 interface UserProduct {
   listingID: string;
@@ -38,13 +40,12 @@ interface UserProduct {
 
 function MyPage() {
   const navigate = useNavigate();
-  const { user, isAuthenticated, updateUser } = useAuth();
+  const { user, isAuthenticated, updateUser, logout } = useAuth();
   const { language, setLanguage } = useLanguage();
   const t = (key: any) => translate(language, key);
 
   const [products, setProducts] = useState<UserProduct[]>([]);
   const [loading, setLoading] = useState(true);
-  const [userVerified] = useState(true);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [showChat, setShowChat] = useState(true);
@@ -56,6 +57,21 @@ function MyPage() {
   const [savingProfile, setSavingProfile] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const avatarInputRef = useRef<HTMLInputElement>(null);
+  const [cropperImage, setCropperImage] = useState<string | null>(null);
+  const [showCropper, setShowCropper] = useState(false);
+
+  // Delete account state
+  const [deleteStep, setDeleteStep] = useState<'closed' | 'notice' | 'verify'>('closed');
+  const [deleteCode, setDeleteCode] = useState('');
+  const [sendingDeleteCode, setSendingDeleteCode] = useState(false);
+  const [deletingAccount, setDeletingAccount] = useState(false);
+
+  // Education verification state
+  const [eduStep, setEduStep] = useState<'closed' | 'email' | 'code'>('closed');
+  const [eduEmail, setEduEmail] = useState('');
+  const [eduCode, setEduCode] = useState('');
+  const [sendingEduCode, setSendingEduCode] = useState(false);
+  const [verifyingEdu, setVerifyingEdu] = useState(false);
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -134,25 +150,120 @@ function MyPage() {
     }
   };
 
-  // Handle avatar upload
-  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Handle avatar file selection - open cropper
+  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      setCropperImage(reader.result as string);
+      setShowCropper(true);
+    };
+    reader.readAsDataURL(file);
+    // Reset input so same file can be selected again
+    e.target.value = '';
+  };
+
+  // Handle cropped avatar upload
+  const handleCroppedAvatar = async (blob: Blob) => {
     setUploadingAvatar(true);
     try {
       const formData = new FormData();
-      formData.append('avatar', file);
+      formData.append('avatar', blob, 'avatar.jpg');
       const response = await apiClient.post('/auth/profile/avatar', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
       const updatedUser = response.data.data.user;
       updateUser(updatedUser);
       toast.success(t('avatarUpdated'));
+      setShowCropper(false);
+      setCropperImage(null);
     } catch (error: any) {
       console.error('Avatar upload error:', error);
       toast.error(t('avatarUploadFailed'));
     } finally {
       setUploadingAvatar(false);
+    }
+  };
+
+  // Send delete account verification code
+  const handleSendDeleteCode = async () => {
+    setSendingDeleteCode(true);
+    try {
+      await apiClient.post('/auth/delete-account/send-code');
+      toast.success(t('deleteCodeSent'));
+      setDeleteStep('verify');
+    } catch (error: any) {
+      console.error('Send delete code error:', error);
+      toast.error(t('deleteCodeFailed'));
+    } finally {
+      setSendingDeleteCode(false);
+    }
+  };
+
+  // Confirm account deletion
+  const handleConfirmDelete = async () => {
+    if (deleteCode.length !== 6) return;
+    setDeletingAccount(true);
+    try {
+      await apiClient.post('/auth/delete-account/confirm', { code: deleteCode });
+      toast.success(t('accountDeleted'));
+      setDeleteStep('closed');
+      logout();
+      navigate('/login');
+    } catch (error: any) {
+      console.error('Delete account error:', error);
+      toast.error(t('deleteVerifyFailed'));
+    } finally {
+      setDeletingAccount(false);
+    }
+  };
+
+  // Send edu verification code
+  const handleSendEduCode = async () => {
+    if (!eduEmail.trim()) return;
+    setSendingEduCode(true);
+    try {
+      await apiClient.post('/auth/edu-verify/send-code', { eduEmail });
+      toast.success(t('eduCodeSent'));
+      setEduStep('code');
+    } catch (error: any) {
+      const code = error.response?.data?.error?.code;
+      if (code === 'NOT_EDU_EMAIL') {
+        toast.error(t('notEduEmail'));
+      } else if (code === 'ALREADY_EDU_VERIFIED') {
+        toast.error(t('alreadyEduVerified'));
+      } else if (code === 'EDU_EMAIL_ALREADY_USED') {
+        toast.error(t('eduEmailAlreadyUsed'));
+      } else {
+        toast.error(t('eduCodeFailed'));
+      }
+    } finally {
+      setSendingEduCode(false);
+    }
+  };
+
+  // Confirm edu verification
+  const handleConfirmEdu = async () => {
+    if (eduCode.length !== 6) return;
+    setVerifyingEdu(true);
+    try {
+      const response = await apiClient.post('/auth/edu-verify/confirm', { eduEmail, code: eduCode });
+      const updatedUser = response.data.data.user;
+      updateUser(updatedUser);
+      toast.success(t('eduVerifySuccess'));
+      setEduStep('closed');
+      setEduEmail('');
+      setEduCode('');
+    } catch (error: any) {
+      const code = error.response?.data?.error?.code;
+      if (code === 'EDU_EMAIL_ALREADY_USED') {
+        toast.error(t('eduEmailAlreadyUsed'));
+      } else {
+        toast.error(t('eduVerifyFailed'));
+      }
+    } finally {
+      setVerifyingEdu(false);
     }
   };
 
@@ -192,7 +303,6 @@ function MyPage() {
       <Header
         language={language}
         onLanguageChange={handleLanguageChange}
-        userVerified={userVerified}
         unreadMessages={0}
       />
 
@@ -280,9 +390,24 @@ function MyPage() {
                 <p className="text-sm text-gray-500">{user?.email || ''}</p>
                 {user?.bio && <p className="text-sm text-gray-600 mt-1">{user.bio}</p>}
               </div>
-              <Button variant="outline" size="sm" onClick={() => { setIsEditing(true); setEditName(user?.name || ''); setEditBio(user?.bio || ''); }} className="gap-1">
-                <Edit2 className="w-4 h-4" /> {t('editProfile')}
-              </Button>
+              <div className="flex flex-col gap-2">
+                <Button variant="outline" size="sm" onClick={() => { setIsEditing(true); setEditName(user?.name || ''); setEditBio(user?.bio || ''); }} className="gap-1">
+                  <Edit2 className="w-4 h-4" /> {t('editProfile')}
+                </Button>
+                {user?.eduVerified ? (
+                  <Badge variant="secondary" className="gap-1 py-1.5 px-3">
+                    <GraduationCap className="w-4 h-4 text-green-600" />
+                    <span className="text-green-600">✓</span> {t('eduVerified')}
+                  </Badge>
+                ) : (
+                  <Button variant="outline" size="sm" className="gap-1" onClick={() => setEduStep('email')}>
+                    <GraduationCap className="w-4 h-4" /> {t('eduVerification')}
+                  </Button>
+                )}
+                <Button variant="outline" size="sm" className="gap-1 text-red-500 border-red-200 hover:bg-red-50 hover:text-red-600" onClick={() => setDeleteStep('notice')}>
+                  <UserX className="w-4 h-4" /> {t('deleteAccount')}
+                </Button>
+              </div>
             </div>
           )}
         </div>
@@ -342,7 +467,13 @@ function MyPage() {
                     <CardDescription>{t('manageListings')}</CardDescription>
                   </div>
                   <Button
-                    onClick={() => navigate('/create-product')}
+                    onClick={() => {
+                      if (!user?.eduVerified) {
+                        toast.error(t('eduRequiredToPost'));
+                        return;
+                      }
+                      navigate('/create-product');
+                    }}
                     className="bg-gradient-to-r from-blue-500 to-purple-600"
                   >
                     + {t('createNewProduct')}
@@ -368,7 +499,13 @@ function MyPage() {
                   <h3 className="text-xl font-semibold mb-2">{t('noProductsYet')}</h3>
                   <p className="text-gray-600 mb-6">{t('startSelling')}</p>
                   <Button
-                    onClick={() => navigate('/create-product')}
+                    onClick={() => {
+                      if (!user?.eduVerified) {
+                        toast.error(t('eduRequiredToPost'));
+                        return;
+                      }
+                      navigate('/create-product');
+                    }}
                     className="bg-gradient-to-r from-blue-500 to-purple-600"
                   >
                     {t('createFirstProduct')}
@@ -469,6 +606,24 @@ function MyPage() {
         </Tabs>
       </div>
 
+      {/* Avatar Cropper Dialog */}
+      {cropperImage && (
+        <AvatarCropper
+          imageSrc={cropperImage}
+          open={showCropper}
+          onClose={() => { setShowCropper(false); setCropperImage(null); }}
+          onCropComplete={handleCroppedAvatar}
+          saving={uploadingAvatar}
+          labels={{
+            title: t('changeAvatar'),
+            zoom: t('zoom') || 'Zoom',
+            cancel: t('cancelEdit'),
+            save: t('saveProfile'),
+            saving: t('saving'),
+          }}
+        />
+      )}
+
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={!!deleteConfirm} onOpenChange={(open: any) => !open && setDeleteConfirm(null)}>
         <AlertDialogContent>
@@ -497,6 +652,112 @@ function MyPage() {
           </div>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Delete Account Dialog */}
+      <Dialog open={deleteStep !== 'closed'} onOpenChange={(v) => { if (!v) { setDeleteStep('closed'); setDeleteCode(''); } }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-red-600">{t('deleteAccountNotice')}</DialogTitle>
+          </DialogHeader>
+          {deleteStep === 'notice' && (
+            <div className="space-y-4">
+              <p className="text-sm font-medium text-gray-700">{t('deleteAccountWarning')}</p>
+              <ul className="space-y-2 text-sm text-gray-600">
+                <li className="flex gap-2"><span className="text-red-500 font-bold">•</span>{t('deleteAccountConsequence1')}</li>
+                <li className="flex gap-2"><span className="text-red-500 font-bold">•</span>{t('deleteAccountConsequence2')}</li>
+                <li className="flex gap-2"><span className="text-red-500 font-bold">•</span>{t('deleteAccountConsequence3')}</li>
+                <li className="flex gap-2"><span className="text-red-500 font-bold">•</span>{t('deleteAccountConsequence4')}</li>
+              </ul>
+              <p className="text-sm text-gray-500">{t('deleteAccountConfirmPrompt')}</p>
+              <div className="flex justify-end gap-2 pt-2">
+                <Button variant="outline" size="sm" onClick={() => { setDeleteStep('closed'); setDeleteCode(''); }}>
+                  {t('cancelDelete')}
+                </Button>
+                <Button size="sm" variant="destructive" onClick={handleSendDeleteCode} disabled={sendingDeleteCode}>
+                  {sendingDeleteCode ? <><Loader2 className="w-4 h-4 mr-1 animate-spin" />{t('sendingDeleteCode')}</> : t('proceedDelete')}
+                </Button>
+              </div>
+            </div>
+          )}
+          {deleteStep === 'verify' && (
+            <div className="space-y-4">
+              <p className="text-sm text-gray-600">{t('enterDeleteCode')}</p>
+              <Input
+                value={deleteCode}
+                onChange={(e) => setDeleteCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                placeholder="000000"
+                maxLength={6}
+                className="text-center text-2xl tracking-widest"
+              />
+              <div className="flex justify-end gap-2 pt-2">
+                <Button variant="outline" size="sm" onClick={() => { setDeleteStep('closed'); setDeleteCode(''); }}>
+                  {t('cancelDelete')}
+                </Button>
+                <Button size="sm" variant="destructive" onClick={handleConfirmDelete} disabled={deletingAccount || deleteCode.length !== 6}>
+                  {deletingAccount ? <><Loader2 className="w-4 h-4 mr-1 animate-spin" />{t('deletingAccount')}</> : t('confirmDelete')}
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Education Verification Dialog */}
+      <Dialog open={eduStep !== 'closed'} onOpenChange={(v) => { if (!v) { setEduStep('closed'); setEduEmail(''); setEduCode(''); } }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <GraduationCap className="w-5 h-5 text-blue-600" />
+              {t('eduVerification')}
+            </DialogTitle>
+          </DialogHeader>
+          {eduStep === 'email' && (
+            <div className="space-y-4">
+              <p className="text-sm text-gray-600">{t('eduVerifyDesc')}</p>
+              <div>
+                <label className="text-sm text-gray-500 mb-1 block">{t('eduEmailLabel')}</label>
+                <Input
+                  value={eduEmail}
+                  onChange={(e) => setEduEmail(e.target.value)}
+                  placeholder={t('eduEmailPlaceholder')}
+                  type="email"
+                />
+              </div>
+              <p className="text-xs text-gray-400">{t('eduEmailHint')}</p>
+              <div className="flex justify-end gap-2 pt-2">
+                <Button variant="outline" size="sm" onClick={() => { setEduStep('closed'); setEduEmail(''); }}>
+                  {t('cancel')}
+                </Button>
+                <Button size="sm" onClick={handleSendEduCode} disabled={sendingEduCode || !eduEmail.trim()}
+                  className="bg-gradient-to-r from-blue-500 to-purple-600">
+                  {sendingEduCode ? <><Loader2 className="w-4 h-4 mr-1 animate-spin" />{t('sendingCode')}</> : t('sendEduCode')}
+                </Button>
+              </div>
+            </div>
+          )}
+          {eduStep === 'code' && (
+            <div className="space-y-4">
+              <p className="text-sm text-gray-600">{t('eduEnterCode')}</p>
+              <Input
+                value={eduCode}
+                onChange={(e) => setEduCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                placeholder="000000"
+                maxLength={6}
+                className="text-center text-2xl tracking-widest"
+              />
+              <div className="flex justify-end gap-2 pt-2">
+                <Button variant="outline" size="sm" onClick={() => { setEduStep('closed'); setEduEmail(''); setEduCode(''); }}>
+                  {t('cancel')}
+                </Button>
+                <Button size="sm" onClick={handleConfirmEdu} disabled={verifyingEdu || eduCode.length !== 6}
+                  className="bg-gradient-to-r from-blue-500 to-purple-600">
+                  {verifyingEdu ? <><Loader2 className="w-4 h-4 mr-1 animate-spin" />{t('verifying')}</> : t('verify')}
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

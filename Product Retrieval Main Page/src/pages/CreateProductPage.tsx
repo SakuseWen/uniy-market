@@ -49,6 +49,14 @@ export default function CreateProductPage() {
     }
   }, [isAuthenticated, navigate]);
 
+  // Redirect if not edu verified
+  useEffect(() => {
+    if (isAuthenticated && user && !user.eduVerified) {
+      toast.error(t(language, 'eduRequiredToPost'));
+      navigate('/my-page');
+    }
+  }, [isAuthenticated, user, navigate]);
+
   // Form state
   const [formData, setFormData] = useState({
     title: '',
@@ -63,7 +71,6 @@ export default function CreateProductPage() {
   const [images, setImages] = useState<File[]>([]);
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
-  const [userVerified] = useState(true);
 
   // Handle input change
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -226,7 +233,6 @@ export default function CreateProductPage() {
       <Header
         language={language}
         onLanguageChange={handleLanguageChange}
-        userVerified={userVerified}
         unreadMessages={0}
       />
 

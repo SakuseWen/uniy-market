@@ -83,6 +83,8 @@ export class DatabaseManager {
         preferredLanguage TEXT DEFAULT 'en',
         isAdmin BOOLEAN DEFAULT FALSE,
         bio TEXT,
+        eduVerified BOOLEAN DEFAULT FALSE,
+        eduEmail TEXT,
         status TEXT DEFAULT 'active' CHECK (status IN ('active', 'suspended', 'deleted')),
         createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
         updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP
@@ -93,6 +95,7 @@ export class DatabaseManager {
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         email TEXT NOT NULL,
         code TEXT NOT NULL,
+        metadata TEXT,
         expiresAt DATETIME NOT NULL,
         used BOOLEAN DEFAULT FALSE,
         createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
@@ -340,6 +343,21 @@ export class DatabaseManager {
     } catch (_e) {
       // Column already exists, ignore
     }
+
+    // Migration: add metadata column to VerificationCode if not exists
+    try {
+      await this.db.exec('ALTER TABLE VerificationCode ADD COLUMN metadata TEXT');
+    } catch (_e) {
+      // Column already exists, ignore
+    }
+
+    // Migration: add eduVerified and eduEmail columns if not exists
+    try {
+      await this.db.exec('ALTER TABLE User ADD COLUMN eduVerified BOOLEAN DEFAULT FALSE');
+    } catch (_e) { /* ignore */ }
+    try {
+      await this.db.exec('ALTER TABLE User ADD COLUMN eduEmail TEXT');
+    } catch (_e) { /* ignore */ }
 
     // Insert default data
     await this.insertDefaultData();
