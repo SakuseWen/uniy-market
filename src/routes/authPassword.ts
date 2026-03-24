@@ -2,9 +2,12 @@ import express from 'express';
 import { body, validationResult } from 'express-validator';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import fs from 'fs';
+import path from 'path';
 import { UserModel } from '../models/UserModel';
 import { DatabaseManager } from '../config/database';
 import { generateVerificationCode, sendVerificationEmail } from '../services/emailService';
+import { authenticateToken } from '../middleware/auth';
 
 const router = express.Router();
 let userModel: UserModel | null = null;
@@ -349,6 +352,98 @@ router.post('/resend-code',
     } catch (error) {
       console.error('Resend code error:', error);
       return res.status(500).json({ success: false, error: { code: 'RESEND_FAILED', message: 'Failed to resend code' } });
+    }
+  }
+);
+
+/**
+ * @route   POST /api/auth/delete-account/send-code
+ * @desc    Send verification code for account deletion
+ * @access  Private
+ */
+router.post('/delete-account/send-code', authenticateToken, async (req: express.Request, res: express.Response) => {
+  try {
+    const user = (req as any).user;
+    const db = DatabaseManager.getInstance().getDatabase();
+
+    // Invalidate old codes
+    await db.run('UPDATE VerificationCode SET used = 1 WHERE email = ? AND used = 0', [user.email]);
+
+    // Generate new code
+    const code = generateVerificationCode();
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString();
+    await db.run('INSERT INTO VerificationCode (email, code, expiresAt) VALUES (?, ?, ?)', [user.email, code, expiresAt]);
+
+    const sent = await sendVerificationEmail(user.email, code);
+    if (!sent) {
+      return res.status(500).json({ success: false, error: { code: 'EMAIL_FAILED', message: 'Failed to send verification email' } });
+    }
+
+    return res.json({ success: true, message: 'Verification code sent' });
+  } catch (error) {
+    console.error('Delete account send code error:', error);
+    return res.status(500).json({ success: false, error: { code: 'SEND_CODE_FAILED', message: 'Failed to send code' } });
+  }
+});
+
+/**
+ * @route   POST /api/auth/delete-account/confirm
+ * @desc    Confirm account deletion with verification code
+ * @access  Private
+ */
+router.post('/delete-account/confirm',
+  authenticateToken,
+  [body('code').isLength({ min: 6, max: 6 }).withMessage('6-digit code is required')],
+  async (req: express.Request, res: express.Response) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({ success: false, error: { code: 'VALIDATION_ERROR', message: 'Invalid code' } });
+      }
+
+      const user = (req as any).user;
+      const { code } = req.body;
+      const db = DatabaseManager.getInstance().getDatabase();
+
+      // Verify code
+      const record = await db.get(
+        'SELECT * FROM VerificationCode WHERE email = ? AND code = ? AND used = 0 AND expiresAt > ? ORDER BY createdAt DESC LIMIT 1',
+        [user.email, code, new Date().toISOString()]
+      );
+      if (!record) {
+        return res.status(400).json({ success: false, error: { code: 'INVALID_CODE', message: 'Invalid or expired verification code' } });
+      }
+
+      // Mark code as used
+      await db.run('UPDATE VerificationCode SET used = 1 WHERE id = ?', [record.id]);
+
+      // Delete avatar file from disk
+      if (user.profileImage && user.profileImage.startsWith('/uploads/avatars/')) {
+        try { fs.unlinkSync(path.join(__dirname, '../../public', user.profileImage)); } catch (_e) { /* ignore */ }
+      }
+
+      // Delete product image files from disk
+      const productImages = await db.all(
+        `SELECT pi.imagePath FROM ProductImage pi
+         JOIN ProductListing pl ON pi.listingID = pl.listingID
+         WHERE pl.sellerID = ?`, [user.userID]
+      );
+      for (const img of productImages) {
+        if (img.imagePath) {
+          try { fs.unlinkSync(path.join(__dirname, '../../public', img.imagePath)); } catch (_e) { /* ignore */ }
+        }
+      }
+
+      // Hard delete user - CASCADE will handle related records
+      await db.run('DELETE FROM User WHERE userID = ?', [user.userID]);
+
+      // Also clean up verification codes
+      await db.run('DELETE FROM VerificationCode WHERE email = ?', [user.email]);
+
+      return res.json({ success: true, message: 'Account deleted successfully' });
+    } catch (error) {
+      console.error('Delete account confirm error:', error);
+      return res.status(500).json({ success: false, error: { code: 'DELETE_FAILED', message: 'Failed to delete account' } });
     }
   }
 );

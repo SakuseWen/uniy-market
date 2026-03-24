@@ -11,7 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs'
 import { Avatar, AvatarFallback, AvatarImage } from '../components/ui/avatar';
 import { Input } from '../components/ui/input';
 import { Textarea } from '../components/ui/textarea';
-import { ArrowLeft, Edit2, Trash2, Loader2, Camera } from 'lucide-react';
+import { ArrowLeft, Edit2, Trash2, Loader2, Camera, GraduationCap, UserX } from 'lucide-react';
 import { toast } from 'sonner';
 import { Toaster } from '../components/ui/sonner';
 import { productService } from '../services';
@@ -26,6 +26,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '../components/ui/alert-dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../components/ui/dialog';
 
 interface UserProduct {
   listingID: string;
@@ -39,7 +40,7 @@ interface UserProduct {
 
 function MyPage() {
   const navigate = useNavigate();
-  const { user, isAuthenticated, updateUser } = useAuth();
+  const { user, isAuthenticated, updateUser, logout } = useAuth();
   const { language, setLanguage } = useLanguage();
   const t = (key: any) => translate(language, key);
 
@@ -59,6 +60,12 @@ function MyPage() {
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const [cropperImage, setCropperImage] = useState<string | null>(null);
   const [showCropper, setShowCropper] = useState(false);
+
+  // Delete account state
+  const [deleteStep, setDeleteStep] = useState<'closed' | 'notice' | 'verify'>('closed');
+  const [deleteCode, setDeleteCode] = useState('');
+  const [sendingDeleteCode, setSendingDeleteCode] = useState(false);
+  const [deletingAccount, setDeletingAccount] = useState(false);
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -170,6 +177,39 @@ function MyPage() {
       toast.error(t('avatarUploadFailed'));
     } finally {
       setUploadingAvatar(false);
+    }
+  };
+
+  // Send delete account verification code
+  const handleSendDeleteCode = async () => {
+    setSendingDeleteCode(true);
+    try {
+      await apiClient.post('/auth/delete-account/send-code');
+      toast.success(t('deleteCodeSent'));
+      setDeleteStep('verify');
+    } catch (error: any) {
+      console.error('Send delete code error:', error);
+      toast.error(t('deleteCodeFailed'));
+    } finally {
+      setSendingDeleteCode(false);
+    }
+  };
+
+  // Confirm account deletion
+  const handleConfirmDelete = async () => {
+    if (deleteCode.length !== 6) return;
+    setDeletingAccount(true);
+    try {
+      await apiClient.post('/auth/delete-account/confirm', { code: deleteCode });
+      toast.success(t('accountDeleted'));
+      setDeleteStep('closed');
+      logout();
+      navigate('/login');
+    } catch (error: any) {
+      console.error('Delete account error:', error);
+      toast.error(t('deleteVerifyFailed'));
+    } finally {
+      setDeletingAccount(false);
     }
   };
 
@@ -297,9 +337,17 @@ function MyPage() {
                 <p className="text-sm text-gray-500">{user?.email || ''}</p>
                 {user?.bio && <p className="text-sm text-gray-600 mt-1">{user.bio}</p>}
               </div>
-              <Button variant="outline" size="sm" onClick={() => { setIsEditing(true); setEditName(user?.name || ''); setEditBio(user?.bio || ''); }} className="gap-1">
-                <Edit2 className="w-4 h-4" /> {t('editProfile')}
-              </Button>
+              <div className="flex flex-col gap-2">
+                <Button variant="outline" size="sm" onClick={() => { setIsEditing(true); setEditName(user?.name || ''); setEditBio(user?.bio || ''); }} className="gap-1">
+                  <Edit2 className="w-4 h-4" /> {t('editProfile')}
+                </Button>
+                <Button variant="outline" size="sm" className="gap-1" disabled>
+                  <GraduationCap className="w-4 h-4" /> {t('eduVerification')}
+                </Button>
+                <Button variant="outline" size="sm" className="gap-1 text-red-500 border-red-200 hover:bg-red-50 hover:text-red-600" onClick={() => setDeleteStep('notice')}>
+                  <UserX className="w-4 h-4" /> {t('deleteAccount')}
+                </Button>
+              </div>
             </div>
           )}
         </div>
@@ -532,6 +580,55 @@ function MyPage() {
           </div>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Delete Account Dialog */}
+      <Dialog open={deleteStep !== 'closed'} onOpenChange={(v) => { if (!v) { setDeleteStep('closed'); setDeleteCode(''); } }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-red-600">{t('deleteAccountNotice')}</DialogTitle>
+          </DialogHeader>
+          {deleteStep === 'notice' && (
+            <div className="space-y-4">
+              <p className="text-sm font-medium text-gray-700">{t('deleteAccountWarning')}</p>
+              <ul className="space-y-2 text-sm text-gray-600">
+                <li className="flex gap-2"><span className="text-red-500 font-bold">•</span>{t('deleteAccountConsequence1')}</li>
+                <li className="flex gap-2"><span className="text-red-500 font-bold">•</span>{t('deleteAccountConsequence2')}</li>
+                <li className="flex gap-2"><span className="text-red-500 font-bold">•</span>{t('deleteAccountConsequence3')}</li>
+                <li className="flex gap-2"><span className="text-red-500 font-bold">•</span>{t('deleteAccountConsequence4')}</li>
+              </ul>
+              <p className="text-sm text-gray-500">{t('deleteAccountConfirmPrompt')}</p>
+              <div className="flex justify-end gap-2 pt-2">
+                <Button variant="outline" size="sm" onClick={() => { setDeleteStep('closed'); setDeleteCode(''); }}>
+                  {t('cancelDelete')}
+                </Button>
+                <Button size="sm" variant="destructive" onClick={handleSendDeleteCode} disabled={sendingDeleteCode}>
+                  {sendingDeleteCode ? <><Loader2 className="w-4 h-4 mr-1 animate-spin" />{t('sendingDeleteCode')}</> : t('proceedDelete')}
+                </Button>
+              </div>
+            </div>
+          )}
+          {deleteStep === 'verify' && (
+            <div className="space-y-4">
+              <p className="text-sm text-gray-600">{t('enterDeleteCode')}</p>
+              <Input
+                value={deleteCode}
+                onChange={(e) => setDeleteCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                placeholder="000000"
+                maxLength={6}
+                className="text-center text-2xl tracking-widest"
+              />
+              <div className="flex justify-end gap-2 pt-2">
+                <Button variant="outline" size="sm" onClick={() => { setDeleteStep('closed'); setDeleteCode(''); }}>
+                  {t('cancelDelete')}
+                </Button>
+                <Button size="sm" variant="destructive" onClick={handleConfirmDelete} disabled={deletingAccount || deleteCode.length !== 6}>
+                  {deletingAccount ? <><Loader2 className="w-4 h-4 mr-1 animate-spin" />{t('deletingAccount')}</> : t('confirmDelete')}
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
