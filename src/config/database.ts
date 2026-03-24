@@ -1,6 +1,7 @@
 import sqlite3 from 'sqlite3';
 import { Database, open } from 'sqlite';
 import path from 'path';
+import fs from 'fs';
 
 export class DatabaseManager {
   private static instance: DatabaseManager;
@@ -21,6 +22,14 @@ export class DatabaseManager {
         process.env['NODE_ENV'] === 'test'
           ? ':memory:'
           : process.env['DATABASE_URL'] || path.join(process.cwd(), 'data', 'uniy_market.db');
+
+      // Ensure the directory exists
+      if (dbPath !== ':memory:') {
+        const dir = path.dirname(dbPath);
+        if (!fs.existsSync(dir)) {
+          fs.mkdirSync(dir, { recursive: true });
+        }
+      }
 
       this.db = await open({
         filename: dbPath,
