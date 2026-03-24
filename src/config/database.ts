@@ -76,6 +76,7 @@ export class DatabaseManager {
         userID TEXT PRIMARY KEY,
         email TEXT UNIQUE NOT NULL,
         name TEXT NOT NULL,
+        password TEXT,
         phone TEXT,
         profileImage TEXT,
         isVerified BOOLEAN DEFAULT FALSE,
@@ -85,6 +86,18 @@ export class DatabaseManager {
         createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
         updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP
       );
+
+      -- Verification Codes table
+      CREATE TABLE IF NOT EXISTS VerificationCode (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        email TEXT NOT NULL,
+        code TEXT NOT NULL,
+        expiresAt DATETIME NOT NULL,
+        used BOOLEAN DEFAULT FALSE,
+        createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
+      );
+      CREATE INDEX IF NOT EXISTS idx_verification_email ON VerificationCode(email);
+      CREATE INDEX IF NOT EXISTS idx_verification_expires ON VerificationCode(expiresAt);
 
       -- Student table
       CREATE TABLE IF NOT EXISTS Student (

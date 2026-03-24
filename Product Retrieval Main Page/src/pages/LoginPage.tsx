@@ -43,7 +43,12 @@ export default function LoginPage() {
     try {
       await login(loginEmail, loginPassword);
       navigate('/');
-    } catch (err) {
+    } catch (err: any) {
+      // Check if user is not verified
+      if (err.message === 'USER_NOT_VERIFIED' || err.message?.includes('not verified')) {
+        navigate('/verify-email', { state: { email: loginEmail } });
+        return;
+      }
       setError('Login failed. Please check your email and password.');
       console.error('Login error:', err);
     } finally {
@@ -84,8 +89,8 @@ export default function LoginPage() {
         throw new Error(data?.error?.message || 'Registration failed');
       }
 
-      // 注册成功后跳转邮箱验证页 / Redirect to email verification after registration
-      navigate('/verify-email');
+      // 注册成功后跳转邮箱验证页，传递email / Redirect to email verification after registration
+      navigate('/verify-email', { state: { email: registerEmail } });
     } catch (err: any) {
       setError(err.message || 'Registration failed. Please try again.');
       console.error('Register error:', err);

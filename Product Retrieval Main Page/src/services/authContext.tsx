@@ -54,7 +54,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
 
       if (!response.ok) {
-        throw new Error('Login failed');
+        const errorData = await response.json().catch(() => null);
+        const errorCode = errorData?.error?.code || 'LOGIN_FAILED';
+        throw new Error(errorCode);
       }
 
       const data = await response.json();

@@ -210,7 +210,6 @@ export const translations = {
 
     // Create/Edit Product Page
     backToProducts: 'Back to Products',
-    createNewProduct: 'Create New Product',
     fillDetails: 'Fill in the details to list your product',
     productTitle: 'Product Title',
     enterProductTitle: 'Enter product title',
@@ -262,12 +261,18 @@ export const translations = {
 
     // Email Verification
     verifyYourEmail: 'Verify Your Email',
-    verifyEmailDesc: 'We have sent a code to your email. Please enter the verification code.',
+    verifyEmailDesc: 'We have sent a verification code to your email. Please enter the code below.',
     enterCode: 'Enter 6-digit code',
-    codeExpiry: 'Check your university email inbox. The code expires in 10 minutes.',
+    codeExpiry: 'Check your email inbox. The code expires in 10 minutes.',
     verifying: 'Verifying...',
     verify: 'Verify',
     backToLogin: '← Back to Login',
+    invalidCode: 'Please enter a valid 6-digit code.',
+    emailRequired: 'Email is required. Please register again.',
+    verificationSuccess: 'Email verified successfully! Redirecting...',
+    codeSent: 'A new verification code has been sent.',
+    resendCode: 'Didn\'t receive the code? Resend',
+    sendingCode: 'Sending...',
   },
   zh: {
     // Header
@@ -408,6 +413,7 @@ export const translations = {
     detail: '详情',
     postQuestion: '发布问题或评论...',
     noCommentsYet: '暂无评论。来做第一个提问的人吧！',
+    logout: '退出登录',
 
     // Chat Page UI
     typeMessage: '输入消息...',
@@ -477,7 +483,6 @@ export const translations = {
 
     // Create/Edit Product Page
     backToProducts: '返回商品列表',
-    createNewProduct: '发布新商品',
     fillDetails: '填写商品详情以发布您的商品',
     productTitle: '商品标题',
     enterProductTitle: '输入商品标题',
@@ -529,12 +534,18 @@ export const translations = {
 
     // Email Verification
     verifyYourEmail: '验证您的邮箱',
-    verifyEmailDesc: '我们已向您的邮箱发送了验证码，请输入验证码。',
+    verifyEmailDesc: '我们已向您的邮箱发送了验证码，请输入下方验证码。',
     enterCode: '输入6位验证码',
-    codeExpiry: '请查看您的大学邮箱收件箱，验证码将在10分钟后过期。',
+    codeExpiry: '请查看您的邮箱收件箱，验证码将在10分钟后过期。',
     verifying: '验证中...',
     verify: '验证',
     backToLogin: '← 返回登录',
+    invalidCode: '请输入有效的6位验证码。',
+    emailRequired: '需要邮箱地址，请重新注册。',
+    verificationSuccess: '邮箱验证成功！正在跳转...',
+    codeSent: '新的验证码已发送。',
+    resendCode: '没有收到验证码？重新发送',
+    sendingCode: '发送中...',
   },
   th: {
     // Header
@@ -745,7 +756,6 @@ export const translations = {
 
     // Create/Edit Product Page
     backToProducts: 'กลับไปหน้าสินค้า',
-    createNewProduct: 'สร้างสินค้าใหม่',
     fillDetails: 'กรอกรายละเอียดเพื่อลงขายสินค้าของคุณ',
     productTitle: 'ชื่อสินค้า',
     enterProductTitle: 'กรอกชื่อสินค้า',
@@ -797,12 +807,18 @@ export const translations = {
 
     // Email Verification
     verifyYourEmail: 'ยืนยันอีเมลของคุณ',
-    verifyEmailDesc: 'เราได้ส่งรหัสไปยังอีเมลของคุณแล้ว กรุณากรอกรหัสยืนยัน',
+    verifyEmailDesc: 'เราได้ส่งรหัสยืนยันไปยังอีเมลของคุณแล้ว กรุณากรอกรหัสด้านล่าง',
     enterCode: 'กรอกรหัส 6 หลัก',
-    codeExpiry: 'ตรวจสอบกล่องจดหมายอีเมลมหาวิทยาลัยของคุณ รหัสจะหมดอายุใน 10 นาที',
+    codeExpiry: 'ตรวจสอบกล่องจดหมายอีเมลของคุณ รหัสจะหมดอายุใน 10 นาที',
     verifying: 'กำลังยืนยัน...',
     verify: 'ยืนยัน',
     backToLogin: '← กลับไปเข้าสู่ระบบ',
+    invalidCode: 'กรุณากรอกรหัส 6 หลักที่ถูกต้อง',
+    emailRequired: 'ต้องการอีเมล กรุณาลงทะเบียนใหม่',
+    verificationSuccess: 'ยืนยันอีเมลสำเร็จ! กำลังเปลี่ยนเส้นทาง...',
+    codeSent: 'ส่งรหัสยืนยันใหม่แล้ว',
+    resendCode: 'ไม่ได้รับรหัส? ส่งอีกครั้ง',
+    sendingCode: 'กำลังส่ง...',
   },
 };
 
