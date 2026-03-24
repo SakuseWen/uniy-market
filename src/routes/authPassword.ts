@@ -513,6 +513,15 @@ router.post('/edu-verify/send-code',
 
       const db = DatabaseManager.getInstance().getDatabase();
 
+      // Check if this edu email is already verified by another account
+      const existingEdu = await db.get(
+        'SELECT userID FROM User WHERE eduEmail = ? AND eduVerified = 1 AND userID != ?',
+        [eduEmail, user.userID]
+      );
+      if (existingEdu) {
+        return res.status(400).json({ success: false, error: { code: 'EDU_EMAIL_ALREADY_USED', message: 'This education email is already verified by another account' } });
+      }
+
       // Invalidate old codes
       await db.run('UPDATE VerificationCode SET used = 1 WHERE email = ? AND used = 0', [eduEmail]);
 
@@ -571,6 +580,15 @@ router.post('/edu-verify/confirm',
 
       // Mark code as used
       await db.run('UPDATE VerificationCode SET used = 1 WHERE id = ?', [record.id]);
+
+      // Check if this edu email is already verified by another account
+      const existingEdu = await db.get(
+        'SELECT userID FROM User WHERE eduEmail = ? AND eduVerified = 1 AND userID != ?',
+        [eduEmail, user.userID]
+      );
+      if (existingEdu) {
+        return res.status(400).json({ success: false, error: { code: 'EDU_EMAIL_ALREADY_USED', message: 'This education email is already verified by another account' } });
+      }
 
       // Update user edu verification status
       await getUserModel().updateUser(user.userID, { eduVerified: true, eduEmail } as any);

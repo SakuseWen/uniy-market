@@ -233,6 +233,8 @@ function MyPage() {
         toast.error(t('notEduEmail'));
       } else if (code === 'ALREADY_EDU_VERIFIED') {
         toast.error(t('alreadyEduVerified'));
+      } else if (code === 'EDU_EMAIL_ALREADY_USED') {
+        toast.error(t('eduEmailAlreadyUsed'));
       } else {
         toast.error(t('eduCodeFailed'));
       }
@@ -254,7 +256,12 @@ function MyPage() {
       setEduEmail('');
       setEduCode('');
     } catch (error: any) {
-      toast.error(t('eduVerifyFailed'));
+      const code = error.response?.data?.error?.code;
+      if (code === 'EDU_EMAIL_ALREADY_USED') {
+        toast.error(t('eduEmailAlreadyUsed'));
+      } else {
+        toast.error(t('eduVerifyFailed'));
+      }
     } finally {
       setVerifyingEdu(false);
     }

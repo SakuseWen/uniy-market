@@ -329,6 +329,7 @@ export const translations = {
     alreadyEduVerified: 'Education already verified.',
     eduVerifySuccess: 'Education email verified successfully!',
     eduVerifyFailed: 'Verification failed. Please check the code and try again.',
+    eduEmailAlreadyUsed: 'This education email is already verified by another account.',
   },
   zh: {
     // Header
@@ -658,6 +659,7 @@ export const translations = {
     alreadyEduVerified: '教育认证已完成。',
     eduVerifySuccess: '教育邮箱验证成功！',
     eduVerifyFailed: '验证失败，请检查验证码后重试。',
+    eduEmailAlreadyUsed: '该教育邮箱已被其他账户认证。',
   },
   th: {
     // Header
@@ -987,6 +989,7 @@ export const translations = {
     alreadyEduVerified: 'ยืนยันการศึกษาแล้ว',
     eduVerifySuccess: 'ยืนยันอีเมลการศึกษาสำเร็จ!',
     eduVerifyFailed: 'การยืนยันล้มเหลว กรุณาตรวจสอบรหัสแล้วลองอีกครั้ง',
+    eduEmailAlreadyUsed: 'อีเมลการศึกษานี้ถูกยืนยันโดยบัญชีอื่นแล้ว',
   },
 };
 
