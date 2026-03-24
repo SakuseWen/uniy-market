@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
 import Cropper, { Area } from 'react-easy-crop';
+import 'react-easy-crop/react-easy-crop.css';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
 import { Button } from './ui/button';
 import { Slider } from './ui/slider';
@@ -80,7 +81,7 @@ export function AvatarCropper({ imageSrc, open, onClose, onCropComplete, saving,
         <DialogHeader>
           <DialogTitle>{labels.title}</DialogTitle>
         </DialogHeader>
-        <div className="relative w-full h-72 bg-gray-900 rounded-lg overflow-hidden">
+        <div style={{ position: 'relative', width: '100%', height: 300, background: '#111' }} className="rounded-lg overflow-hidden">
           <Cropper
             image={imageSrc}
             crop={crop}
