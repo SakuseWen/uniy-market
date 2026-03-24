@@ -100,7 +100,7 @@ export class DatabaseManager {
       -- Category table
       CREATE TABLE IF NOT EXISTS Category (
         catID INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT NOT NULL,
+        name TEXT NOT NULL UNIQUE,
         nameEn TEXT,
         nameTh TEXT,
         nameZh TEXT,
@@ -328,6 +328,14 @@ export class DatabaseManager {
 
   private async insertDefaultData(): Promise<void> {
     if (!this.db) return;
+
+    // Clean up duplicate categories and add unique constraint
+    await this.db.exec(`
+      DELETE FROM Category WHERE catID NOT IN (
+        SELECT MIN(catID) FROM Category GROUP BY name
+      );
+    `);
+    await this.db.exec(`CREATE UNIQUE INDEX IF NOT EXISTS idx_category_name ON Category(name);`);
 
     // Insert default categories
     const categories = [
