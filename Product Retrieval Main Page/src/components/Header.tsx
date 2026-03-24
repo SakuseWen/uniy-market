@@ -145,7 +145,7 @@ export function Header({ language, onLanguageChange, userVerified, unreadMessage
                     className="w-8 h-8 p-0 rounded-full"
                   >
                     <Avatar className="w-8 h-8">
-                      <AvatarImage src="" />
+                      <AvatarImage src={user?.profileImage ? `http://localhost:3000${user.profileImage}` : ''} />
                       <AvatarFallback>
                         {user?.name?.charAt(0).toUpperCase() || 'U'}
                       </AvatarFallback>

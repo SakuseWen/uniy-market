@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router';
 import { Header } from '../components/Header';
+import { AvatarCropper } from '../components/AvatarCropper';
 import { translate } from '../lib/i18n';
 import { useLanguage } from '../lib/LanguageContext';
 import { Button } from '../components/ui/button';
@@ -56,6 +57,8 @@ function MyPage() {
   const [savingProfile, setSavingProfile] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const avatarInputRef = useRef<HTMLInputElement>(null);
+  const [cropperImage, setCropperImage] = useState<string | null>(null);
+  const [showCropper, setShowCropper] = useState(false);
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -134,20 +137,34 @@ function MyPage() {
     }
   };
 
-  // Handle avatar upload
-  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Handle avatar file selection - open cropper
+  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      setCropperImage(reader.result as string);
+      setShowCropper(true);
+    };
+    reader.readAsDataURL(file);
+    // Reset input so same file can be selected again
+    e.target.value = '';
+  };
+
+  // Handle cropped avatar upload
+  const handleCroppedAvatar = async (blob: Blob) => {
     setUploadingAvatar(true);
     try {
       const formData = new FormData();
-      formData.append('avatar', file);
+      formData.append('avatar', blob, 'avatar.jpg');
       const response = await apiClient.post('/auth/profile/avatar', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
       const updatedUser = response.data.data.user;
       updateUser(updatedUser);
       toast.success(t('avatarUpdated'));
+      setShowCropper(false);
+      setCropperImage(null);
     } catch (error: any) {
       console.error('Avatar upload error:', error);
       toast.error(t('avatarUploadFailed'));
@@ -468,6 +485,24 @@ function MyPage() {
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* Avatar Cropper Dialog */}
+      {cropperImage && (
+        <AvatarCropper
+          imageSrc={cropperImage}
+          open={showCropper}
+          onClose={() => { setShowCropper(false); setCropperImage(null); }}
+          onCropComplete={handleCroppedAvatar}
+          saving={uploadingAvatar}
+          labels={{
+            title: t('changeAvatar'),
+            zoom: t('zoom') || 'Zoom',
+            cancel: t('cancelEdit'),
+            save: t('saveProfile'),
+            saving: t('saving'),
+          }}
+        />
+      )}
 
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={!!deleteConfirm} onOpenChange={(open: any) => !open && setDeleteConfirm(null)}>

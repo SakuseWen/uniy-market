@@ -295,7 +295,7 @@ export const translations = {
     profileUpdateFailed: 'Failed to update profile',
     avatarUpdated: 'Avatar updated successfully',
     avatarUploadFailed: 'Failed to upload avatar',
-    saving: 'Saving...',
+    zoom: 'Zoom',
   },
   zh: {
     // Header
@@ -591,7 +591,7 @@ export const translations = {
     profileUpdateFailed: '资料更新失败',
     avatarUpdated: '头像更新成功',
     avatarUploadFailed: '头像上传失败',
-    saving: '保存中...',
+    zoom: '缩放',
   },
   th: {
     // Header
@@ -887,7 +887,7 @@ export const translations = {
     profileUpdateFailed: 'อัปเดตโปรไฟล์ล้มเหลว',
     avatarUpdated: 'อัปเดตรูปโปรไฟล์สำเร็จ',
     avatarUploadFailed: 'อัปโหลดรูปโปรไฟล์ล้มเหลว',
-    saving: 'กำลังบันทึก...',
+    zoom: 'ซูม',
   },
 };
 
