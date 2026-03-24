@@ -183,9 +183,9 @@ router.post('/register',
 
       const { email, name, password } = req.body;
 
-      // Check if user already exists
+      // Check if user already exists (only verified users block re-registration)
       const existingUser = await getUserModel().getUserByEmail(email);
-      if (existingUser) {
+      if (existingUser && existingUser.isVerified) {
         return res.status(400).json({
           success: false,
           error: {
@@ -197,27 +197,27 @@ router.post('/register',
         });
       }
 
+      // If unverified user exists, delete it so they can re-register
+      if (existingUser && !existingUser.isVerified) {
+        const db = DatabaseManager.getInstance().getDatabase();
+        await db.run('DELETE FROM User WHERE userID = ?', [existingUser.userID]);
+      }
+
       // Hash password
       const hashedPassword = await bcrypt.hash(password, 10);
 
-      // Create user
-      const userID = `user_${Date.now()}`;
-      const newUser = await getUserModel().createUser({
-        userID,
-        email,
-        name,
-        password: hashedPassword,
-        isVerified: false, // Require email verification
-        preferredLanguage: 'en',
-      });
-
-      // Generate and store verification code
+      // Don't create user yet - store registration data in VerificationCode metadata
       const code = generateVerificationCode();
       const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString(); // 10 minutes
       const db = DatabaseManager.getInstance().getDatabase();
+
+      // Invalidate old codes for this email
+      await db.run('UPDATE VerificationCode SET used = 1 WHERE email = ? AND used = 0', [email]);
+
+      const metadata = JSON.stringify({ name, password: hashedPassword });
       await db.run(
-        'INSERT INTO VerificationCode (email, code, expiresAt) VALUES (?, ?, ?)',
-        [email, code, expiresAt]
+        'INSERT INTO VerificationCode (email, code, metadata, expiresAt) VALUES (?, ?, ?, ?)',
+        [email, code, metadata, expiresAt]
       );
 
       // Send verification email
@@ -226,7 +226,7 @@ router.post('/register',
       return res.status(201).json({
         success: true,
         data: {
-          email: newUser.email,
+          email,
           requiresVerification: true,
         },
         message: 'Registration successful. Please check your email for verification code.'
@@ -280,13 +280,28 @@ router.post('/verify-code',
       // Mark code as used
       await db.run('UPDATE VerificationCode SET used = 1 WHERE id = ?', [record.id]);
 
-      // Mark user as verified
-      const user = await getUserModel().getUserByEmail(email);
-      if (!user) {
+      // Check if this is a registration verification (has metadata) or other verification
+      let user = await getUserModel().getUserByEmail(email);
+
+      if (!user && record.metadata) {
+        // Registration flow: create user now
+        const meta = JSON.parse(record.metadata);
+        const userID = `user_${Date.now()}`;
+        user = await getUserModel().createUser({
+          userID,
+          email,
+          name: meta.name,
+          password: meta.password,
+          isVerified: true,
+          preferredLanguage: 'en',
+        });
+      } else if (user && !user.isVerified) {
+        // Existing unverified user (legacy) - mark as verified
+        await getUserModel().updateUser(user.userID, { isVerified: true } as any);
+        user = { ...user, isVerified: true };
+      } else if (!user) {
         return res.status(404).json({ success: false, error: { code: 'USER_NOT_FOUND', message: 'User not found' } });
       }
-
-      await getUserModel().updateUser(user.userID, { isVerified: true } as any);
 
       // Generate JWT token for auto-login
       const token = jwt.sign(
@@ -299,7 +314,7 @@ router.post('/verify-code',
         success: true,
         data: {
           token,
-          user: { userID: user.userID, email: user.email, name: user.name, profileImage: user.profileImage, bio: user.bio, isVerified: true, isAdmin: user.isAdmin, preferredLanguage: user.preferredLanguage }
+          user: { userID: user.userID, email: user.email, name: user.name, profileImage: user.profileImage, bio: (user as any).bio, isVerified: true, isAdmin: user.isAdmin, preferredLanguage: user.preferredLanguage }
         },
         message: 'Email verified successfully'
       });
@@ -325,23 +340,38 @@ router.post('/resend-code',
       }
 
       const { email } = req.body;
-      const user = await getUserModel().getUserByEmail(email);
-      if (!user) {
-        return res.status(404).json({ success: false, error: { code: 'USER_NOT_FOUND', message: 'User not found' } });
-      }
+      const db = DatabaseManager.getInstance().getDatabase();
 
-      if (user.isVerified) {
+      // Check if there's a pending verification for this email
+      const pendingCode = await db.get(
+        'SELECT * FROM VerificationCode WHERE email = ? AND used = 0 ORDER BY createdAt DESC LIMIT 1',
+        [email]
+      );
+
+      // Also check if user already exists and is verified
+      const user = await getUserModel().getUserByEmail(email);
+      if (user && user.isVerified) {
         return res.status(400).json({ success: false, error: { code: 'ALREADY_VERIFIED', message: 'Email is already verified' } });
       }
 
-      // Invalidate old codes
-      const db = DatabaseManager.getInstance().getDatabase();
+      if (!pendingCode && !user) {
+        return res.status(404).json({ success: false, error: { code: 'NO_PENDING_REGISTRATION', message: 'No pending registration found for this email' } });
+      }
+
+      // Invalidate old codes but preserve metadata from the latest one
+      const latestCode = await db.get(
+        'SELECT metadata FROM VerificationCode WHERE email = ? AND metadata IS NOT NULL ORDER BY createdAt DESC LIMIT 1',
+        [email]
+      );
       await db.run('UPDATE VerificationCode SET used = 1 WHERE email = ? AND used = 0', [email]);
 
-      // Generate new code
+      // Generate new code, carry over metadata
       const code = generateVerificationCode();
       const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString();
-      await db.run('INSERT INTO VerificationCode (email, code, expiresAt) VALUES (?, ?, ?)', [email, code, expiresAt]);
+      await db.run(
+        'INSERT INTO VerificationCode (email, code, metadata, expiresAt) VALUES (?, ?, ?, ?)',
+        [email, code, latestCode?.metadata || null, expiresAt]
+      );
 
       const sent = await sendVerificationEmail(email, code);
       if (!sent) {

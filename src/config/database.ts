@@ -93,6 +93,7 @@ export class DatabaseManager {
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         email TEXT NOT NULL,
         code TEXT NOT NULL,
+        metadata TEXT,
         expiresAt DATETIME NOT NULL,
         used BOOLEAN DEFAULT FALSE,
         createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
@@ -337,6 +338,13 @@ export class DatabaseManager {
     // Migration: add bio column if not exists
     try {
       await this.db.exec('ALTER TABLE User ADD COLUMN bio TEXT');
+    } catch (_e) {
+      // Column already exists, ignore
+    }
+
+    // Migration: add metadata column to VerificationCode if not exists
+    try {
+      await this.db.exec('ALTER TABLE VerificationCode ADD COLUMN metadata TEXT');
     } catch (_e) {
       // Column already exists, ignore
     }
