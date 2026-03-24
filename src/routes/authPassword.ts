@@ -130,6 +130,8 @@ router.post('/login',
             name: user.name,
             profileImage: user.profileImage,
             bio: user.bio,
+            eduVerified: user.eduVerified || false,
+            eduEmail: user.eduEmail || null,
             isVerified: user.isVerified,
             isAdmin: user.isAdmin,
             preferredLanguage: user.preferredLanguage,
@@ -314,7 +316,7 @@ router.post('/verify-code',
         success: true,
         data: {
           token,
-          user: { userID: user.userID, email: user.email, name: user.name, profileImage: user.profileImage, bio: (user as any).bio, isVerified: true, isAdmin: user.isAdmin, preferredLanguage: user.preferredLanguage }
+          user: { userID: user.userID, email: user.email, name: user.name, profileImage: user.profileImage, bio: (user as any).bio, eduVerified: (user as any).eduVerified || false, eduEmail: (user as any).eduEmail || null, isVerified: true, isAdmin: user.isAdmin, preferredLanguage: user.preferredLanguage }
         },
         message: 'Email verified successfully'
       });
@@ -474,6 +476,128 @@ router.post('/delete-account/confirm',
     } catch (error) {
       console.error('Delete account confirm error:', error);
       return res.status(500).json({ success: false, error: { code: 'DELETE_FAILED', message: 'Failed to delete account' } });
+    }
+  }
+);
+
+/**
+ * @route   POST /api/auth/edu-verify/send-code
+ * @desc    Send verification code to education email
+ * @access  Private
+ */
+router.post('/edu-verify/send-code',
+  authenticateToken,
+  [body('eduEmail').isEmail().withMessage('Valid education email is required')],
+  async (req: express.Request, res: express.Response) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({ success: false, error: { code: 'VALIDATION_ERROR', message: 'Invalid email' } });
+      }
+
+      const user = (req as any).user;
+      const { eduEmail } = req.body;
+
+      // Check if already edu verified
+      if (user.eduVerified) {
+        return res.status(400).json({ success: false, error: { code: 'ALREADY_EDU_VERIFIED', message: 'Education already verified' } });
+      }
+
+      // Check if email domain looks like an education domain
+      const domain = eduEmail.split('@')[1]?.toLowerCase() || '';
+      const eduDomains = ['.edu', '.ac.', '.edu.', '.school', '.university'];
+      const isEduDomain = eduDomains.some((d: string) => domain.includes(d));
+      if (!isEduDomain) {
+        return res.status(400).json({ success: false, error: { code: 'NOT_EDU_EMAIL', message: 'This does not appear to be an education email address' } });
+      }
+
+      const db = DatabaseManager.getInstance().getDatabase();
+
+      // Invalidate old codes
+      await db.run('UPDATE VerificationCode SET used = 1 WHERE email = ? AND used = 0', [eduEmail]);
+
+      // Generate and send code
+      const code = generateVerificationCode();
+      const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString();
+      const metadata = JSON.stringify({ type: 'edu_verify', userID: user.userID });
+      await db.run(
+        'INSERT INTO VerificationCode (email, code, metadata, expiresAt) VALUES (?, ?, ?, ?)',
+        [eduEmail, code, metadata, expiresAt]
+      );
+
+      const sent = await sendVerificationEmail(eduEmail, code);
+      if (!sent) {
+        return res.status(500).json({ success: false, error: { code: 'EMAIL_FAILED', message: 'Failed to send verification email' } });
+      }
+
+      return res.json({ success: true, message: 'Verification code sent to education email' });
+    } catch (error) {
+      console.error('Edu verify send code error:', error);
+      return res.status(500).json({ success: false, error: { code: 'SEND_CODE_FAILED', message: 'Failed to send code' } });
+    }
+  }
+);
+
+/**
+ * @route   POST /api/auth/edu-verify/confirm
+ * @desc    Confirm education email verification
+ * @access  Private
+ */
+router.post('/edu-verify/confirm',
+  authenticateToken,
+  [
+    body('eduEmail').isEmail().withMessage('Valid education email is required'),
+    body('code').isLength({ min: 6, max: 6 }).withMessage('6-digit code is required'),
+  ],
+  async (req: express.Request, res: express.Response) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({ success: false, error: { code: 'VALIDATION_ERROR', message: 'Invalid input' } });
+      }
+
+      const user = (req as any).user;
+      const { eduEmail, code } = req.body;
+      const db = DatabaseManager.getInstance().getDatabase();
+
+      // Verify code
+      const record = await db.get(
+        'SELECT * FROM VerificationCode WHERE email = ? AND code = ? AND used = 0 AND expiresAt > ? ORDER BY createdAt DESC LIMIT 1',
+        [eduEmail, code, new Date().toISOString()]
+      );
+      if (!record) {
+        return res.status(400).json({ success: false, error: { code: 'INVALID_CODE', message: 'Invalid or expired verification code' } });
+      }
+
+      // Mark code as used
+      await db.run('UPDATE VerificationCode SET used = 1 WHERE id = ?', [record.id]);
+
+      // Update user edu verification status
+      await getUserModel().updateUser(user.userID, { eduVerified: true, eduEmail } as any);
+
+      const updatedUser = await getUserModel().getUserById(user.userID);
+
+      return res.json({
+        success: true,
+        data: {
+          user: {
+            userID: updatedUser!.userID,
+            email: updatedUser!.email,
+            name: updatedUser!.name,
+            profileImage: updatedUser!.profileImage,
+            bio: updatedUser!.bio,
+            eduVerified: true,
+            eduEmail,
+            isVerified: updatedUser!.isVerified,
+            isAdmin: updatedUser!.isAdmin,
+            preferredLanguage: updatedUser!.preferredLanguage,
+          }
+        },
+        message: 'Education email verified successfully'
+      });
+    } catch (error) {
+      console.error('Edu verify confirm error:', error);
+      return res.status(500).json({ success: false, error: { code: 'VERIFICATION_FAILED', message: 'Failed to verify education email' } });
     }
   }
 );

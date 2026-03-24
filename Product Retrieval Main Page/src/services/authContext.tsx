@@ -6,6 +6,8 @@ export interface User {
   name: string;
   profileImage?: string;
   bio?: string;
+  eduVerified?: boolean;
+  eduEmail?: string;
   isVerified: boolean;
   isAdmin: boolean;
   preferredLanguage: string;

@@ -315,6 +315,20 @@ export const translations = {
     deleteCodeFailed: 'Failed to send verification code.',
     deleteVerifyFailed: 'Verification failed. Please check the code and try again.',
     sendingDeleteCode: 'Sending...',
+    // Education Verification
+    eduVerified: 'Education Verified',
+    eduVerifyDesc: 'Verify your education email to get a verified badge. Supported domains: .edu, .ac.*, .edu.*, .school, .university',
+    eduEmailLabel: 'Education Email',
+    eduEmailPlaceholder: 'e.g. student@university.edu',
+    eduEmailHint: 'Must be an education email address (.edu, .ac.*, etc.)',
+    sendEduCode: 'Send Code',
+    eduEnterCode: 'Enter the 6-digit verification code sent to your education email',
+    eduCodeSent: 'Verification code sent to your education email.',
+    eduCodeFailed: 'Failed to send verification code.',
+    notEduEmail: 'This does not appear to be an education email address.',
+    alreadyEduVerified: 'Education already verified.',
+    eduVerifySuccess: 'Education email verified successfully!',
+    eduVerifyFailed: 'Verification failed. Please check the code and try again.',
   },
   zh: {
     // Header
@@ -630,6 +644,20 @@ export const translations = {
     deleteCodeFailed: '验证码发送失败。',
     deleteVerifyFailed: '验证失败，请检查验证码后重试。',
     sendingDeleteCode: '发送中...',
+    // Education Verification
+    eduVerified: '已通过教育认证',
+    eduVerifyDesc: '验证您的教育邮箱以获得认证徽章。支持的域名：.edu, .ac.*, .edu.*, .school, .university',
+    eduEmailLabel: '教育邮箱',
+    eduEmailPlaceholder: '例如 student@university.edu',
+    eduEmailHint: '必须是教育邮箱地址（.edu, .ac.* 等）',
+    sendEduCode: '发送验证码',
+    eduEnterCode: '请输入发送到您教育邮箱的6位验证码',
+    eduCodeSent: '验证码已发送到您的教育邮箱。',
+    eduCodeFailed: '验证码发送失败。',
+    notEduEmail: '这不是一个有效的教育邮箱地址。',
+    alreadyEduVerified: '教育认证已完成。',
+    eduVerifySuccess: '教育邮箱验证成功！',
+    eduVerifyFailed: '验证失败，请检查验证码后重试。',
   },
   th: {
     // Header
@@ -945,6 +973,20 @@ export const translations = {
     deleteCodeFailed: 'ส่งรหัสยืนยันล้มเหลว',
     deleteVerifyFailed: 'การยืนยันล้มเหลว กรุณาตรวจสอบรหัสแล้วลองอีกครั้ง',
     sendingDeleteCode: 'กำลังส่ง...',
+    // Education Verification
+    eduVerified: 'ยืนยันการศึกษาแล้ว',
+    eduVerifyDesc: 'ยืนยันอีเมลการศึกษาของคุณเพื่อรับตราสัญลักษณ์ยืนยัน โดเมนที่รองรับ: .edu, .ac.*, .edu.*, .school, .university',
+    eduEmailLabel: 'อีเมลการศึกษา',
+    eduEmailPlaceholder: 'เช่น student@university.edu',
+    eduEmailHint: 'ต้องเป็นอีเมลการศึกษา (.edu, .ac.* เป็นต้น)',
+    sendEduCode: 'ส่งรหัส',
+    eduEnterCode: 'กรอกรหัสยืนยัน 6 หลักที่ส่งไปยังอีเมลการศึกษาของคุณ',
+    eduCodeSent: 'ส่งรหัสยืนยันไปยังอีเมลการศึกษาของคุณแล้ว',
+    eduCodeFailed: 'ส่งรหัสยืนยันล้มเหลว',
+    notEduEmail: 'นี่ไม่ใช่อีเมลการศึกษาที่ถูกต้อง',
+    alreadyEduVerified: 'ยืนยันการศึกษาแล้ว',
+    eduVerifySuccess: 'ยืนยันอีเมลการศึกษาสำเร็จ!',
+    eduVerifyFailed: 'การยืนยันล้มเหลว กรุณาตรวจสอบรหัสแล้วลองอีกครั้ง',
   },
 };
 

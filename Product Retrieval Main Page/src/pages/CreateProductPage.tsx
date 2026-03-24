@@ -63,7 +63,6 @@ export default function CreateProductPage() {
   const [images, setImages] = useState<File[]>([]);
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
-  const [userVerified] = useState(true);
 
   // Handle input change
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -226,7 +225,6 @@ export default function CreateProductPage() {
       <Header
         language={language}
         onLanguageChange={handleLanguageChange}
-        userVerified={userVerified}
         unreadMessages={0}
       />
 

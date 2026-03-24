@@ -35,7 +35,6 @@ export default function MainPage() {
   const t = (key: any) => translate(language, key);
 
   // User state
-  const [userVerified] = useState(true);
   const [unreadMessages] = useState(3);
 
   // View state
@@ -225,7 +224,6 @@ export default function MainPage() {
         <Header
           language={language}
           onLanguageChange={handleLanguageChange}
-          userVerified={userVerified}
           unreadMessages={unreadMessages}
         />
 
@@ -249,7 +247,6 @@ export default function MainPage() {
       <Header
         language={language}
         onLanguageChange={handleLanguageChange}
-        userVerified={userVerified}
         unreadMessages={unreadMessages}
       />
 

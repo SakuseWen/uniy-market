@@ -16,14 +16,22 @@ import { useAuth } from '../services/authContext';
 interface HeaderProps {
   language: Language;
   onLanguageChange: (lang: Language) => void;
-  userVerified: boolean;
   unreadMessages: number;
 }
 
-export function Header({ language, onLanguageChange, userVerified, unreadMessages }: HeaderProps) {
+export function Header({ language, onLanguageChange, unreadMessages }: HeaderProps) {
   const t = (key: any) => translate(language, key);
   const navigate = useNavigate();
   const { user, isAuthenticated, logout } = useAuth();
+
+  // Mask edu email: e.g. "student@university.edu" → "stu***@university.edu"
+  const getMaskedEduEmail = () => {
+    if (!user?.eduEmail) return '';
+    const [local, domain] = user.eduEmail.split('@');
+    if (!domain) return user.eduEmail;
+    const visible = local.slice(0, 3);
+    return `${visible}***@${domain}`;
+  };
 
   const handleAvatarClick = () => {
     if (isAuthenticated) {
@@ -69,16 +77,16 @@ export function Header({ language, onLanguageChange, userVerified, unreadMessage
           <div className="flex items-center gap-4">
             {/* Campus Verification */}
             <div className="hidden sm:block">
-              {userVerified ? (
+              {user?.eduVerified ? (
                 <Badge variant="secondary" className="gap-1">
                   <span className="text-green-600">✓</span>
-                  {t('verified')} - STU***123
+                  {t('verified')} - {getMaskedEduEmail()}
                 </Badge>
-              ) : (
-                <Button variant="outline" size="sm">
+              ) : isAuthenticated ? (
+                <Button variant="outline" size="sm" onClick={() => navigate('/my-page')}>
                   {t('verifyNow')}
                 </Button>
-              )}
+              ) : null}
             </div>
 
             {/* 消息预览浮窗 / Message Preview Popover */}

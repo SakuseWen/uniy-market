@@ -46,7 +46,6 @@ function MyPage() {
 
   const [products, setProducts] = useState<UserProduct[]>([]);
   const [loading, setLoading] = useState(true);
-  const [userVerified] = useState(true);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [showChat, setShowChat] = useState(true);
@@ -66,6 +65,13 @@ function MyPage() {
   const [deleteCode, setDeleteCode] = useState('');
   const [sendingDeleteCode, setSendingDeleteCode] = useState(false);
   const [deletingAccount, setDeletingAccount] = useState(false);
+
+  // Education verification state
+  const [eduStep, setEduStep] = useState<'closed' | 'email' | 'code'>('closed');
+  const [eduEmail, setEduEmail] = useState('');
+  const [eduCode, setEduCode] = useState('');
+  const [sendingEduCode, setSendingEduCode] = useState(false);
+  const [verifyingEdu, setVerifyingEdu] = useState(false);
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -213,6 +219,47 @@ function MyPage() {
     }
   };
 
+  // Send edu verification code
+  const handleSendEduCode = async () => {
+    if (!eduEmail.trim()) return;
+    setSendingEduCode(true);
+    try {
+      await apiClient.post('/auth/edu-verify/send-code', { eduEmail });
+      toast.success(t('eduCodeSent'));
+      setEduStep('code');
+    } catch (error: any) {
+      const code = error.response?.data?.error?.code;
+      if (code === 'NOT_EDU_EMAIL') {
+        toast.error(t('notEduEmail'));
+      } else if (code === 'ALREADY_EDU_VERIFIED') {
+        toast.error(t('alreadyEduVerified'));
+      } else {
+        toast.error(t('eduCodeFailed'));
+      }
+    } finally {
+      setSendingEduCode(false);
+    }
+  };
+
+  // Confirm edu verification
+  const handleConfirmEdu = async () => {
+    if (eduCode.length !== 6) return;
+    setVerifyingEdu(true);
+    try {
+      const response = await apiClient.post('/auth/edu-verify/confirm', { eduEmail, code: eduCode });
+      const updatedUser = response.data.data.user;
+      updateUser(updatedUser);
+      toast.success(t('eduVerifySuccess'));
+      setEduStep('closed');
+      setEduEmail('');
+      setEduCode('');
+    } catch (error: any) {
+      toast.error(t('eduVerifyFailed'));
+    } finally {
+      setVerifyingEdu(false);
+    }
+  };
+
   const getStatusColor = (status: string | undefined) => {
     if (!status) return 'bg-blue-100 text-blue-800';
     switch (status.toLowerCase()) {
@@ -249,7 +296,6 @@ function MyPage() {
       <Header
         language={language}
         onLanguageChange={handleLanguageChange}
-        userVerified={userVerified}
         unreadMessages={0}
       />
 
@@ -341,9 +387,16 @@ function MyPage() {
                 <Button variant="outline" size="sm" onClick={() => { setIsEditing(true); setEditName(user?.name || ''); setEditBio(user?.bio || ''); }} className="gap-1">
                   <Edit2 className="w-4 h-4" /> {t('editProfile')}
                 </Button>
-                <Button variant="outline" size="sm" className="gap-1" disabled>
-                  <GraduationCap className="w-4 h-4" /> {t('eduVerification')}
-                </Button>
+                {user?.eduVerified ? (
+                  <Badge variant="secondary" className="gap-1 py-1.5 px-3">
+                    <GraduationCap className="w-4 h-4 text-green-600" />
+                    <span className="text-green-600">✓</span> {t('eduVerified')}
+                  </Badge>
+                ) : (
+                  <Button variant="outline" size="sm" className="gap-1" onClick={() => setEduStep('email')}>
+                    <GraduationCap className="w-4 h-4" /> {t('eduVerification')}
+                  </Button>
+                )}
                 <Button variant="outline" size="sm" className="gap-1 text-red-500 border-red-200 hover:bg-red-50 hover:text-red-600" onClick={() => setDeleteStep('notice')}>
                   <UserX className="w-4 h-4" /> {t('deleteAccount')}
                 </Button>
@@ -623,6 +676,63 @@ function MyPage() {
                 </Button>
                 <Button size="sm" variant="destructive" onClick={handleConfirmDelete} disabled={deletingAccount || deleteCode.length !== 6}>
                   {deletingAccount ? <><Loader2 className="w-4 h-4 mr-1 animate-spin" />{t('deletingAccount')}</> : t('confirmDelete')}
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Education Verification Dialog */}
+      <Dialog open={eduStep !== 'closed'} onOpenChange={(v) => { if (!v) { setEduStep('closed'); setEduEmail(''); setEduCode(''); } }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <GraduationCap className="w-5 h-5 text-blue-600" />
+              {t('eduVerification')}
+            </DialogTitle>
+          </DialogHeader>
+          {eduStep === 'email' && (
+            <div className="space-y-4">
+              <p className="text-sm text-gray-600">{t('eduVerifyDesc')}</p>
+              <div>
+                <label className="text-sm text-gray-500 mb-1 block">{t('eduEmailLabel')}</label>
+                <Input
+                  value={eduEmail}
+                  onChange={(e) => setEduEmail(e.target.value)}
+                  placeholder={t('eduEmailPlaceholder')}
+                  type="email"
+                />
+              </div>
+              <p className="text-xs text-gray-400">{t('eduEmailHint')}</p>
+              <div className="flex justify-end gap-2 pt-2">
+                <Button variant="outline" size="sm" onClick={() => { setEduStep('closed'); setEduEmail(''); }}>
+                  {t('cancel')}
+                </Button>
+                <Button size="sm" onClick={handleSendEduCode} disabled={sendingEduCode || !eduEmail.trim()}
+                  className="bg-gradient-to-r from-blue-500 to-purple-600">
+                  {sendingEduCode ? <><Loader2 className="w-4 h-4 mr-1 animate-spin" />{t('sendingCode')}</> : t('sendEduCode')}
+                </Button>
+              </div>
+            </div>
+          )}
+          {eduStep === 'code' && (
+            <div className="space-y-4">
+              <p className="text-sm text-gray-600">{t('eduEnterCode')}</p>
+              <Input
+                value={eduCode}
+                onChange={(e) => setEduCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                placeholder="000000"
+                maxLength={6}
+                className="text-center text-2xl tracking-widest"
+              />
+              <div className="flex justify-end gap-2 pt-2">
+                <Button variant="outline" size="sm" onClick={() => { setEduStep('closed'); setEduEmail(''); setEduCode(''); }}>
+                  {t('cancel')}
+                </Button>
+                <Button size="sm" onClick={handleConfirmEdu} disabled={verifyingEdu || eduCode.length !== 6}
+                  className="bg-gradient-to-r from-blue-500 to-purple-600">
+                  {verifyingEdu ? <><Loader2 className="w-4 h-4 mr-1 animate-spin" />{t('verifying')}</> : t('verify')}
                 </Button>
               </div>
             </div>
