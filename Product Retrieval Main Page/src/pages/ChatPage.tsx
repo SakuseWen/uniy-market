@@ -12,9 +12,13 @@ import {
   DropdownMenuTrigger,
 } from '../components/ui/dropdown-menu';
 import { mockProducts } from '../lib/mockData';
+import { translate } from '../lib/i18n';
+import type { Language } from '../lib/i18n';
+import { useLanguage } from '../lib/LanguageContext';
 
 interface Message {
   id: string;
+  // 消息内容保持原样，不随语言切换翻译 / Message content stays as-is
   text: string;
   sender: 'user' | 'seller';
   timestamp: Date;
@@ -25,6 +29,9 @@ export default function ChatPage() {
   const navigate = useNavigate();
   const { sellerId } = useParams();
   const [message, setMessage] = useState('');
+  const { language, setLanguage } = useLanguage();
+  const t = (key: any) => translate(language, key);
+
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
@@ -57,14 +64,16 @@ export default function ChatPage() {
   ]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Find seller info from mock data
-  const sellerProduct = mockProducts.find(p => p.seller.id === sellerId);
-  const seller = sellerProduct?.seller || {
-    id: sellerId || 'unknown',
-    name: 'Seller',
+  // 根据 sellerId 动态获取卖家信息 / Dynamically get seller info based on sellerId
+  const sellerProduct = mockProducts.find(p => p.id === sellerId);
+
+  // 统一聊天架构：支持 example-seller 演示入口 / Unified chat: support example-seller demo entry
+  const seller = sellerProduct?.seller ?? {
+    name: sellerId === 'example-seller' ? 'Example Seller' : 'Seller',
     avatar: '',
-    verified: false,
-    role: 'student',
+    verified: sellerId === 'example-seller',
+    role: 'student' as const,
+    rating: 5,
   };
 
   const scrollToBottom = () => {
@@ -74,6 +83,10 @@ export default function ChatPage() {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  const handleLanguageChange = (lang: Language) => {
+    setLanguage(lang);
+  };
 
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();
@@ -90,7 +103,7 @@ export default function ChatPage() {
     setMessages([...messages, newMessage]);
     setMessage('');
 
-    // Simulate seller response after 2 seconds
+    // 模拟卖家 2 秒后回复 / Simulate seller response after 2 seconds
     setTimeout(() => {
       const response: Message = {
         id: (Date.now() + 1).toString(),
@@ -110,26 +123,24 @@ export default function ChatPage() {
     const minutes = Math.floor(diff / 60000);
 
     if (hours < 1) {
-      return `${minutes}m ago`;
+      return `${minutes}m ${t('mAgo')}`;
     } else if (hours < 24) {
-      return `${hours}h ago`;
+      return `${hours}h ${t('mAgo')}`;
     } else {
       return date.toLocaleDateString();
     }
   };
 
+  const langLabel = language === 'en' ? 'English' : language === 'zh' ? '中文' : 'ไทย';
+
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
-      {/* Header */}
+      {/* 顶部栏 / Header */}
       <div className="bg-white border-b sticky top-0 z-50">
         <div className="container mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => navigate('/')}
-              >
+              <Button variant="ghost" size="icon" onClick={() => navigate('/')}>
                 <ArrowLeft className="w-5 h-5" />
               </Button>
 
@@ -147,9 +158,9 @@ export default function ChatPage() {
                   </div>
                   <div className="flex items-center gap-2">
                     <Badge variant="secondary" className="text-xs">
-                      {seller.role}
+                      {t(seller.role as any)}
                     </Badge>
-                    <span className="text-xs text-green-600">● Online</span>
+                    <span className="text-xs text-green-600">● {t('online')}</span>
                   </div>
                 </div>
               </div>
@@ -162,6 +173,17 @@ export default function ChatPage() {
               <Button variant="ghost" size="icon">
                 <Video className="w-5 h-5" />
               </Button>
+              {/* 语言切换下拉菜单 / Language switcher */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="sm">{langLabel}</Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={() => handleLanguageChange('zh')}>中文</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleLanguageChange('en')}>English</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleLanguageChange('th')}>ไทย</DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="icon">
@@ -169,10 +191,10 @@ export default function ChatPage() {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                  <DropdownMenuItem>View Profile</DropdownMenuItem>
-                  <DropdownMenuItem>View Listings</DropdownMenuItem>
-                  <DropdownMenuItem>Block User</DropdownMenuItem>
-                  <DropdownMenuItem className="text-red-600">Report</DropdownMenuItem>
+                  <DropdownMenuItem>{t('viewProfile')}</DropdownMenuItem>
+                  <DropdownMenuItem>{t('viewListings')}</DropdownMenuItem>
+                  <DropdownMenuItem>{t('blockUser')}</DropdownMenuItem>
+                  <DropdownMenuItem className="text-red-600">{t('report')}</DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
@@ -180,7 +202,7 @@ export default function ChatPage() {
         </div>
       </div>
 
-      {/* Product Context (if available) */}
+      {/* 商品上下文 / Product Context (if available) */}
       {sellerProduct && (
         <div className="bg-blue-50 border-b">
           <div className="container mx-auto px-4 py-3">
@@ -194,19 +216,15 @@ export default function ChatPage() {
                 <p className="font-semibold text-sm">{sellerProduct.title}</p>
                 <p className="text-blue-600 font-semibold">${sellerProduct.price}</p>
               </div>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => navigate('/')}
-              >
-                View Item
+              <Button size="sm" variant="outline" onClick={() => navigate('/')}>
+                {t('viewItem')}
               </Button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Messages Area */}
+      {/* 消息区域 / Messages Area */}
       <div className="flex-1 overflow-y-auto">
         <div className="container mx-auto px-4 py-6 max-w-4xl">
           <div className="space-y-4">
@@ -249,7 +267,7 @@ export default function ChatPage() {
       <div className="bg-yellow-50 border-t border-yellow-200">
         <div className="container mx-auto px-4 py-2">
           <p className="text-xs text-yellow-800 text-center">
-            ⚠️ <strong>Safety Reminder:</strong> Never share personal financial information. Meet in public campus locations for exchanges.
+            ⚠️ <strong>{t('safetyReminder')}:</strong> {t('safetyReminderChat')}
           </p>
         </div>
       </div>
@@ -269,7 +287,7 @@ export default function ChatPage() {
             <Input
               value={message}
               onChange={(e) => setMessage(e.target.value)}
-              placeholder="Type a message..."
+              placeholder={t('typeMessage')}
               className="flex-1"
             />
             <Button

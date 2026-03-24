@@ -8,6 +8,7 @@ import {
   DropdownMenuTrigger,
 } from './ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
+import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
 import { Language, translate } from '../lib/i18n';
 import { useNavigate } from 'react-router';
 import { useAuth } from '../services/authContext';
@@ -80,15 +81,39 @@ export function Header({ language, onLanguageChange, userVerified, unreadMessage
               )}
             </div>
 
-            {/* Messages Icon */}
-            <div className="relative cursor-pointer">
-              <Bell className="w-5 h-5" />
-              {unreadMessages > 0 && (
-                <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center text-white text-xs">
-                  {unreadMessages}
+            {/* 消息预览浮窗 / Message Preview Popover */}
+            <Popover>
+              <PopoverTrigger asChild>
+                <div className="relative cursor-pointer">
+                  <Bell className="w-5 h-5" />
+                  {unreadMessages > 0 && (
+                    <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center text-white text-xs">
+                      {unreadMessages}
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
+              </PopoverTrigger>
+              <PopoverContent className="w-80 p-0" align="end">
+                <div className="px-3 pt-3 pb-2">
+                  <p className="font-semibold text-sm">{t('messages') || 'Messages'}</p>
+                </div>
+                <div
+                  className="flex items-center gap-3 p-3 hover:bg-gray-50 cursor-pointer rounded-md mx-1 mb-1"
+                  onClick={() => navigate('/chat/example-seller')}
+                >
+                  <Avatar className="w-10 h-10 flex-shrink-0">
+                    <AvatarImage src="" />
+                    <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white text-xs">
+                      ES
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-sm">Example Seller</p>
+                    <p className="text-sm text-gray-500 truncate">Hi! Is this item still available?</p>
+                  </div>
+                </div>
+              </PopoverContent>
+            </Popover>
 
             {/* Language Switch */}
             <DropdownMenu>

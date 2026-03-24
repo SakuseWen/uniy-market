@@ -7,7 +7,8 @@ import { ProductListView } from '../components/ProductListView';
 import { ProductDetailPage } from '../components/ProductDetailPage';
 import { SideFilterPanel } from '../components/SideFilterPanel';
 import { ComparisonBar } from '../components/ComparisonBar';
-import { Language, translate } from '../lib/i18n';
+import { translate } from '../lib/i18n';
+import type { Language } from '../lib/i18n';
 import { Product } from '../lib/mockData';
 import { useProducts, useCategories } from '../hooks';
 import { Grid, List, TrendingUp, Loader2 } from 'lucide-react';
@@ -23,13 +24,14 @@ import {
 import { toast } from 'sonner';
 import { Toaster } from '../components/ui/sonner';
 import { useAuth } from '../services/authContext';
+import { useLanguage } from '../lib/LanguageContext';
 
 export default function MainPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
   
-  // Language state
-  const [language, setLanguage] = useState<Language>('en');
+  // 从全局 Context 读取语言状态 / Read language from global Context
+  const { language, setLanguage } = useLanguage();
   const t = (key: any) => translate(language, key);
 
   // User state
@@ -195,8 +197,6 @@ export default function MainPage() {
 
   const handleLanguageChange = (lang: Language) => {
     setLanguage(lang);
-    // Save to localStorage
-    localStorage.setItem('preferredLanguage', lang);
   };
 
   const handleProductClick = (product: Product) => {
