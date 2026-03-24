@@ -27,6 +27,7 @@ export default function LoginPage() {
   const [registerName, setRegisterName] = useState('');
   const [registerEmail, setRegisterEmail] = useState('');
   const [registerPassword, setRegisterPassword] = useState('');
+  const [registerConfirmPassword, setRegisterConfirmPassword] = useState('');
 
   const { language, setLanguage } = useLanguage();
   const t = (key: any) => translate(language, key);
@@ -53,6 +54,12 @@ export default function LoginPage() {
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+
+    if (registerPassword !== registerConfirmPassword) {
+      setError(t('passwordMismatch'));
+      return;
+    }
+
     setIsLoading(true);
     try {
       const response = await fetch('http://localhost:3000/api/auth/register', {
@@ -236,6 +243,17 @@ export default function LoginPage() {
                         placeholder="••••••••"
                         value={registerPassword}
                         onChange={(e) => setRegisterPassword(e.target.value)}
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="register-confirm-password">{t('confirmPassword')}</Label>
+                      <Input
+                        id="register-confirm-password"
+                        type="password"
+                        placeholder="••••••••"
+                        value={registerConfirmPassword}
+                        onChange={(e) => setRegisterConfirmPassword(e.target.value)}
                         required
                       />
                     </div>
