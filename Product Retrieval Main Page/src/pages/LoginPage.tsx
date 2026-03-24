@@ -60,6 +60,11 @@ export default function LoginPage() {
       return;
     }
 
+    if (registerPassword.length < 6) {
+      setError(t('passwordTooShort'));
+      return;
+    }
+
     setIsLoading(true);
     try {
       const response = await fetch('http://localhost:3000/api/auth/register', {
