@@ -216,7 +216,7 @@ export default function EditProductPage() {
         return;
       }
       
-      toast.error(error.response?.data?.error?.message || t(language, 'failedUpdateProduct'));
+      toast.error(t(language, 'failedUpdateProduct'));
     } finally {
       setSaving(false);
     }

@@ -49,7 +49,7 @@ export default function LoginPage() {
         navigate('/verify-email', { state: { email: loginEmail } });
         return;
       }
-      setError('Login failed. Please check your email and password.');
+      setError(t('loginFailed'));
       console.error('Login error:', err);
     } finally {
       setIsLoading(false);
@@ -86,13 +86,17 @@ export default function LoginPage() {
 
       if (!response.ok) {
         const data = await response.json();
-        throw new Error(data?.error?.message || 'Registration failed');
+        const errorCode = data?.error?.code || '';
+        if (errorCode === 'USER_EXISTS') {
+          throw new Error(t('userExists'));
+        }
+        throw new Error(t('registrationFailed'));
       }
 
       // 注册成功后跳转邮箱验证页，传递email / Redirect to email verification after registration
       navigate('/verify-email', { state: { email: registerEmail } });
     } catch (err: any) {
-      setError(err.message || 'Registration failed. Please try again.');
+      setError(err.message || t('registrationFailed'));
       console.error('Register error:', err);
     } finally {
       setIsLoading(false);

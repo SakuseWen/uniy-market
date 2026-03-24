@@ -93,7 +93,7 @@ function MyPage() {
         navigate('/login');
         return;
       }
-      toast.error(error.response?.data?.error?.message || t('failedDeleteProduct'));
+      toast.error(t('failedDeleteProduct'));
     } finally {
       setDeleting(false);
     }
@@ -308,7 +308,7 @@ function MyPage() {
                                     ));
                                     toast.success(t('productUnlisted'));
                                   } catch (err: any) {
-                                    toast.error(err.response?.data?.error?.message || t('failedUnlist'));
+                                    toast.error(t('failedUnlist'));
                                   }
                                 }}
                               >
@@ -327,7 +327,7 @@ function MyPage() {
                                     ));
                                     toast.success(t('productRelisted'));
                                   } catch (err: any) {
-                                    toast.error(err.response?.data?.error?.message || t('failedRelist'));
+                                    toast.error(t('failedRelist'));
                                   }
                                 }}
                               >

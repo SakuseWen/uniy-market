@@ -208,7 +208,7 @@ export default function CreateProductPage() {
         return;
       }
       
-      toast.error(error.response?.data?.error?.message || error.message || t(language, 'failedCreateProduct'));
+      toast.error(t(language, 'failedCreateProduct'));
     } finally {
       setLoading(false);
     }

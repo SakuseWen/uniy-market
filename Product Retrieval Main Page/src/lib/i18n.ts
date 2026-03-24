@@ -207,6 +207,14 @@ export const translations = {
     termsOfService: 'Terms of Service',
     and: 'and',
     privacyPolicy: 'Privacy Policy',
+    loginFailed: 'Login failed. Please check your email and password.',
+    registrationFailed: 'Registration failed. Please try again.',
+    userExists: 'An account with this email already exists.',
+    addedToFavorites: 'Added to favorites',
+    removedFromFavorites: 'Removed from favorites',
+    addedToComparison: 'Added to comparison',
+    removedFromComparison: 'Removed from comparison',
+    maxCompareItems: 'You can only compare up to 4 items',
 
     // Create/Edit Product Page
     backToProducts: 'Back to Products',
@@ -483,6 +491,14 @@ export const translations = {
     termsOfService: '服务条款',
     and: '和',
     privacyPolicy: '隐私政策',
+    loginFailed: '登录失败，请检查邮箱和密码。',
+    registrationFailed: '注册失败，请重试。',
+    userExists: '该邮箱已被注册。',
+    addedToFavorites: '已加入收藏',
+    removedFromFavorites: '已取消收藏',
+    addedToComparison: '已加入对比',
+    removedFromComparison: '已取消对比',
+    maxCompareItems: '最多只能对比4件商品',
 
     // Create/Edit Product Page
     backToProducts: '返回商品列表',
@@ -759,6 +775,14 @@ export const translations = {
     termsOfService: 'ข้อกำหนดการใช้งาน',
     and: 'และ',
     privacyPolicy: 'นโยบายความเป็นส่วนตัว',
+    loginFailed: 'เข้าสู่ระบบล้มเหลว กรุณาตรวจสอบอีเมลและรหัสผ่าน',
+    registrationFailed: 'การลงทะเบียนล้มเหลว กรุณาลองอีกครั้ง',
+    userExists: 'อีเมลนี้ถูกใช้งานแล้ว',
+    addedToFavorites: 'เพิ่มในรายการโปรดแล้ว',
+    removedFromFavorites: 'ลบออกจากรายการโปรดแล้ว',
+    addedToComparison: 'เพิ่มในการเปรียบเทียบแล้ว',
+    removedFromComparison: 'ลบออกจากการเปรียบเทียบแล้ว',
+    maxCompareItems: 'เปรียบเทียบได้สูงสุด 4 รายการเท่านั้น',
 
     // Create/Edit Product Page
     backToProducts: 'กลับไปหน้าสินค้า',
