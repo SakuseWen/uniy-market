@@ -33,7 +33,7 @@ interface UserProduct {
   createdAt: string;
 }
 
-function UserProfilePage() {
+function MyPage() {
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuth();
   const { language, setLanguage } = useLanguage();
@@ -350,4 +350,4 @@ function UserProfilePage() {
   );
 }
 
-export default UserProfilePage;
+export default MyPage;
