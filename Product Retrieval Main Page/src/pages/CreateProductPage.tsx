@@ -49,6 +49,14 @@ export default function CreateProductPage() {
     }
   }, [isAuthenticated, navigate]);
 
+  // Redirect if not edu verified
+  useEffect(() => {
+    if (isAuthenticated && user && !user.eduVerified) {
+      toast.error(t(language, 'eduRequiredToPost'));
+      navigate('/my-page');
+    }
+  }, [isAuthenticated, user, navigate]);
+
   // Form state
   const [formData, setFormData] = useState({
     title: '',

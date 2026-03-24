@@ -330,6 +330,7 @@ export const translations = {
     eduVerifySuccess: 'Education email verified successfully!',
     eduVerifyFailed: 'Verification failed. Please check the code and try again.',
     eduEmailAlreadyUsed: 'This education email is already verified by another account.',
+    eduRequiredToPost: 'You are not verified as an education user and cannot use this feature. Please verify first.',
   },
   zh: {
     // Header
@@ -660,6 +661,7 @@ export const translations = {
     eduVerifySuccess: '教育邮箱验证成功！',
     eduVerifyFailed: '验证失败，请检查验证码后重试。',
     eduEmailAlreadyUsed: '该教育邮箱已被其他账户认证。',
+    eduRequiredToPost: '您还未认证为教育用户不可使用此功能，请先进行认证。',
   },
   th: {
     // Header
@@ -990,6 +992,7 @@ export const translations = {
     eduVerifySuccess: 'ยืนยันอีเมลการศึกษาสำเร็จ!',
     eduVerifyFailed: 'การยืนยันล้มเหลว กรุณาตรวจสอบรหัสแล้วลองอีกครั้ง',
     eduEmailAlreadyUsed: 'อีเมลการศึกษานี้ถูกยืนยันโดยบัญชีอื่นแล้ว',
+    eduRequiredToPost: 'คุณยังไม่ได้ยืนยันตัวตนเป็นผู้ใช้การศึกษา ไม่สามารถใช้ฟีเจอร์นี้ได้ กรุณายืนยันตัวตนก่อน',
   },
 };
 

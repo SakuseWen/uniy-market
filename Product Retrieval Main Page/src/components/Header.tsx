@@ -12,6 +12,7 @@ import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
 import { Language, translate } from '../lib/i18n';
 import { useNavigate } from 'react-router';
 import { useAuth } from '../services/authContext';
+import { toast } from 'sonner';
 
 interface HeaderProps {
   language: Language;
@@ -186,7 +187,13 @@ export function Header({ language, onLanguageChange, unreadMessages }: HeaderPro
             {/* Post Item Button */}
             <Button 
               className="hidden lg:flex bg-gradient-to-r from-blue-500 to-purple-600"
-              onClick={() => navigate('/create-product')}
+              onClick={() => {
+                if (!user?.eduVerified) {
+                  toast.error(t('eduRequiredToPost'));
+                  return;
+                }
+                navigate('/create-product');
+              }}
             >
               {t('postItemCTA')}
             </Button>

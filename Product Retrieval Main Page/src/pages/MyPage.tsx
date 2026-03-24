@@ -467,7 +467,13 @@ function MyPage() {
                     <CardDescription>{t('manageListings')}</CardDescription>
                   </div>
                   <Button
-                    onClick={() => navigate('/create-product')}
+                    onClick={() => {
+                      if (!user?.eduVerified) {
+                        toast.error(t('eduRequiredToPost'));
+                        return;
+                      }
+                      navigate('/create-product');
+                    }}
                     className="bg-gradient-to-r from-blue-500 to-purple-600"
                   >
                     + {t('createNewProduct')}
@@ -493,7 +499,13 @@ function MyPage() {
                   <h3 className="text-xl font-semibold mb-2">{t('noProductsYet')}</h3>
                   <p className="text-gray-600 mb-6">{t('startSelling')}</p>
                   <Button
-                    onClick={() => navigate('/create-product')}
+                    onClick={() => {
+                      if (!user?.eduVerified) {
+                        toast.error(t('eduRequiredToPost'));
+                        return;
+                      }
+                      navigate('/create-product');
+                    }}
                     className="bg-gradient-to-r from-blue-500 to-purple-600"
                   >
                     {t('createFirstProduct')}
