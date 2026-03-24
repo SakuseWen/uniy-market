@@ -367,7 +367,7 @@ router.delete('/:id', authenticateToken, async (req: express.Request, res: expre
       });
     }
 
-    // Soft delete (set status to inactive)
+    // Hard delete (remove from database)
     const deleted = await getProductModel().deleteProduct(id!);
 
     if (!deleted) {

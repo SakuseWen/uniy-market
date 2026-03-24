@@ -110,14 +110,16 @@ export class ProductModel extends BaseModel {
   }
 
   /**
-   * Delete product (soft delete by setting status to 'inactive')
+   * Delete product (hard delete - remove from database)
    */
   async deleteProduct(listingID: string): Promise<boolean> {
+    // Delete associated images first
+    await this.execute('DELETE FROM ProductImage WHERE listingID = ?', [listingID]);
+    // Delete the product
     const result = await this.execute(
-      'UPDATE ProductListing SET status = ?, updatedAt = ? WHERE listingID = ?',
-      ['inactive', new Date().toISOString(), listingID]
+      'DELETE FROM ProductListing WHERE listingID = ?',
+      [listingID]
     );
-
     return result.changes > 0;
   }
 
