@@ -66,7 +66,7 @@ function MyPage() {
         setProducts((response.data as any) || []);
       } catch (error: any) {
         console.error('Fetch products error:', error);
-        toast.error('Failed to load your products');
+        toast.error(t('failedLoadYourProducts'));
       } finally {
         setLoading(false);
       }
@@ -84,16 +84,16 @@ function MyPage() {
       await productService.deleteProduct(productId);
       const updatedProducts = products.filter((p: any) => p.listingID !== productId);
       setProducts(updatedProducts);
-      toast.success('Product deleted successfully');
+      toast.success(t('productDeleted'));
       setDeleteConfirm(null);
     } catch (error: any) {
       console.error('Delete product error:', error);
       if (error.response?.status === 401) {
-        toast.error('Your session has expired. Please login again.');
+        toast.error(t('sessionExpired'));
         navigate('/login');
         return;
       }
-      toast.error(error.response?.data?.error?.message || 'Failed to delete product');
+      toast.error(error.response?.data?.error?.message || t('failedDeleteProduct'));
     } finally {
       setDeleting(false);
     }
@@ -114,11 +114,11 @@ function MyPage() {
   };
 
   const getConditionLabel = (condition: string | undefined) => {
-    if (!condition) return 'Unknown';
+    if (!condition) return '';
     switch (condition) {
-      case 'new': return 'New';
-      case 'like_new': return 'Like New';
-      case 'used': return 'Used';
+      case 'new': return t('new');
+      case 'like_new': return t('likeNew');
+      case 'used': return t('used');
       default: return condition;
     }
   };
@@ -150,7 +150,7 @@ function MyPage() {
           className="flex items-center gap-2 text-blue-600 hover:text-blue-700 mb-6"
         >
           <ArrowLeft className="w-4 h-4" />
-          Back to Products
+          {t('backToProducts')}
         </button>
 
         {/* Profile Header (Social Style) */}
@@ -219,13 +219,13 @@ function MyPage() {
                 <div className="flex items-center justify-between">
                   <div>
                     <CardTitle>{t('myProducts')}</CardTitle>
-                    <CardDescription>Manage your product listings</CardDescription>
+                    <CardDescription>{t('manageListings')}</CardDescription>
                   </div>
                   <Button
                     onClick={() => navigate('/create-product')}
                     className="bg-gradient-to-r from-blue-500 to-purple-600"
                   >
-                    + Create New Product
+                    + {t('createNewProduct')}
                   </Button>
                 </div>
               </CardHeader>
@@ -234,7 +234,7 @@ function MyPage() {
             {loading ? (
               <div className="flex items-center justify-center py-16">
                 <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
-                <span className="ml-3 text-gray-600">Loading your products...</span>
+                <span className="ml-3 text-gray-600">{t('loadingYourProducts')}</span>
               </div>
             ) : products.length === 0 ? (
               <Card>
@@ -245,13 +245,13 @@ function MyPage() {
                         d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
                     </svg>
                   </div>
-                  <h3 className="text-xl font-semibold mb-2">No products yet</h3>
-                  <p className="text-gray-600 mb-6">Start selling by creating your first product listing</p>
+                  <h3 className="text-xl font-semibold mb-2">{t('noProductsYet')}</h3>
+                  <p className="text-gray-600 mb-6">{t('startSelling')}</p>
                   <Button
                     onClick={() => navigate('/create-product')}
                     className="bg-gradient-to-r from-blue-500 to-purple-600"
                   >
-                    Create Your First Product
+                    {t('createFirstProduct')}
                   </Button>
                 </CardContent>
               </Card>
@@ -273,7 +273,7 @@ function MyPage() {
                             />
                           ) : (
                             <div className="w-32 h-32 bg-gray-200 rounded-lg flex items-center justify-center">
-                              <span className="text-gray-400">No image</span>
+                              <span className="text-gray-400">{t('noImage')}</span>
                             </div>
                           )}
                         </div>
@@ -288,12 +288,12 @@ function MyPage() {
                             </Badge>
                           </div>
                           <div className="flex gap-4 text-sm text-gray-600 mb-4">
-                            <span>Condition: {getConditionLabel(product.condition)}</span>
-                            <span>Posted: {new Date(product.createdAt).toLocaleDateString()}</span>
+                            <span>{t('condition')}: {getConditionLabel(product.condition)}</span>
+                            <span>{t('posted')}: {new Date(product.createdAt).toLocaleDateString()}</span>
                           </div>
                           <div className="flex gap-2">
                             <Button variant="outline" size="sm" onClick={() => navigate(`/edit-product/${product.listingID}`)} className="gap-2">
-                              <Edit2 className="w-4 h-4" /> Edit
+                              <Edit2 className="w-4 h-4" /> {t('edit')}
                             </Button>
                             {product.status === 'active' ? (
                               <Button
@@ -306,9 +306,9 @@ function MyPage() {
                                     setProducts(products.map((p: any) =>
                                       p.listingID === product.listingID ? { ...p, status: 'inactive' } : p
                                     ));
-                                    toast.success('Product unlisted');
+                                    toast.success(t('productUnlisted'));
                                   } catch (err: any) {
-                                    toast.error(err.response?.data?.error?.message || 'Failed to unlist');
+                                    toast.error(err.response?.data?.error?.message || t('failedUnlist'));
                                   }
                                 }}
                               >
@@ -325,9 +325,9 @@ function MyPage() {
                                     setProducts(products.map((p: any) =>
                                       p.listingID === product.listingID ? { ...p, status: 'active' } : p
                                     ));
-                                    toast.success('Product relisted');
+                                    toast.success(t('productRelisted'));
                                   } catch (err: any) {
-                                    toast.error(err.response?.data?.error?.message || 'Failed to relist');
+                                    toast.error(err.response?.data?.error?.message || t('failedRelist'));
                                   }
                                 }}
                               >
@@ -353,13 +353,13 @@ function MyPage() {
       <AlertDialog open={!!deleteConfirm} onOpenChange={(open: any) => !open && setDeleteConfirm(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Product</AlertDialogTitle>
+            <AlertDialogTitle>{t('deleteProduct')}</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete this product? This action cannot be undone.
+              {t('deleteProductConfirm')}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <div className="flex gap-4">
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => deleteConfirm && handleDeleteProduct(deleteConfirm)}
               disabled={deleting}
@@ -368,10 +368,10 @@ function MyPage() {
               {deleting ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Deleting...
+                  {t('deleting')}
                 </>
               ) : (
-                'Delete'
+                t('delete')
               )}
             </AlertDialogAction>
           </div>
