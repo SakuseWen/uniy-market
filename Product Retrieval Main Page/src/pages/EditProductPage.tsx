@@ -417,7 +417,7 @@ export default function EditProductPage() {
                             <img
                               src={imageUrl}
                               alt="Product"
-                              className="w-full h-32 object-cover rounded-lg"
+                              className="w-full rounded-lg"
                               onError={(e) => {
                                 console.error('Image failed to load:', imageUrl);
                                 (e.target as HTMLImageElement).src = '/placeholder-product.jpg';
@@ -466,7 +466,7 @@ export default function EditProductPage() {
                         <img
                           src={preview}
                           alt={`Preview ${index}`}
-                          className="w-full h-32 object-cover rounded-lg"
+                          className="w-full rounded-lg"
                         />
                         <button
                           type="button"

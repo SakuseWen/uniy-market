@@ -372,7 +372,7 @@ export default function CreateProductPage() {
                         <img
                           src={preview}
                           alt={`Preview ${index + 1}`}
-                          className="w-full h-32 object-cover rounded-lg"
+                          className="w-full rounded-lg"
                         />
                         <button
                           type="button"
