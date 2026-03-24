@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router';
 import { Header } from '../components/Header';
 import { Language, translate } from '../lib/i18n';
+import { useLanguage } from '../lib/LanguageContext';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
@@ -25,7 +26,7 @@ import { compressImages } from '../lib/imageUtils';
 export default function CreateProductPage() {
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuth();
-  const [language, setLanguage] = useState<Language>('en');
+  const { language, setLanguage } = useLanguage();
   const { categories } = useCategories();
 
   // Default categories in case API fails
@@ -213,7 +214,6 @@ export default function CreateProductPage() {
 
   const handleLanguageChange = (lang: Language) => {
     setLanguage(lang);
-    localStorage.setItem('preferredLanguage', lang);
   };
 
   return (

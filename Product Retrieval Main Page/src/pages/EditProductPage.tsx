@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router';
 import { Header } from '../components/Header';
 import { Language, translate } from '../lib/i18n';
+import { useLanguage } from '../lib/LanguageContext';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
@@ -45,7 +46,7 @@ export default function EditProductPage() {
   const navigate = useNavigate();
   const { productId } = useParams<{ productId: string }>();
   const { isAuthenticated } = useAuth();
-  const [language, setLanguage] = useState<Language>('en');
+  const { language, setLanguage } = useLanguage();
   const { categories, loading: categoriesLoading } = useCategories();
   
   // Default categories in case API fails
@@ -221,7 +222,6 @@ export default function EditProductPage() {
 
   const handleLanguageChange = (lang: Language) => {
     setLanguage(lang);
-    localStorage.setItem('preferredLanguage', lang);
   };
 
   if (loading) {
