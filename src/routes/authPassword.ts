@@ -190,22 +190,6 @@ router.post('/register',
         });
       }
 
-      // Verify university email
-      const universityDomains = ['@university.edu', '@student.edu', '@alumni.edu'];
-      const isUniversityEmail = universityDomains.some(domain => email.endsWith(domain));
-
-      if (!isUniversityEmail) {
-        return res.status(400).json({
-          success: false,
-          error: {
-            code: 'INVALID_EMAIL_DOMAIN',
-            message: 'Only university email addresses are allowed',
-            timestamp: new Date().toISOString(),
-            requestId: req.get('x-request-id') || 'unknown'
-          }
-        });
-      }
-
       // Hash password
       const hashedPassword = await bcrypt.hash(password, 10);
 

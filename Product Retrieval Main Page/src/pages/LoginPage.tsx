@@ -68,13 +68,14 @@ export default function LoginPage() {
       });
 
       if (!response.ok) {
-        throw new Error('Registration failed');
+        const data = await response.json();
+        throw new Error(data?.error?.message || 'Registration failed');
       }
 
       // 注册成功后跳转邮箱验证页 / Redirect to email verification after registration
       navigate('/verify-email');
-    } catch (err) {
-      setError('Registration failed. Please try again.');
+    } catch (err: any) {
+      setError(err.message || 'Registration failed. Please try again.');
       console.error('Register error:', err);
     } finally {
       setIsLoading(false);
