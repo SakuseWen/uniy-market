@@ -273,6 +273,9 @@ export const translations = {
     codeSent: 'A new verification code has been sent.',
     resendCode: 'Didn\'t receive the code? Resend',
     sendingCode: 'Sending...',
+    invalidOrExpiredCode: 'Invalid or expired verification code.',
+    verificationFailed: 'Verification failed. Please try again.',
+    resendFailed: 'Failed to resend code. Please try again.',
   },
   zh: {
     // Header
@@ -546,6 +549,9 @@ export const translations = {
     codeSent: '新的验证码已发送。',
     resendCode: '没有收到验证码？重新发送',
     sendingCode: '发送中...',
+    invalidOrExpiredCode: '验证码无效或已过期。',
+    verificationFailed: '验证失败，请重试。',
+    resendFailed: '重新发送失败，请重试。',
   },
   th: {
     // Header
@@ -819,6 +825,9 @@ export const translations = {
     codeSent: 'ส่งรหัสยืนยันใหม่แล้ว',
     resendCode: 'ไม่ได้รับรหัส? ส่งอีกครั้ง',
     sendingCode: 'กำลังส่ง...',
+    invalidOrExpiredCode: 'รหัสยืนยันไม่ถูกต้องหรือหมดอายุ',
+    verificationFailed: 'การยืนยันล้มเหลว กรุณาลองอีกครั้ง',
+    resendFailed: 'ส่งรหัสอีกครั้งล้มเหลว กรุณาลองอีกครั้ง',
   },
 };
 

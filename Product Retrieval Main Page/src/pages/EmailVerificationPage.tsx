@@ -49,7 +49,11 @@ export default function EmailVerificationPage() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data?.error?.message || 'Verification failed');
+        const errorCode = data?.error?.code || '';
+        if (errorCode === 'INVALID_CODE') {
+          throw new Error(t('invalidOrExpiredCode'));
+        }
+        throw new Error(t('verificationFailed'));
       }
 
       // Auto-login: save token and user
@@ -63,7 +67,7 @@ export default function EmailVerificationPage() {
         window.location.href = '/';
       }, 1000);
     } catch (err: any) {
-      setError(err.message || 'Verification failed');
+      setError(err.message || t('verificationFailed'));
     } finally {
       setIsLoading(false);
     }
@@ -81,12 +85,12 @@ export default function EmailVerificationPage() {
       });
       const data = await response.json();
       if (!response.ok) {
-        throw new Error(data?.error?.message || 'Failed to resend');
+        throw new Error(t('resendFailed'));
       }
       setSuccess(t('codeSent'));
       setTimeout(() => setSuccess(''), 3000);
     } catch (err: any) {
-      setError(err.message || 'Failed to resend code');
+      setError(err.message || t('resendFailed'));
     } finally {
       setIsResending(false);
     }
