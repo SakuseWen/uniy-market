@@ -295,9 +295,6 @@ function MyPage() {
                             <Button variant="outline" size="sm" onClick={() => navigate(`/edit-product/${product.listingID}`)} className="gap-2">
                               <Edit2 className="w-4 h-4" /> Edit
                             </Button>
-                            <Button variant="destructive" size="sm" onClick={() => setDeleteConfirm(product.listingID)} className="gap-2">
-                              <Trash2 className="w-4 h-4" /> {t('delete')}
-                            </Button>
                             {product.status === 'active' ? (
                               <Button
                                 variant="outline"
@@ -337,6 +334,9 @@ function MyPage() {
                                 {t('relist')}
                               </Button>
                             ) : null}
+                            <Button variant="destructive" size="sm" onClick={() => setDeleteConfirm(product.listingID)} className="gap-2">
+                              <Trash2 className="w-4 h-4" /> {t('delete')}
+                            </Button>
                           </div>
                         </div>
                       </div>
