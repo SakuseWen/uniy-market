@@ -3,7 +3,7 @@ import MainPage from './pages/MainPage';
 import LoginPage from './pages/LoginPage';
 import ChatPage from './pages/ChatPage';
 import CreateProductPage from './pages/CreateProductPage';
-import UserProfilePage from './pages/UserProfilePage';
+import MyPage from './pages/MyPage';
 import EditProductPage from './pages/EditProductPage';
 import EmailVerificationPage from './pages/EmailVerificationPage';
 
@@ -26,7 +26,7 @@ export const router = createBrowserRouter([
   },
   {
     path: '/my-page',
-    Component: UserProfilePage,
+    Component: MyPage,
   },
   {
     path: '/edit-product/:productId',
