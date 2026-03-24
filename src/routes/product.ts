@@ -367,7 +367,7 @@ router.delete('/:id', authenticateToken, async (req: express.Request, res: expre
       });
     }
 
-    // Soft delete (set status to inactive)
+    // Hard delete (remove from database)
     const deleted = await getProductModel().deleteProduct(id!);
 
     if (!deleted) {
@@ -542,7 +542,7 @@ router.get('/seller/:sellerId',
         });
       }
 
-      const result = await getProductModel().getProductsBySeller(sellerId!, page, limit);
+      const result = await getProductModel().getProductsBySeller(sellerId!, page, limit, req.query['includeInactive'] === 'true');
 
       // Enrich products with images and category information
       const enrichedProducts = await Promise.all(

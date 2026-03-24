@@ -76,15 +76,29 @@ export class DatabaseManager {
         userID TEXT PRIMARY KEY,
         email TEXT UNIQUE NOT NULL,
         name TEXT NOT NULL,
+        password TEXT,
         phone TEXT,
         profileImage TEXT,
         isVerified BOOLEAN DEFAULT FALSE,
         preferredLanguage TEXT DEFAULT 'en',
         isAdmin BOOLEAN DEFAULT FALSE,
+        bio TEXT,
         status TEXT DEFAULT 'active' CHECK (status IN ('active', 'suspended', 'deleted')),
         createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
         updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP
       );
+
+      -- Verification Codes table
+      CREATE TABLE IF NOT EXISTS VerificationCode (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        email TEXT NOT NULL,
+        code TEXT NOT NULL,
+        expiresAt DATETIME NOT NULL,
+        used BOOLEAN DEFAULT FALSE,
+        createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
+      );
+      CREATE INDEX IF NOT EXISTS idx_verification_email ON VerificationCode(email);
+      CREATE INDEX IF NOT EXISTS idx_verification_expires ON VerificationCode(expiresAt);
 
       -- Student table
       CREATE TABLE IF NOT EXISTS Student (
@@ -100,7 +114,7 @@ export class DatabaseManager {
       -- Category table
       CREATE TABLE IF NOT EXISTS Category (
         catID INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT NOT NULL,
+        name TEXT NOT NULL UNIQUE,
         nameEn TEXT,
         nameTh TEXT,
         nameZh TEXT,
@@ -320,6 +334,13 @@ export class DatabaseManager {
 
     await this.db.exec(schema);
 
+    // Migration: add bio column if not exists
+    try {
+      await this.db.exec('ALTER TABLE User ADD COLUMN bio TEXT');
+    } catch (_e) {
+      // Column already exists, ignore
+    }
+
     // Insert default data
     await this.insertDefaultData();
 
@@ -328,6 +349,14 @@ export class DatabaseManager {
 
   private async insertDefaultData(): Promise<void> {
     if (!this.db) return;
+
+    // Clean up duplicate categories and add unique constraint
+    await this.db.exec(`
+      DELETE FROM Category WHERE catID NOT IN (
+        SELECT MIN(catID) FROM Category GROUP BY name
+      );
+    `);
+    await this.db.exec(`CREATE UNIQUE INDEX IF NOT EXISTS idx_category_name ON Category(name);`);
 
     // Insert default categories
     const categories = [
@@ -384,6 +413,14 @@ export class DatabaseManager {
         [university.domain, university.universityName, university.country]
       );
     }
+
+    // Clean up duplicate sensitive words and add unique constraint
+    await this.db.exec(`
+      DELETE FROM SensitiveWords WHERE id NOT IN (
+        SELECT MIN(id) FROM SensitiveWords GROUP BY word, language
+      );
+    `);
+    await this.db.exec(`CREATE UNIQUE INDEX IF NOT EXISTS idx_sensitive_word_lang ON SensitiveWords(word, language);`);
 
     // Insert default sensitive words
     const sensitiveWords = [

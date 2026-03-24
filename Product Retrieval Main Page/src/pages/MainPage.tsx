@@ -167,10 +167,10 @@ export default function MainPage() {
   const handleFavorite = (id: string) => {
     setFavoritedIds((prev) => {
       if (prev.includes(id)) {
-        toast.success('Removed from favorites');
+        toast.success(t('removedFromFavorites'));
         return prev.filter((fId) => fId !== id);
       } else {
-        toast.success('Added to favorites');
+        toast.success(t('addedToFavorites'));
         return [...prev, id];
       }
     });
@@ -179,13 +179,13 @@ export default function MainPage() {
   const handleCompare = (id: string) => {
     setComparisonIds((prev) => {
       if (prev.includes(id)) {
-        toast.success('Removed from comparison');
+        toast.success(t('removedFromComparison'));
         return prev.filter((cId) => cId !== id);
       } else if (prev.length >= 4) {
-        toast.error('You can only compare up to 4 items');
+        toast.error(t('maxCompareItems'));
         return prev;
       } else {
-        toast.success('Added to comparison');
+        toast.success(t('addedToComparison'));
         return [...prev, id];
       }
     });

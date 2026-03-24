@@ -274,7 +274,7 @@ export const productService = {
   },
 
   // 获取用户的商品列表
-  async getUserProducts(userId: string, page: number = 1, limit: number = 20): Promise<{ data: BackendProduct[] }> {
+  async getUserProducts(userId: string, page: number = 1, limit: number = 20, includeInactive: boolean = false): Promise<{ data: BackendProduct[] }> {
     try {
       const response = await apiClient.get<{
         success: boolean;
@@ -282,7 +282,7 @@ export const productService = {
           data: BackendProduct[];
           pagination?: any;
         };
-      }>(`/products/seller/${userId}?page=${page}&limit=${limit}`);
+      }>(`/products/seller/${userId}?page=${page}&limit=${limit}${includeInactive ? '&includeInactive=true' : ''}`);
       
       console.log('getUserProducts response:', response.data);
       

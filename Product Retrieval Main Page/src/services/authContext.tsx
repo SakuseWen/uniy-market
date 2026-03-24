@@ -4,6 +4,8 @@ export interface User {
   userID: string;
   email: string;
   name: string;
+  profileImage?: string;
+  bio?: string;
   isVerified: boolean;
   isAdmin: boolean;
   preferredLanguage: string;
@@ -15,6 +17,7 @@ interface AuthContextType {
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
+  updateUser: (updatedUser: User) => void;
   isAuthenticated: boolean;
 }
 
@@ -54,7 +57,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
 
       if (!response.ok) {
-        throw new Error('Login failed');
+        const errorData = await response.json().catch(() => null);
+        const errorCode = errorData?.error?.code || 'LOGIN_FAILED';
+        throw new Error(errorCode);
       }
 
       const data = await response.json();
@@ -77,6 +82,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     localStorage.removeItem('authUser');
   };
 
+  const updateUser = (updatedUser: User) => {
+    setUser(updatedUser);
+    localStorage.setItem('authUser', JSON.stringify(updatedUser));
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -85,6 +95,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         isLoading,
         login,
         logout,
+        updateUser,
         isAuthenticated: !!user && !!token,
       }}
     >

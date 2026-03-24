@@ -2,6 +2,9 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router';
 import { Header } from '../components/Header';
 import { Language, translate } from '../lib/i18n';
+import { useLanguage } from '../lib/LanguageContext';
+
+const t = (lang: Language, key: string) => translate(lang, key as any);
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
@@ -45,7 +48,7 @@ export default function EditProductPage() {
   const navigate = useNavigate();
   const { productId } = useParams<{ productId: string }>();
   const { isAuthenticated } = useAuth();
-  const [language, setLanguage] = useState<Language>('en');
+  const { language, setLanguage } = useLanguage();
   const { categories, loading: categoriesLoading } = useCategories();
   
   // Default categories in case API fails
@@ -100,7 +103,7 @@ export default function EditProductPage() {
         setFormData(product);
       } catch (error: any) {
         console.error('Fetch product error:', error);
-        toast.error('Failed to load product');
+        toast.error(t(language, 'failedLoadProduct'));
         navigate('/my-page');
       } finally {
         setLoading(false);
@@ -135,7 +138,7 @@ export default function EditProductPage() {
   const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     if (newImages.length + files.length > 5) {
-      toast.error('Maximum 5 images allowed');
+      toast.error(t(language, 'maxImagesError'));
       return;
     }
 
@@ -154,7 +157,7 @@ export default function EditProductPage() {
       });
     } catch (error) {
       console.error('Image compression error:', error);
-      toast.error('Failed to process images');
+      toast.error(t(language, 'failedProcessImages'));
     }
   };
 
@@ -201,19 +204,19 @@ export default function EditProductPage() {
         await productService.uploadProductImages(productId, formDataObj);
       }
 
-      toast.success('Product updated successfully');
+      toast.success(t(language, 'productUpdated'));
       navigate('/my-page');
     } catch (error: any) {
       console.error('Update product error:', error);
       
       // Handle 401 Unauthorized
       if (error.response?.status === 401) {
-        toast.error('Your session has expired. Please login again.');
+        toast.error(t(language, 'sessionExpired'));
         navigate('/login');
         return;
       }
       
-      toast.error(error.response?.data?.error?.message || 'Failed to update product');
+      toast.error(t(language, 'failedUpdateProduct'));
     } finally {
       setSaving(false);
     }
@@ -221,7 +224,6 @@ export default function EditProductPage() {
 
   const handleLanguageChange = (lang: Language) => {
     setLanguage(lang);
-    localStorage.setItem('preferredLanguage', lang);
   };
 
   if (loading) {
@@ -236,7 +238,7 @@ export default function EditProductPage() {
         />
         <div className="flex items-center justify-center py-16">
           <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
-          <span className="ml-3 text-gray-600">Loading product...</span>
+          <span className="ml-3 text-gray-600">{t(language, 'loadingProduct')}</span>
         </div>
       </div>
     );
@@ -254,8 +256,8 @@ export default function EditProductPage() {
         />
         <div className="container mx-auto px-4 py-8">
           <div className="text-center">
-            <h1 className="text-2xl font-bold text-gray-900 mb-4">Product not found</h1>
-            <Button onClick={() => navigate('/my-page')}>Back to My Products</Button>
+            <h1 className="text-2xl font-bold text-gray-900 mb-4">{t(language, 'productNotFound')}</h1>
+            <Button onClick={() => navigate('/my-page')}>{t(language, 'backToMyProducts')}</Button>
           </div>
         </div>
       </div>
@@ -282,39 +284,39 @@ export default function EditProductPage() {
           className="flex items-center gap-2 text-blue-600 hover:text-blue-700 mb-6"
         >
           <ArrowLeft className="w-4 h-4" />
-          Back to My Products
+          {t(language, 'backToMyProducts')}
         </button>
 
         {/* Edit Form */}
         <Card>
           <CardHeader>
-            <CardTitle>Edit Product</CardTitle>
-            <CardDescription>Update your product information</CardDescription>
+            <CardTitle>{t(language, 'editProduct')}</CardTitle>
+            <CardDescription>{t(language, 'updateProductInfo')}</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* Title */}
               <div className="space-y-2">
-                <Label htmlFor="title">Product Title</Label>
+                <Label htmlFor="title">{t(language, 'productTitle')}</Label>
                 <Input
                   id="title"
                   name="title"
                   value={formData.title}
                   onChange={handleInputChange}
-                  placeholder="Enter product title"
+                  placeholder={t(language, 'enterProductTitle')}
                   required
                 />
               </div>
 
               {/* Description */}
               <div className="space-y-2">
-                <Label htmlFor="description">Description</Label>
+                <Label htmlFor="description">{t(language, 'description')}</Label>
                 <Textarea
                   id="description"
                   name="description"
                   value={formData.description}
                   onChange={handleInputChange}
-                  placeholder="Describe your product"
+                  placeholder={t(language, 'describeYourProduct')}
                   rows={4}
                 />
               </div>
@@ -322,7 +324,7 @@ export default function EditProductPage() {
               {/* Price */}
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="price">Price ($)</Label>
+                  <Label htmlFor="price">{t(language, 'priceDollar')}</Label>
                   <Input
                     id="price"
                     name="price"
@@ -335,7 +337,7 @@ export default function EditProductPage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="stock">Stock</Label>
+                  <Label htmlFor="stock">{t(language, 'stock')}</Label>
                   <Input
                     id="stock"
                     name="stock"
@@ -351,20 +353,20 @@ export default function EditProductPage() {
               {/* Condition */}
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="condition">Condition</Label>
+                  <Label htmlFor="condition">{t(language, 'condition')}</Label>
                   <Select value={formData.condition} onValueChange={(value) => handleSelectChange('condition', value)}>
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="new">New</SelectItem>
-                      <SelectItem value="like_new">Like New</SelectItem>
-                      <SelectItem value="used">Used</SelectItem>
+                      <SelectItem value="new">{t(language, 'new')}</SelectItem>
+                      <SelectItem value="like_new">{t(language, 'likeNew')}</SelectItem>
+                      <SelectItem value="used">{t(language, 'used')}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="categoryID">Category</Label>
+                  <Label htmlFor="categoryID">{t(language, 'category')}</Label>
                   <Select 
                     value={formData.categoryID?.toString() || '1'} 
                     onValueChange={(value) => handleSelectChange('categoryID', value)}
@@ -380,7 +382,7 @@ export default function EditProductPage() {
                           </SelectItem>
                         ))
                       ) : (
-                        <SelectItem value="1">Loading categories...</SelectItem>
+                        <SelectItem value="1">{t(language, 'loadingCategories')}</SelectItem>
                       )}
                     </SelectContent>
                   </Select>
@@ -389,20 +391,20 @@ export default function EditProductPage() {
 
               {/* Location */}
               <div className="space-y-2">
-                <Label htmlFor="location">Location</Label>
+                <Label htmlFor="location">{t(language, 'location')}</Label>
                 <Input
                   id="location"
                   name="location"
                   value={formData.location}
                   onChange={handleInputChange}
-                  placeholder="Enter location"
+                  placeholder={t(language, 'enterLocation')}
                 />
               </div>
 
               {/* Existing Images */}
               {formData.images && formData.images.length > 0 && (
                 <div className="space-y-2">
-                  <Label>Current Images</Label>
+                  <Label>{t(language, 'currentImages')}</Label>
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                     {formData.images
                       .filter(img => !imagesToDelete.includes(img.imageID))
@@ -417,7 +419,7 @@ export default function EditProductPage() {
                             <img
                               src={imageUrl}
                               alt="Product"
-                              className="w-full h-32 object-cover rounded-lg"
+                              className="w-full rounded-lg"
                               onError={(e) => {
                                 console.error('Image failed to load:', imageUrl);
                                 (e.target as HTMLImageElement).src = '/placeholder-product.jpg';
@@ -439,10 +441,10 @@ export default function EditProductPage() {
 
               {/* New Images */}
               <div className="space-y-2">
-                <Label>Add New Images (Max 5)</Label>
+                <Label>{t(language, 'addNewImages')} ({t(language, 'maxImages')})</Label>
                 <div className="border-2 border-dashed rounded-lg p-6 text-center">
                   <Upload className="w-8 h-8 mx-auto mb-2 text-gray-400" />
-                  <p className="text-sm text-gray-600 mb-2">Drag and drop images here or click to select</p>
+                  <p className="text-sm text-gray-600 mb-2">{t(language, 'dragDropImages')}</p>
                   <input
                     type="file"
                     multiple
@@ -453,7 +455,7 @@ export default function EditProductPage() {
                   />
                   <label htmlFor="image-input" className="cursor-pointer">
                     <Button type="button" variant="outline" asChild>
-                      <span>Select Images</span>
+                      <span>{t(language, 'selectImages')}</span>
                     </Button>
                   </label>
                 </div>
@@ -466,7 +468,7 @@ export default function EditProductPage() {
                         <img
                           src={preview}
                           alt={`Preview ${index}`}
-                          className="w-full h-32 object-cover rounded-lg"
+                          className="w-full rounded-lg"
                         />
                         <button
                           type="button"
@@ -491,10 +493,10 @@ export default function EditProductPage() {
                   {saving ? (
                     <>
                       <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Saving...
+                      {t(language, 'saving')}
                     </>
                   ) : (
-                    'Save Changes'
+                    t(language, 'saveChanges')
                   )}
                 </Button>
                 <Button
@@ -502,7 +504,7 @@ export default function EditProductPage() {
                   variant="outline"
                   onClick={() => navigate('/my-page')}
                 >
-                  Cancel
+                  {t(language, 'cancel')}
                 </Button>
               </div>
             </form>

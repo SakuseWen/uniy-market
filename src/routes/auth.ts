@@ -1,8 +1,32 @@
 import express from 'express';
 import passport from 'passport';
+import path from 'path';
+import multer from 'multer';
+import fs from 'fs';
 import { AuthService } from '../services/AuthService';
 import { authenticateToken } from '../middleware/auth';
 import { body, validationResult } from 'express-validator';
+
+// Avatar upload config
+const avatarDir = path.join(__dirname, '../../public/uploads/avatars');
+if (!fs.existsSync(avatarDir)) {
+  fs.mkdirSync(avatarDir, { recursive: true });
+}
+const avatarStorage = multer.diskStorage({
+  destination: (_req, _file, cb) => cb(null, avatarDir),
+  filename: (_req, file, cb) => {
+    const ext = path.extname(file.originalname);
+    cb(null, `avatar-${Date.now()}-${Math.round(Math.random() * 1e9)}${ext}`);
+  },
+});
+const avatarUpload = multer({
+  storage: avatarStorage,
+  fileFilter: (_req, file, cb) => {
+    const allowed = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    cb(null, allowed.includes(file.mimetype));
+  },
+  limits: { fileSize: 5 * 1024 * 1024 },
+});
 
 const router = express.Router();
 let authService: AuthService | null = null;
@@ -213,6 +237,7 @@ router.put('/profile',
     body('name').optional().isLength({ min: 1, max: 100 }).trim(),
     body('phone').optional().isMobilePhone('any'),
     body('preferredLanguage').optional().isIn(['en', 'th', 'zh']),
+    body('bio').optional().isLength({ max: 500 }).trim(),
   ],
   async (req: express.Request, res: express.Response) => {
     try {
@@ -252,6 +277,51 @@ router.put('/profile',
           requestId: req.get('x-request-id') || 'unknown'
         }
       });
+    }
+  }
+);
+
+/**
+ * @route   POST /api/auth/profile/avatar
+ * @desc    Upload user avatar
+ * @access  Private
+ */
+router.post('/profile/avatar',
+  authenticateToken,
+  avatarUpload.single('avatar'),
+  async (req: express.Request, res: express.Response) => {
+    try {
+      const user = req.user as any;
+      if (!req.file) {
+        return res.status(400).json({ success: false, error: { code: 'NO_FILE', message: 'No avatar file uploaded' } });
+      }
+      const relativePath = `/uploads/avatars/${req.file.filename}`;
+
+      // Delete old avatar file if exists
+      if (user.profileImage && user.profileImage.startsWith('/uploads/avatars/')) {
+        const oldPath = path.join(__dirname, '../../public', user.profileImage);
+        try { fs.unlinkSync(oldPath); } catch (_e) { /* ignore */ }
+      }
+
+      const updatedUser = await getAuthService().updateUserProfile(user.userID, { profileImage: relativePath });
+      return res.json({
+        success: true,
+        data: {
+          user: {
+            userID: updatedUser.userID,
+            email: updatedUser.email,
+            name: updatedUser.name,
+            profileImage: updatedUser.profileImage,
+            bio: updatedUser.bio,
+            isVerified: updatedUser.isVerified,
+            isAdmin: updatedUser.isAdmin,
+            preferredLanguage: updatedUser.preferredLanguage,
+          }
+        }
+      });
+    } catch (error) {
+      console.error('Avatar upload error:', error);
+      return res.status(500).json({ success: false, error: { code: 'AVATAR_UPLOAD_FAILED', message: 'Failed to upload avatar' } });
     }
   }
 );

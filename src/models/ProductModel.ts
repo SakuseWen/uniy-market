@@ -110,14 +110,16 @@ export class ProductModel extends BaseModel {
   }
 
   /**
-   * Delete product (soft delete by setting status to 'inactive')
+   * Delete product (hard delete - remove from database)
    */
   async deleteProduct(listingID: string): Promise<boolean> {
+    // Delete associated images first
+    await this.execute('DELETE FROM ProductImage WHERE listingID = ?', [listingID]);
+    // Delete the product
     const result = await this.execute(
-      'UPDATE ProductListing SET status = ?, updatedAt = ? WHERE listingID = ?',
-      ['inactive', new Date().toISOString(), listingID]
+      'DELETE FROM ProductListing WHERE listingID = ?',
+      [listingID]
     );
-
     return result.changes > 0;
   }
 
@@ -228,19 +230,28 @@ export class ProductModel extends BaseModel {
   /**
    * Get products by seller ID
    */
-  async getProductsBySeller(sellerID: string, page: number = 1, limit: number = 20): Promise<PaginatedResponse<ProductListing>> {
+  async getProductsBySeller(sellerID: string, page: number = 1, limit: number = 20, includeInactive: boolean = false): Promise<PaginatedResponse<ProductListing>> {
     const offset = (page - 1) * limit;
 
-    const products = await this.query(
-      'SELECT * FROM ProductListing WHERE sellerID = ? AND status != ? ORDER BY createdAt DESC LIMIT ? OFFSET ?',
-      [sellerID, 'inactive', limit, offset]
-    );
+    let query: string;
+    let countQuery: string;
+    let params: any[];
+    let countParams: any[];
 
-    const totalResult = await this.queryOne(
-      'SELECT COUNT(*) as count FROM ProductListing WHERE sellerID = ? AND status != ?',
-      [sellerID, 'inactive']
-    );
+    if (includeInactive) {
+      query = 'SELECT * FROM ProductListing WHERE sellerID = ? ORDER BY createdAt DESC LIMIT ? OFFSET ?';
+      params = [sellerID, limit, offset];
+      countQuery = 'SELECT COUNT(*) as count FROM ProductListing WHERE sellerID = ?';
+      countParams = [sellerID];
+    } else {
+      query = 'SELECT * FROM ProductListing WHERE sellerID = ? AND status != ? ORDER BY createdAt DESC LIMIT ? OFFSET ?';
+      params = [sellerID, 'inactive', limit, offset];
+      countQuery = 'SELECT COUNT(*) as count FROM ProductListing WHERE sellerID = ? AND status != ?';
+      countParams = [sellerID, 'inactive'];
+    }
 
+    const products = await this.query(query, params);
+    const totalResult = await this.queryOne(countQuery, countParams);
     const total = totalResult?.count || 0;
 
     return {

@@ -1,36 +1,99 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router';
+import { useNavigate, useLocation } from 'react-router';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '../components/ui/card';
 import { CheckCircle, Mail } from 'lucide-react';
 import { translate } from '../lib/i18n';
 import { useLanguage } from '../lib/LanguageContext';
+import { useAuth } from '../services/authContext';
 
-// 邮箱验证页面 / Email Verification Page
 export default function EmailVerificationPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { language } = useLanguage();
   const t = (key: any) => translate(language, key);
 
+  const email = (location.state as any)?.email || '';
+
   const [code, setCode] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isResending, setIsResending] = useState(false);
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
 
-  const handleVerify = (e: React.FormEvent) => {
+  const handleVerify = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setSuccess('');
 
     if (code.length !== 6 || !/^\d{6}$/.test(code)) {
-      setError('Please enter a valid 6-digit code.');
+      setError(t('invalidCode'));
+      return;
+    }
+
+    if (!email) {
+      setError(t('emailRequired'));
+      navigate('/login');
       return;
     }
 
     setIsLoading(true);
-    setTimeout(() => {
+    try {
+      const response = await fetch('http://localhost:3000/api/auth/verify-code', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, code }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        const errorCode = data?.error?.code || '';
+        if (errorCode === 'INVALID_CODE') {
+          throw new Error(t('invalidOrExpiredCode'));
+        }
+        throw new Error(t('verificationFailed'));
+      }
+
+      // Auto-login: save token and user
+      if (data.data?.token) {
+        localStorage.setItem('authToken', data.data.token);
+        localStorage.setItem('authUser', JSON.stringify(data.data.user));
+      }
+
+      setSuccess(t('verificationSuccess'));
+      setTimeout(() => {
+        window.location.href = '/';
+      }, 1000);
+    } catch (err: any) {
+      setError(err.message || t('verificationFailed'));
+    } finally {
       setIsLoading(false);
-      navigate('/');
-    }, 1200);
+    }
+  };
+
+  const handleResend = async () => {
+    if (!email) return;
+    setIsResending(true);
+    setError('');
+    try {
+      const response = await fetch('http://localhost:3000/api/auth/resend-code', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(t('resendFailed'));
+      }
+      setSuccess(t('codeSent'));
+      setTimeout(() => setSuccess(''), 3000);
+    } catch (err: any) {
+      setError(err.message || t('resendFailed'));
+    } finally {
+      setIsResending(false);
+    }
   };
 
   return (
@@ -53,7 +116,10 @@ export default function EmailVerificationPage() {
               </div>
             </div>
             <CardTitle>{t('verifyYourEmail')}</CardTitle>
-            <CardDescription>{t('verifyEmailDesc')}</CardDescription>
+            <CardDescription>
+              {t('verifyEmailDesc')}
+              {email && <span className="block mt-1 font-medium text-blue-600">{email}</span>}
+            </CardDescription>
           </CardHeader>
 
           <CardContent>
@@ -70,6 +136,9 @@ export default function EmailVerificationPage() {
                 />
                 {error && (
                   <p className="text-sm text-red-500 text-center">{error}</p>
+                )}
+                {success && (
+                  <p className="text-sm text-green-600 text-center">{success}</p>
                 )}
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-sm">
                   <div className="flex items-start gap-2">
@@ -89,6 +158,14 @@ export default function EmailVerificationPage() {
             >
               {isLoading ? t('verifying') : t('verify')}
             </Button>
+            <button
+              type="button"
+              className="text-sm text-blue-600 hover:text-blue-800 transition-colors"
+              onClick={handleResend}
+              disabled={isResending}
+            >
+              {isResending ? t('sendingCode') : t('resendCode')}
+            </button>
             <button
               type="button"
               className="text-sm text-gray-500 hover:text-blue-600 transition-colors"

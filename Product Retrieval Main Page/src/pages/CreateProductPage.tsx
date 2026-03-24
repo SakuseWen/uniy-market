@@ -2,6 +2,9 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router';
 import { Header } from '../components/Header';
 import { Language, translate } from '../lib/i18n';
+import { useLanguage } from '../lib/LanguageContext';
+
+const t = (lang: Language, key: string) => translate(lang, key as any);
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
@@ -25,7 +28,7 @@ import { compressImages } from '../lib/imageUtils';
 export default function CreateProductPage() {
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuth();
-  const [language, setLanguage] = useState<Language>('en');
+  const { language, setLanguage } = useLanguage();
   const { categories } = useCategories();
 
   // Default categories in case API fails
@@ -85,7 +88,7 @@ export default function CreateProductPage() {
     if (!files) return;
 
     if (images.length + files.length > 5) {
-      toast.error('Maximum 5 images allowed');
+      toast.error(t(language, 'maxImagesError'));
       return;
     }
 
@@ -104,7 +107,7 @@ export default function CreateProductPage() {
       });
     } catch (error) {
       console.error('Image compression error:', error);
-      toast.error('Failed to process images');
+      toast.error(t(language, 'failedProcessImages'));
     }
   };
 
@@ -120,27 +123,27 @@ export default function CreateProductPage() {
 
     // Validation
     if (!formData.title.trim()) {
-      toast.error('Title is required');
+      toast.error(t(language, 'titleRequired'));
       return;
     }
 
     if (!formData.price || parseFloat(formData.price) <= 0) {
-      toast.error('Valid price is required');
+      toast.error(t(language, 'validPriceRequired'));
       return;
     }
 
     if (!formData.stock || parseInt(formData.stock) <= 0) {
-      toast.error('Stock must be at least 1');
+      toast.error(t(language, 'stockAtLeastOne'));
       return;
     }
 
     if (!formData.categoryID) {
-      toast.error('Category is required');
+      toast.error(t(language, 'categoryRequired'));
       return;
     }
 
     if (images.length === 0) {
-      toast.error('At least one image is required');
+      toast.error(t(language, 'imageRequired'));
       return;
     }
 
@@ -180,16 +183,16 @@ export default function CreateProductPage() {
           // Wait a bit more to ensure images are fully saved
           await new Promise(resolve => setTimeout(resolve, 500));
           
-          toast.success('Product created with images!');
+          toast.success(t(language, 'productCreatedWithImages'));
         } catch (imageError: any) {
           console.error('Image upload error:', imageError);
           console.error('Error response:', imageError.response?.data);
           // Don't fail the entire operation if image upload fails
           // The product was created successfully, just without images
-          toast.warning('Product created but image upload failed. You can add images later.');
+          toast.warning(t(language, 'productCreatedImageFailed'));
         }
       } else {
-        toast.success('Product created successfully!');
+        toast.success(t(language, 'productCreatedNoImages'));
       }
 
       // Navigate after everything is done
@@ -200,12 +203,12 @@ export default function CreateProductPage() {
       
       // Handle 401 Unauthorized
       if (error.response?.status === 401) {
-        toast.error('Your session has expired. Please login again.');
+        toast.error(t(language, 'sessionExpired'));
         navigate('/login');
         return;
       }
       
-      toast.error(error.response?.data?.error?.message || error.message || 'Failed to create product');
+      toast.error(t(language, 'failedCreateProduct'));
     } finally {
       setLoading(false);
     }
@@ -213,7 +216,6 @@ export default function CreateProductPage() {
 
   const handleLanguageChange = (lang: Language) => {
     setLanguage(lang);
-    localStorage.setItem('preferredLanguage', lang);
   };
 
   return (
@@ -236,25 +238,25 @@ export default function CreateProductPage() {
           className="flex items-center gap-2 text-blue-600 hover:text-blue-700 mb-6"
         >
           <ArrowLeft className="w-4 h-4" />
-          Back to Products
+          {t(language, 'backToProducts')}
         </button>
 
         {/* Form Card */}
         <Card className="max-w-2xl mx-auto">
           <CardHeader>
-            <CardTitle>Create New Product</CardTitle>
-            <CardDescription>Fill in the details to list your product</CardDescription>
+            <CardTitle>{t(language, 'createNewProduct')}</CardTitle>
+            <CardDescription>{t(language, 'fillDetails')}</CardDescription>
           </CardHeader>
 
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* Title */}
               <div className="space-y-2">
-                <Label htmlFor="title">Product Title *</Label>
+                <Label htmlFor="title">{t(language, 'productTitle')} *</Label>
                 <Input
                   id="title"
                   name="title"
-                  placeholder="Enter product title"
+                  placeholder={t(language, 'enterProductTitle')}
                   value={formData.title}
                   onChange={handleInputChange}
                   maxLength={200}
@@ -265,11 +267,11 @@ export default function CreateProductPage() {
 
               {/* Description */}
               <div className="space-y-2">
-                <Label htmlFor="description">Description</Label>
+                <Label htmlFor="description">{t(language, 'description')}</Label>
                 <Textarea
                   id="description"
                   name="description"
-                  placeholder="Describe your product in detail"
+                  placeholder={t(language, 'describeProduct')}
                   value={formData.description}
                   onChange={handleInputChange}
                   maxLength={2000}
@@ -281,7 +283,7 @@ export default function CreateProductPage() {
               {/* Price and Stock */}
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="price">Price *</Label>
+                  <Label htmlFor="price">{t(language, 'price')} *</Label>
                   <Input
                     id="price"
                     name="price"
@@ -296,7 +298,7 @@ export default function CreateProductPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="stock">Stock *</Label>
+                  <Label htmlFor="stock">{t(language, 'stock')} *</Label>
                   <Input
                     id="stock"
                     name="stock"
@@ -313,24 +315,24 @@ export default function CreateProductPage() {
               {/* Condition and Category */}
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="condition">Condition *</Label>
+                  <Label htmlFor="condition">{t(language, 'condition')} *</Label>
                   <Select value={formData.condition} onValueChange={(value) => handleSelectChange('condition', value)}>
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="new">New</SelectItem>
-                      <SelectItem value="like_new">Like New</SelectItem>
-                      <SelectItem value="used">Used</SelectItem>
+                      <SelectItem value="new">{t(language, 'new')}</SelectItem>
+                      <SelectItem value="like_new">{t(language, 'likeNew')}</SelectItem>
+                      <SelectItem value="used">{t(language, 'used')}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="category">Category *</Label>
+                  <Label htmlFor="category">{t(language, 'category')} *</Label>
                   <Select value={formData.categoryID} onValueChange={(value) => handleSelectChange('categoryID', value)}>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select category" />
+                      <SelectValue placeholder={t(language, 'selectCategory')} />
                     </SelectTrigger>
                     <SelectContent>
                       {displayCategories && displayCategories.length > 0 ? (
@@ -340,7 +342,7 @@ export default function CreateProductPage() {
                           </SelectItem>
                         ))
                       ) : (
-                        <SelectItem value="1">Loading categories...</SelectItem>
+                        <SelectItem value="1">{t(language, 'loadingCategories')}</SelectItem>
                       )}
                     </SelectContent>
                   </Select>
@@ -349,11 +351,11 @@ export default function CreateProductPage() {
 
               {/* Location */}
               <div className="space-y-2">
-                <Label htmlFor="location">Location</Label>
+                <Label htmlFor="location">{t(language, 'location')}</Label>
                 <Input
                   id="location"
                   name="location"
-                  placeholder="e.g., Campus A, Building 1"
+                  placeholder={t(language, 'locationPlaceholder')}
                   value={formData.location}
                   onChange={handleInputChange}
                   maxLength={200}
@@ -362,7 +364,7 @@ export default function CreateProductPage() {
 
               {/* Images */}
               <div className="space-y-2">
-                <Label>Product Images * (Max 5)</Label>
+                <Label>{t(language, 'productImages')} * ({t(language, 'maxImages')})</Label>
                 
                 {/* Image Previews */}
                 {imagePreviews.length > 0 && (
@@ -372,7 +374,7 @@ export default function CreateProductPage() {
                         <img
                           src={preview}
                           alt={`Preview ${index + 1}`}
-                          className="w-full h-32 object-cover rounded-lg"
+                          className="w-full rounded-lg"
                         />
                         <button
                           type="button"
@@ -391,8 +393,8 @@ export default function CreateProductPage() {
                   <label className="flex items-center justify-center w-full px-4 py-8 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-blue-500 transition-colors">
                     <div className="text-center">
                       <Upload className="w-8 h-8 mx-auto text-gray-400 mb-2" />
-                      <p className="text-sm text-gray-600">Click to upload or drag and drop</p>
-                      <p className="text-xs text-gray-500">PNG, JPG, GIF up to 10MB</p>
+                      <p className="text-sm text-gray-600">{t(language, 'clickToUpload')}</p>
+                      <p className="text-xs text-gray-500">{t(language, 'imageFormat')}</p>
                     </div>
                     <input
                       type="file"
@@ -404,7 +406,7 @@ export default function CreateProductPage() {
                   </label>
                 )}
 
-                <p className="text-xs text-gray-500">{images.length}/5 images</p>
+                <p className="text-xs text-gray-500">{images.length}/5 {t(language, 'imagesCount')}</p>
               </div>
 
               {/* Submit Button */}
@@ -415,7 +417,7 @@ export default function CreateProductPage() {
                   onClick={() => navigate('/')}
                   disabled={loading}
                 >
-                  Cancel
+                  {t(language, 'cancel')}
                 </Button>
                 <Button
                   type="submit"
@@ -425,10 +427,10 @@ export default function CreateProductPage() {
                   {loading ? (
                     <>
                       <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Creating...
+                      {t(language, 'creating')}
                     </>
                   ) : (
-                    'Create Product'
+                    t(language, 'createProduct')
                   )}
                 </Button>
               </div>

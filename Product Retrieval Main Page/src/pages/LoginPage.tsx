@@ -27,6 +27,7 @@ export default function LoginPage() {
   const [registerName, setRegisterName] = useState('');
   const [registerEmail, setRegisterEmail] = useState('');
   const [registerPassword, setRegisterPassword] = useState('');
+  const [registerConfirmPassword, setRegisterConfirmPassword] = useState('');
 
   const { language, setLanguage } = useLanguage();
   const t = (key: any) => translate(language, key);
@@ -42,8 +43,13 @@ export default function LoginPage() {
     try {
       await login(loginEmail, loginPassword);
       navigate('/');
-    } catch (err) {
-      setError('Login failed. Please check your email and password.');
+    } catch (err: any) {
+      // Check if user is not verified
+      if (err.message === 'USER_NOT_VERIFIED' || err.message?.includes('not verified')) {
+        navigate('/verify-email', { state: { email: loginEmail } });
+        return;
+      }
+      setError(t('loginFailed'));
       console.error('Login error:', err);
     } finally {
       setIsLoading(false);
@@ -53,6 +59,17 @@ export default function LoginPage() {
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+
+    if (registerPassword !== registerConfirmPassword) {
+      setError(t('passwordMismatch'));
+      return;
+    }
+
+    if (registerPassword.length < 6) {
+      setError(t('passwordTooShort'));
+      return;
+    }
+
     setIsLoading(true);
     try {
       const response = await fetch('http://localhost:3000/api/auth/register', {
@@ -68,13 +85,18 @@ export default function LoginPage() {
       });
 
       if (!response.ok) {
-        throw new Error('Registration failed');
+        const data = await response.json();
+        const errorCode = data?.error?.code || '';
+        if (errorCode === 'USER_EXISTS') {
+          throw new Error(t('userExists'));
+        }
+        throw new Error(t('registrationFailed'));
       }
 
-      // 注册成功后跳转邮箱验证页 / Redirect to email verification after registration
-      navigate('/verify-email');
-    } catch (err) {
-      setError('Registration failed. Please try again.');
+      // 注册成功后跳转邮箱验证页，传递email / Redirect to email verification after registration
+      navigate('/verify-email', { state: { email: registerEmail } });
+    } catch (err: any) {
+      setError(err.message || t('registrationFailed'));
       console.error('Register error:', err);
     } finally {
       setIsLoading(false);
@@ -235,6 +257,17 @@ export default function LoginPage() {
                         placeholder="••••••••"
                         value={registerPassword}
                         onChange={(e) => setRegisterPassword(e.target.value)}
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="register-confirm-password">{t('confirmPassword')}</Label>
+                      <Input
+                        id="register-confirm-password"
+                        type="password"
+                        placeholder="••••••••"
+                        value={registerConfirmPassword}
+                        onChange={(e) => setRegisterConfirmPassword(e.target.value)}
                         required
                       />
                     </div>
