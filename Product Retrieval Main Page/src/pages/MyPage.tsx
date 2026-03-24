@@ -125,7 +125,11 @@ function MyPage() {
 
   const getStatusLabel = (status: string | undefined) => {
     if (!status) return 'Unknown';
-    return status.charAt(0).toUpperCase() + status.slice(1);
+    switch (status.toLowerCase()) {
+      case 'active': return t('active');
+      case 'inactive': return t('inactive');
+      default: return status.charAt(0).toUpperCase() + status.slice(1);
+    }
   };
 
   return (
@@ -294,18 +298,45 @@ function MyPage() {
                             <Button variant="destructive" size="sm" onClick={() => setDeleteConfirm(product.listingID)} className="gap-2">
                               <Trash2 className="w-4 h-4" /> {t('delete')}
                             </Button>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="text-orange-500 border-orange-200 hover:bg-orange-50 hover:text-orange-600"
-                              onClick={() => {
-                                const updated = products.filter((p: any) => p.listingID !== product.listingID);
-                                setProducts(updated);
-                                toast.success('Product unlisted');
-                              }}
-                            >
-                              {t('unlist')}
-                            </Button>
+                            {product.status === 'active' ? (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="text-orange-500 border-orange-200 hover:bg-orange-50 hover:text-orange-600"
+                                onClick={async () => {
+                                  try {
+                                    await productService.updateProduct(product.listingID, { status: 'inactive' });
+                                    setProducts(products.map((p: any) =>
+                                      p.listingID === product.listingID ? { ...p, status: 'inactive' } : p
+                                    ));
+                                    toast.success('Product unlisted');
+                                  } catch (err: any) {
+                                    toast.error(err.response?.data?.error?.message || 'Failed to unlist');
+                                  }
+                                }}
+                              >
+                                {t('unlist')}
+                              </Button>
+                            ) : product.status === 'inactive' ? (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="text-green-500 border-green-200 hover:bg-green-50 hover:text-green-600"
+                                onClick={async () => {
+                                  try {
+                                    await productService.updateProduct(product.listingID, { status: 'active' });
+                                    setProducts(products.map((p: any) =>
+                                      p.listingID === product.listingID ? { ...p, status: 'active' } : p
+                                    ));
+                                    toast.success('Product relisted');
+                                  } catch (err: any) {
+                                    toast.error(err.response?.data?.error?.message || 'Failed to relist');
+                                  }
+                                }}
+                              >
+                                {t('relist')}
+                              </Button>
+                            ) : null}
                           </div>
                         </div>
                       </div>

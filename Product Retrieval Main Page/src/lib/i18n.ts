@@ -158,7 +158,9 @@ export const translations = {
     myProducts: 'My Products',
     delete: 'Delete',
     unlist: 'Unlist',
+    relist: 'Relist',
     active: 'Active',
+    inactive: 'Inactive',
     mAgo: 'ago',
 
     // Login / Register
@@ -349,7 +351,9 @@ export const translations = {
     myProducts: '我的商品',
     delete: '删除',
     unlist: '下架',
+    relist: '上架',
     active: '在售',
+    inactive: '已下架',
     mAgo: '前',
 
     // Login / Register
@@ -541,7 +545,9 @@ export const translations = {
     myProducts: 'สินค้าของฉัน',
     delete: 'ลบ',
     unlist: 'ถอดออก',
+    relist: 'วางขายอีกครั้ง',
     active: 'ใช้งานอยู่',
+    inactive: 'ไม่ได้ใช้งาน',
     mAgo: 'ที่แล้ว',
 
     // Login / Register
