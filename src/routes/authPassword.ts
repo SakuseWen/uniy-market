@@ -126,6 +126,7 @@ router.post('/login',
             email: user.email,
             name: user.name,
             profileImage: user.profileImage,
+            bio: user.bio,
             isVerified: user.isVerified,
             isAdmin: user.isAdmin,
             preferredLanguage: user.preferredLanguage,
@@ -295,7 +296,7 @@ router.post('/verify-code',
         success: true,
         data: {
           token,
-          user: { userID: user.userID, email: user.email, name: user.name, profileImage: user.profileImage, isVerified: true, isAdmin: user.isAdmin, preferredLanguage: user.preferredLanguage }
+          user: { userID: user.userID, email: user.email, name: user.name, profileImage: user.profileImage, bio: user.bio, isVerified: true, isAdmin: user.isAdmin, preferredLanguage: user.preferredLanguage }
         },
         message: 'Email verified successfully'
       });

@@ -82,6 +82,7 @@ export class DatabaseManager {
         isVerified BOOLEAN DEFAULT FALSE,
         preferredLanguage TEXT DEFAULT 'en',
         isAdmin BOOLEAN DEFAULT FALSE,
+        bio TEXT,
         status TEXT DEFAULT 'active' CHECK (status IN ('active', 'suspended', 'deleted')),
         createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
         updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP
@@ -333,6 +334,13 @@ export class DatabaseManager {
 
     await this.db.exec(schema);
 
+    // Migration: add bio column if not exists
+    try {
+      await this.db.exec('ALTER TABLE User ADD COLUMN bio TEXT');
+    } catch (_e) {
+      // Column already exists, ignore
+    }
+
     // Insert default data
     await this.insertDefaultData();
 
@@ -405,6 +413,14 @@ export class DatabaseManager {
         [university.domain, university.universityName, university.country]
       );
     }
+
+    // Clean up duplicate sensitive words and add unique constraint
+    await this.db.exec(`
+      DELETE FROM SensitiveWords WHERE id NOT IN (
+        SELECT MIN(id) FROM SensitiveWords GROUP BY word, language
+      );
+    `);
+    await this.db.exec(`CREATE UNIQUE INDEX IF NOT EXISTS idx_sensitive_word_lang ON SensitiveWords(word, language);`);
 
     // Insert default sensitive words
     const sensitiveWords = [

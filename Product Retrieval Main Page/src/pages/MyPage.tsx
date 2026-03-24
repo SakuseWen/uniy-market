@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router';
 import { Header } from '../components/Header';
 import { translate } from '../lib/i18n';
@@ -8,11 +8,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../co
 import { Badge } from '../components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
 import { Avatar, AvatarFallback, AvatarImage } from '../components/ui/avatar';
-import { ArrowLeft, Edit2, Trash2, Loader2 } from 'lucide-react';
+import { Input } from '../components/ui/input';
+import { Textarea } from '../components/ui/textarea';
+import { ArrowLeft, Edit2, Trash2, Loader2, Camera } from 'lucide-react';
 import { toast } from 'sonner';
 import { Toaster } from '../components/ui/sonner';
 import { productService } from '../services';
 import { useAuth } from '../services/authContext';
+import apiClient from '../services/api';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -35,7 +38,7 @@ interface UserProduct {
 
 function MyPage() {
   const navigate = useNavigate();
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, updateUser } = useAuth();
   const { language, setLanguage } = useLanguage();
   const t = (key: any) => translate(language, key);
 
@@ -45,6 +48,14 @@ function MyPage() {
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [showChat, setShowChat] = useState(true);
+
+  // Profile editing state
+  const [isEditing, setIsEditing] = useState(false);
+  const [editName, setEditName] = useState(user?.name || '');
+  const [editBio, setEditBio] = useState(user?.bio || '');
+  const [savingProfile, setSavingProfile] = useState(false);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const avatarInputRef = useRef<HTMLInputElement>(null);
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -103,6 +114,48 @@ function MyPage() {
     setLanguage(lang);
   };
 
+  // Save profile changes
+  const handleSaveProfile = async () => {
+    setSavingProfile(true);
+    try {
+      const response = await apiClient.put('/auth/profile', {
+        name: editName,
+        bio: editBio,
+      });
+      const updatedUser = response.data.data.user;
+      updateUser(updatedUser);
+      setIsEditing(false);
+      toast.success(t('profileUpdated'));
+    } catch (error: any) {
+      console.error('Save profile error:', error);
+      toast.error(t('profileUpdateFailed'));
+    } finally {
+      setSavingProfile(false);
+    }
+  };
+
+  // Handle avatar upload
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingAvatar(true);
+    try {
+      const formData = new FormData();
+      formData.append('avatar', file);
+      const response = await apiClient.post('/auth/profile/avatar', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      const updatedUser = response.data.data.user;
+      updateUser(updatedUser);
+      toast.success(t('avatarUpdated'));
+    } catch (error: any) {
+      console.error('Avatar upload error:', error);
+      toast.error(t('avatarUploadFailed'));
+    } finally {
+      setUploadingAvatar(false);
+    }
+  };
+
   const getStatusColor = (status: string | undefined) => {
     if (!status) return 'bg-blue-100 text-blue-800';
     switch (status.toLowerCase()) {
@@ -154,17 +207,84 @@ function MyPage() {
         </button>
 
         {/* Profile Header (Social Style) */}
-        <div className="bg-white rounded-xl border p-6 mb-6 flex items-center gap-6">
-          <Avatar className="w-20 h-20 flex-shrink-0">
-            <AvatarImage src="" />
-            <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white text-xl">
-              {user?.username ? user.username.substring(0, 2).toUpperCase() : 'U'}
-            </AvatarFallback>
-          </Avatar>
-          <div className="flex flex-col justify-center gap-1">
-            <p className="text-xl font-bold">{user?.username || 'User'}</p>
-            <p className="text-sm text-gray-500">{user?.email || ''}</p>
-          </div>
+        <div className="bg-white rounded-xl border p-6 mb-6">
+          {isEditing ? (
+            /* Edit Mode */
+            <div className="flex flex-col gap-4">
+              <div className="flex items-center gap-6">
+                <div className="relative flex-shrink-0">
+                  <Avatar className="w-20 h-20">
+                    <AvatarImage src={user?.profileImage ? `http://localhost:3000${user.profileImage}` : ''} />
+                    <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white text-xl">
+                      {user?.name ? user.name.substring(0, 2).toUpperCase() : 'U'}
+                    </AvatarFallback>
+                  </Avatar>
+                  <button
+                    type="button"
+                    className="absolute bottom-0 right-0 bg-blue-500 text-white rounded-full p-1.5 hover:bg-blue-600 transition-colors"
+                    onClick={() => avatarInputRef.current?.click()}
+                    disabled={uploadingAvatar}
+                  >
+                    {uploadingAvatar ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Camera className="w-3.5 h-3.5" />}
+                  </button>
+                  <input
+                    ref={avatarInputRef}
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    className="hidden"
+                    onChange={handleAvatarChange}
+                  />
+                </div>
+                <div className="flex-1 space-y-3">
+                  <div>
+                    <label className="text-sm text-gray-500 mb-1 block">{t('profileName')}</label>
+                    <Input
+                      value={editName}
+                      onChange={(e) => setEditName(e.target.value)}
+                      maxLength={100}
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm text-gray-500 mb-1 block">{t('profileBio')}</label>
+                    <Textarea
+                      value={editBio}
+                      onChange={(e) => setEditBio(e.target.value)}
+                      placeholder={t('bioPlaceholder')}
+                      maxLength={500}
+                      rows={3}
+                    />
+                  </div>
+                </div>
+              </div>
+              <div className="flex justify-end gap-2">
+                <Button variant="outline" size="sm" onClick={() => { setIsEditing(false); setEditName(user?.name || ''); setEditBio(user?.bio || ''); }}>
+                  {t('cancelEdit')}
+                </Button>
+                <Button size="sm" onClick={handleSaveProfile} disabled={savingProfile || !editName.trim()}
+                  className="bg-gradient-to-r from-blue-500 to-purple-600">
+                  {savingProfile ? <><Loader2 className="w-4 h-4 mr-1 animate-spin" />{t('saving')}</> : t('saveProfile')}
+                </Button>
+              </div>
+            </div>
+          ) : (
+            /* View Mode */
+            <div className="flex items-center gap-6">
+              <Avatar className="w-20 h-20 flex-shrink-0">
+                <AvatarImage src={user?.profileImage ? `http://localhost:3000${user.profileImage}` : ''} />
+                <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white text-xl">
+                  {user?.name ? user.name.substring(0, 2).toUpperCase() : 'U'}
+                </AvatarFallback>
+              </Avatar>
+              <div className="flex flex-col justify-center gap-1 flex-1">
+                <p className="text-xl font-bold">{user?.name || 'User'}</p>
+                <p className="text-sm text-gray-500">{user?.email || ''}</p>
+                {user?.bio && <p className="text-sm text-gray-600 mt-1">{user.bio}</p>}
+              </div>
+              <Button variant="outline" size="sm" onClick={() => { setIsEditing(true); setEditName(user?.name || ''); setEditBio(user?.bio || ''); }} className="gap-1">
+                <Edit2 className="w-4 h-4" /> {t('editProfile')}
+              </Button>
+            </div>
+          )}
         </div>
 
         {/* Tabs: Chat History / My Products */}
