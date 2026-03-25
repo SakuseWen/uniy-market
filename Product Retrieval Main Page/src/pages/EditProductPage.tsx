@@ -250,13 +250,13 @@ export default function EditProductPage() {
           console.error('Image upload response:', imgError.response?.data);
           // Product info was updated successfully, just images failed
           toast.warning(t(language, 'productUpdatedImageFailed') || 'Product updated but image upload failed');
-          navigate('/my-page');
+          setTimeout(() => navigate('/my-page'), 1000);
           return;
         }
       }
 
       toast.success(t(language, 'productUpdated'));
-      navigate('/my-page');
+      setTimeout(() => navigate('/my-page'), 1000);
     } catch (error: any) {
       console.error('Update product error:', error);
       
