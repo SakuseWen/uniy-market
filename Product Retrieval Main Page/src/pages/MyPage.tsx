@@ -556,7 +556,7 @@ function MyPage() {
                               <Button
                                 variant="outline"
                                 size="sm"
-                                className="text-orange-500 border-orange-200 hover:bg-orange-50 hover:text-orange-600"
+                                className="text-orange-500 border-orange-200 hover:bg-orange-50 hover:text-orange-600 transition-colors"
                                 onClick={async () => {
                                   try {
                                     await productService.updateProduct(product.listingID, { status: 'inactive' });
@@ -575,7 +575,7 @@ function MyPage() {
                               <Button
                                 variant="outline"
                                 size="sm"
-                                className="text-green-500 border-green-200 hover:bg-green-50 hover:text-green-600"
+                                className="text-green-500 border-green-200 hover:bg-green-50 hover:text-green-600 transition-colors"
                                 onClick={async () => {
                                   try {
                                     await productService.updateProduct(product.listingID, { status: 'active' });
