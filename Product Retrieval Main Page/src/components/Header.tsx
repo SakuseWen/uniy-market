@@ -188,7 +188,11 @@ export function Header({ language, onLanguageChange, unreadMessages }: HeaderPro
             <Button 
               className="hidden lg:flex bg-gradient-to-r from-blue-500 to-purple-600 hover:shadow-lg hover:scale-105 transition-all duration-200"
               onClick={() => {
-                if (!user?.eduVerified) {
+                if (!user) {
+                  navigate('/login');
+                  return;
+                }
+                if (!user.eduVerified) {
                   toast.error(t('eduRequiredToPost'));
                   return;
                 }
