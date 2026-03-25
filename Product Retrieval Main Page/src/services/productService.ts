@@ -179,10 +179,16 @@ export const productService = {
       } 
     }>(`/products/${id}`);
     
-    // Merge images into product data
+    // Merge images, seller, category into product data
     const productData = response.data.data.product;
     if (response.data.data.images) {
       productData.images = response.data.data.images;
+    }
+    if (response.data.data.seller) {
+      productData.seller = response.data.data.seller;
+    }
+    if (response.data.data.category) {
+      productData.category = response.data.data.category;
     }
     
     return transformProduct(productData);
