@@ -438,11 +438,11 @@ export default function EditProductPage() {
                           : `http://localhost:3000${image.imagePath}`;
                         
                         return (
-                          <div key={image.imageID} className="relative w-24 h-24">
+                          <div key={image.imageID} className="relative w-[288px] h-[288px]">
                             <img
                               src={imageUrl}
                               alt="Product"
-                              className="w-24 h-24 object-cover rounded-lg"
+                              className="w-[288px] h-[288px] object-cover rounded-lg"
                               onError={(e) => {
                                 console.error('Image failed to load:', imageUrl);
                                 (e.target as HTMLImageElement).src = '/placeholder-product.jpg';
@@ -492,11 +492,11 @@ export default function EditProductPage() {
                 {newImagePreviews.length > 0 && (
                   <div className="flex flex-wrap gap-3 mt-4">
                     {newImagePreviews.map((preview, index) => (
-                      <div key={index} className="relative w-24 h-24">
+                      <div key={index} className="relative w-[288px] h-[288px]">
                         <img
                           src={preview}
                           alt={`Preview ${index}`}
-                          className="w-24 h-24 object-cover rounded-lg"
+                          className="w-[288px] h-[288px] object-cover rounded-lg"
                         />
                         <button
                           type="button"
