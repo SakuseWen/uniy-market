@@ -253,7 +253,7 @@ export default function MainPage() {
       />
 
       {/* Main Content */}
-      <div className="container mx-auto px-4 py-6">
+      <div className="container mx-auto px-4 py-6" style={{ marginTop: '160px' }}>
         {/* Toolbar - View Mode and Sorting */}
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-4">
