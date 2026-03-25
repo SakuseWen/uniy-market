@@ -134,9 +134,9 @@ export default function SellerProfilePage() {
 
         {/* Products */}
         <Card>
-          <CardHeader>
-            <CardTitle>{t('sellerProducts') || 'Products'} ({products.length})</CardTitle>
-          </CardHeader>
+          <CardContent className="py-4">
+            <p className="text-lg font-bold text-center">{t('sellerProducts') || 'Products'} ({products.length})</p>
+          </CardContent>
         </Card>
 
         {products.length === 0 ? (
