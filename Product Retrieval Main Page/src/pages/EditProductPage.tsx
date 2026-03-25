@@ -47,7 +47,7 @@ interface Product {
 export default function EditProductPage() {
   const navigate = useNavigate();
   const { productId } = useParams<{ productId: string }>();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, isLoading } = useAuth();
   const { language, setLanguage } = useLanguage();
   const { categories, loading: categoriesLoading } = useCategories();
   
@@ -64,10 +64,10 @@ export default function EditProductPage() {
 
   // Redirect to login if not authenticated
   useEffect(() => {
-    if (!isAuthenticated) {
+    if (!isLoading && !isAuthenticated) {
       navigate('/login');
     }
-  }, [isAuthenticated, navigate]);
+  }, [isLoading, isAuthenticated, navigate]);
 
   // Form state
   const [formData, setFormData] = useState<Product | null>(null);
