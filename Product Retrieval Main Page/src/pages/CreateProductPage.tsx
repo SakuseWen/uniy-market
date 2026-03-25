@@ -71,6 +71,7 @@ export default function CreateProductPage() {
   const [images, setImages] = useState<File[]>([]);
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
 
   // Handle input change
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -122,6 +123,32 @@ export default function CreateProductPage() {
   const removeImage = (index: number) => {
     setImages(prev => prev.filter((_, i) => i !== index));
     setImagePreviews(prev => prev.filter((_, i) => i !== index));
+  };
+
+  // Handle drag and drop
+  const handleDrop = async (e: React.DragEvent<HTMLLabelElement>) => {
+    e.preventDefault();
+    setIsDragging(false);
+    const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'));
+    if (files.length === 0) return;
+    if (images.length + files.length > 5) {
+      toast.error(t(language, 'maxImagesError'));
+      return;
+    }
+    try {
+      const compressed = await compressImages(files);
+      setImages(prev => [...prev, ...compressed]);
+      compressed.forEach(file => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          setImagePreviews(prev => [...prev, reader.result as string]);
+        };
+        reader.readAsDataURL(file);
+      });
+    } catch (error) {
+      console.error('Image compression error:', error);
+      toast.error(t(language, 'failedProcessImages'));
+    }
   };
 
   // Handle submit
@@ -396,10 +423,15 @@ export default function CreateProductPage() {
 
                 {/* Upload Area */}
                 {images.length < 5 && (
-                  <label className="flex items-center justify-center w-full px-4 py-8 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-blue-500 transition-colors">
+                  <label
+                    className={`flex items-center justify-center w-full px-4 py-8 border-2 border-dashed rounded-lg cursor-pointer transition-colors ${isDragging ? 'border-blue-500 bg-blue-50' : 'border-gray-300 hover:border-blue-500'}`}
+                    onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+                    onDragLeave={() => setIsDragging(false)}
+                    onDrop={handleDrop}
+                  >
                     <div className="text-center">
                       <Upload className="w-8 h-8 mx-auto text-gray-400 mb-2" />
-                      <p className="text-sm text-gray-600">{t(language, 'clickToUpload')}</p>
+                      <p className="text-sm text-gray-600">{t(language, 'dragDropImages')}</p>
                       <p className="text-xs text-gray-500">{t(language, 'imageFormat')}</p>
                     </div>
                     <input

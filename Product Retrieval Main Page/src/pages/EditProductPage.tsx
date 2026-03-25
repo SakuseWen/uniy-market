@@ -76,6 +76,7 @@ export default function EditProductPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [imagesToDelete, setImagesToDelete] = useState<string[]>([]);
+  const [isDragging, setIsDragging] = useState(false);
 
   // Fetch product data
   useEffect(() => {
@@ -164,6 +165,32 @@ export default function EditProductPage() {
   const removeNewImage = (index: number) => {
     setNewImages(prev => prev.filter((_, i) => i !== index));
     setNewImagePreviews(prev => prev.filter((_, i) => i !== index));
+  };
+
+  // Handle drag and drop
+  const handleDrop = async (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setIsDragging(false);
+    const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'));
+    if (files.length === 0) return;
+    if (newImages.length + files.length > 5) {
+      toast.error(t(language, 'maxImagesError'));
+      return;
+    }
+    try {
+      const compressed = await compressImages(files);
+      setNewImages(prev => [...prev, ...compressed]);
+      compressed.forEach(file => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          setNewImagePreviews(prev => [...prev, reader.result as string]);
+        };
+        reader.readAsDataURL(file);
+      });
+    } catch (error) {
+      console.error('Image compression error:', error);
+      toast.error(t(language, 'failedProcessImages'));
+    }
   };
 
   // Mark image for deletion
@@ -438,7 +465,12 @@ export default function EditProductPage() {
               {/* New Images */}
               <div className="space-y-2">
                 <Label>{t(language, 'addNewImages')} ({t(language, 'maxImages')})</Label>
-                <div className="border-2 border-dashed rounded-lg p-6 text-center">
+                <div
+                  className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${isDragging ? 'border-blue-500 bg-blue-50' : 'border-gray-300 hover:border-blue-500'}`}
+                  onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+                  onDragLeave={() => setIsDragging(false)}
+                  onDrop={handleDrop}
+                >
                   <Upload className="w-8 h-8 mx-auto mb-2 text-gray-400" />
                   <p className="text-sm text-gray-600 mb-2">{t(language, 'dragDropImages')}</p>
                   <input
