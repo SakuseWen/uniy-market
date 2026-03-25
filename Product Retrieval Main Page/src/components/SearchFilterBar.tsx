@@ -47,7 +47,7 @@ export function SearchFilterBar({
   };
 
   return (
-    <div className="sticky top-[73px] z-40 bg-white border-b shadow-sm">
+    <div className="bg-white border-b shadow-sm">
       <div className="container mx-auto px-4 py-4">
         {/* Search Bar */}
         <div className="relative mb-4">
