@@ -170,7 +170,7 @@ export function ProductDetailPage({
 
             {/* Action Buttons */}
             <div className="grid grid-cols-2 gap-3 mb-3">
-              <Button className="w-full bg-gradient-to-r from-blue-500 to-purple-600" onClick={() => {
+              <Button className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:shadow-lg hover:scale-105 transition-all duration-200" onClick={() => {
                 if (!user) { navigate('/login'); return; }
                 if (product.seller.id) navigate(`/chat/${product.seller.id}`);
               }}>
