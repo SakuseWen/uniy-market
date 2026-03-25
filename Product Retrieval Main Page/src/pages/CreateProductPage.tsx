@@ -401,13 +401,13 @@ export default function CreateProductPage() {
                 
                 {/* Image Previews */}
                 {imagePreviews.length > 0 && (
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-4">
+                  <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 gap-3 mb-4">
                     {imagePreviews.map((preview, index) => (
-                      <div key={index} className="relative group">
+                      <div key={index} className="relative group aspect-square">
                         <img
                           src={preview}
                           alt={`Preview ${index + 1}`}
-                          className="w-full rounded-lg"
+                          className="w-full h-full object-cover rounded-lg"
                         />
                         <button
                           type="button"

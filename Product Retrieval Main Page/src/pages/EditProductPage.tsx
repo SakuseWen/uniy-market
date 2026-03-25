@@ -428,7 +428,7 @@ export default function EditProductPage() {
               {formData.images && formData.images.length > 0 && (
                 <div className="space-y-2">
                   <Label>{t(language, 'currentImages')}</Label>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 gap-3">
                     {formData.images
                       .filter(img => !imagesToDelete.includes(img.imageID))
                       .map(image => {
@@ -438,11 +438,11 @@ export default function EditProductPage() {
                           : `http://localhost:3000${image.imagePath}`;
                         
                         return (
-                          <div key={image.imageID} className="relative">
+                          <div key={image.imageID} className="relative aspect-square">
                             <img
                               src={imageUrl}
                               alt="Product"
-                              className="w-full rounded-lg"
+                              className="w-full h-full object-cover rounded-lg"
                               onError={(e) => {
                                 console.error('Image failed to load:', imageUrl);
                                 (e.target as HTMLImageElement).src = '/placeholder-product.jpg';
@@ -490,13 +490,13 @@ export default function EditProductPage() {
 
                 {/* Image Previews */}
                 {newImagePreviews.length > 0 && (
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mt-4">
+                  <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 gap-3 mt-4">
                     {newImagePreviews.map((preview, index) => (
-                      <div key={index} className="relative">
+                      <div key={index} className="relative aspect-square">
                         <img
                           src={preview}
                           alt={`Preview ${index}`}
-                          className="w-full rounded-lg"
+                          className="w-full h-full object-cover rounded-lg"
                         />
                         <button
                           type="button"
