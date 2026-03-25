@@ -235,25 +235,25 @@ export default function MainPage() {
     <div className="min-h-screen bg-gray-50">
       <Toaster position="top-right" />
       
-      {/* Header */}
-      <Header
-        language={language}
-        onLanguageChange={handleLanguageChange}
-        unreadMessages={unreadMessages}
-      />
-
-      {/* Search and Filter Bar */}
-      <SearchFilterBar
-        language={language}
-        searchQuery={searchQuery}
-        onSearchChange={setSearchQuery}
-        filters={filters}
-        onFilterChange={setFilters}
-        onShowAdvancedFilters={() => setShowAdvancedFilters(true)}
-      />
+      {/* Fixed top bar: Header + Search */}
+      <div className="sticky top-0 z-50">
+        <Header
+          language={language}
+          onLanguageChange={handleLanguageChange}
+          unreadMessages={unreadMessages}
+        />
+        <SearchFilterBar
+          language={language}
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          filters={filters}
+          onFilterChange={setFilters}
+          onShowAdvancedFilters={() => setShowAdvancedFilters(true)}
+        />
+      </div>
 
       {/* Main Content */}
-      <div className="container mx-auto px-4 py-6" style={{ marginTop: '160px' }}>
+      <div className="container mx-auto px-4 py-6">
         {/* Toolbar - View Mode and Sorting */}
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-4">
