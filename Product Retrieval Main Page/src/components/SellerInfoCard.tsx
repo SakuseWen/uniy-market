@@ -95,7 +95,7 @@ export function SellerInfoCard({ seller, language }: SellerInfoCardProps) {
                 <MessageCircle className="w-4 h-4 mr-2" />
                 {t('message')}
               </Button>
-              <Button variant="outline">{t('viewSellerProfile')}</Button>
+              <Button variant="outline" onClick={() => seller.id && navigate(`/seller/${seller.id}`)}>{t('viewSellerProfile')}</Button>
             </div>
           </div>
         </div>

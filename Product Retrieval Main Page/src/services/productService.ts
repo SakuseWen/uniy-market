@@ -100,6 +100,7 @@ function transformProduct(backendProduct: BackendProduct): Product {
     }) || [],
     description: backendProduct.description,
     seller: {
+      id: backendProduct.seller?.userID || '',
       name: backendProduct.seller?.name || 'Unknown',
       avatar: backendProduct.seller?.profileImage || '',
       role: 'student' as const,

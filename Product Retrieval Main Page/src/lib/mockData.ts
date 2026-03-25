@@ -15,6 +15,7 @@ export interface Product {
   descriptionTh?: string;
   specifications?: Record<string, string>;
   seller: {
+    id?: string;
     name: string;
     avatar: string;
     role: 'student' | 'staff';

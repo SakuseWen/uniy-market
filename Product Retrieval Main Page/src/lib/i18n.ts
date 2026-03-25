@@ -218,6 +218,9 @@ export const translations = {
 
     // Create/Edit Product Page
     backToProducts: 'Back to Products',
+    sellerProducts: 'Products',
+    back: 'Back',
+    userNotFound: 'User not found',
     fillDetails: 'Fill in the details to list your product',
     productTitle: 'Product Title',
     enterProductTitle: 'Enter product title',
@@ -549,6 +552,9 @@ export const translations = {
 
     // Create/Edit Product Page
     backToProducts: '返回商品列表',
+    sellerProducts: '商品列表',
+    back: '返回',
+    userNotFound: '用户未找到',
     fillDetails: '填写商品详情以发布您的商品',
     productTitle: '商品标题',
     enterProductTitle: '输入商品标题',
@@ -880,6 +886,9 @@ export const translations = {
 
     // Create/Edit Product Page
     backToProducts: 'กลับไปหน้าสินค้า',
+    sellerProducts: 'สินค้า',
+    back: 'กลับ',
+    userNotFound: 'ไม่พบผู้ใช้',
     fillDetails: 'กรอกรายละเอียดเพื่อลงขายสินค้าของคุณ',
     productTitle: 'ชื่อสินค้า',
     enterProductTitle: 'กรอกชื่อสินค้า',
