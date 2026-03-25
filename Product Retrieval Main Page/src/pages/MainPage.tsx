@@ -4,7 +4,6 @@ import { Header } from '../components/Header';
 import { SearchFilterBar } from '../components/SearchFilterBar';
 import { ProductCard } from '../components/ProductCard';
 import { ProductListView } from '../components/ProductListView';
-import { ProductDetailPage } from '../components/ProductDetailPage';
 import { SideFilterPanel } from '../components/SideFilterPanel';
 import { ComparisonBar } from '../components/ComparisonBar';
 import { translate } from '../lib/i18n';
@@ -70,9 +69,6 @@ export default function MainPage() {
   // Comparison state
   const [comparisonIds, setComparisonIds] = useState<string[]>([]);
   const [favoritedIds, setFavoritedIds] = useState<string[]>([]);
-
-  // Product detail state
-  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
 
   // Fetch products from API
   const apiFilters = useMemo(() => {
@@ -209,6 +205,10 @@ export default function MainPage() {
   };
 
   const handleContact = (sellerId: string) => {
+    if (!user) {
+      navigate('/login');
+      return;
+    }
     navigate(`/chat/${sellerId}`);
   };
 
@@ -217,12 +217,11 @@ export default function MainPage() {
   };
 
   const handleProductClick = (product: Product) => {
-    setSelectedProduct(product);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    navigate(`/product/${product.id}`);
   };
 
   const handleBackToList = () => {
-    setSelectedProduct(null);
+    navigate('/');
   };
 
   // Get related products (same category, different id)
@@ -231,31 +230,6 @@ export default function MainPage() {
       .filter((p) => p.category === product.category && p.id !== product.id)
       .slice(0, 6);
   };
-
-  // Show detail page if product is selected
-  if (selectedProduct) {
-    return (
-      <div className="min-h-screen bg-gray-50">
-        <Toaster position="top-right" />
-        
-        {/* Header */}
-        <Header
-          language={language}
-          onLanguageChange={handleLanguageChange}
-          unreadMessages={unreadMessages}
-        />
-
-        {/* Product Detail Page */}
-        <ProductDetailPage
-          product={selectedProduct}
-          relatedProducts={getRelatedProducts(selectedProduct)}
-          language={language}
-          onBack={handleBackToList}
-          onProductClick={handleProductClick}
-        />
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-gray-50">

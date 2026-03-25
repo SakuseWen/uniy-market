@@ -474,7 +474,7 @@ function MyPage() {
                       }
                       navigate('/create-product');
                     }}
-                    className="bg-gradient-to-r from-blue-500 to-purple-600"
+                    className="bg-gradient-to-r from-blue-500 to-purple-600 hover:shadow-lg hover:scale-105 transition-all duration-200"
                   >
                     + {t('createNewProduct')}
                   </Button>
@@ -506,7 +506,7 @@ function MyPage() {
                       }
                       navigate('/create-product');
                     }}
-                    className="bg-gradient-to-r from-blue-500 to-purple-600"
+                    className="bg-gradient-to-r from-blue-500 to-purple-600 hover:shadow-lg hover:scale-105 transition-all duration-200"
                   >
                     {t('createFirstProduct')}
                   </Button>
@@ -556,7 +556,7 @@ function MyPage() {
                               <Button
                                 variant="outline"
                                 size="sm"
-                                className="text-orange-500 border-orange-200 hover:bg-orange-50 hover:text-orange-600"
+                                className="text-orange-500 border-orange-200 hover:bg-orange-100 hover:text-orange-700 hover:border-orange-300 hover:shadow-md transition-all duration-200"
                                 onClick={async () => {
                                   try {
                                     await productService.updateProduct(product.listingID, { status: 'inactive' });
@@ -575,7 +575,7 @@ function MyPage() {
                               <Button
                                 variant="outline"
                                 size="sm"
-                                className="text-green-500 border-green-200 hover:bg-green-50 hover:text-green-600"
+                                className="text-green-500 border-green-200 hover:bg-green-100 hover:text-green-700 hover:border-green-300 hover:shadow-md transition-all duration-200"
                                 onClick={async () => {
                                   try {
                                     await productService.updateProduct(product.listingID, { status: 'active' });

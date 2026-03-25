@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Language, translate } from '../lib/i18n';
 import { Product } from '../lib/mockData';
 import { useNavigate } from 'react-router';
+import { useAuth } from '../services/authContext';
 
 interface SellerInfoCardProps {
   seller: Product['seller'];
@@ -15,6 +16,7 @@ interface SellerInfoCardProps {
 export function SellerInfoCard({ seller, language }: SellerInfoCardProps) {
   const t = (key: any) => translate(language, key);
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   return (
     <Card>
@@ -90,12 +92,21 @@ export function SellerInfoCard({ seller, language }: SellerInfoCardProps) {
             <div className="flex gap-2">
               <Button 
                 className="bg-gradient-to-r from-blue-500 to-purple-600 hover:shadow-lg hover:scale-105 transition-all duration-200"
-                onClick={() => navigate(`/chat/${seller.id}`)}
+                onClick={() => {
+                  if (!user) { navigate('/login'); return; }
+                  navigate(`/chat/${seller.id}`);
+                }}
               >
                 <MessageCircle className="w-4 h-4 mr-2" />
                 {t('message')}
               </Button>
-              <Button variant="outline">{t('viewSellerProfile')}</Button>
+              <Button variant="outline" onClick={() => {
+                if (seller.id && user && seller.id === user.userID) {
+                  navigate('/my-page');
+                } else if (seller.id) {
+                  navigate(`/seller/${seller.id}`);
+                }
+              }}>{t('viewSellerProfile')}</Button>
             </div>
           </div>
         </div>

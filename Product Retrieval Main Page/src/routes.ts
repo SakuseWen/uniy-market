@@ -6,6 +6,8 @@ import CreateProductPage from './pages/CreateProductPage';
 import MyPage from './pages/MyPage';
 import EditProductPage from './pages/EditProductPage';
 import EmailVerificationPage from './pages/EmailVerificationPage';
+import SellerProfilePage from './pages/SellerProfilePage';
+import ProductPage from './pages/ProductPage';
 
 export const router = createBrowserRouter([
   {
@@ -35,5 +37,13 @@ export const router = createBrowserRouter([
   {
     path: '/verify-email',
     Component: EmailVerificationPage,
+  },
+  {
+    path: '/seller/:sellerId',
+    Component: SellerProfilePage,
+  },
+  {
+    path: '/product/:productId',
+    Component: ProductPage,
   },
 ]);

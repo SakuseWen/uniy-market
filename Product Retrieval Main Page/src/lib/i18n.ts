@@ -197,8 +197,8 @@ export const translations = {
     fullName: 'Full Name',
     studentStaffId: 'Student/Staff ID',
     universityEmail: 'University Email',
-    campusVerification: 'Campus Verification',
-    campusVerificationDesc: "We'll send a verification code to your university email to ensure a safe community.",
+    campusVerification: 'Email Verification',
+    campusVerificationDesc: "We'll send a verification code to the email you provided to confirm it is real and accessible.",
     creatingAccount: 'Creating Account...',
     confirmPassword: 'Confirm Password',
     passwordMismatch: 'Passwords do not match',
@@ -218,6 +218,9 @@ export const translations = {
 
     // Create/Edit Product Page
     backToProducts: 'Back to Products',
+    sellerProducts: 'Products',
+    back: 'Back',
+    userNotFound: 'User not found',
     fillDetails: 'Fill in the details to list your product',
     productTitle: 'Product Title',
     enterProductTitle: 'Enter product title',
@@ -528,8 +531,8 @@ export const translations = {
     fullName: '姓名',
     studentStaffId: '学号/工号',
     universityEmail: '大学邮箱',
-    campusVerification: '校园认证',
-    campusVerificationDesc: '我们将向您的大学邮箱发送验证码，以确保社区安全。',
+    campusVerification: '邮箱认证',
+    campusVerificationDesc: '我们将向您提供的邮箱发送验证码，以确认该邮箱真实可用。',
     creatingAccount: '创建中...',
     confirmPassword: '确认密码',
     passwordMismatch: '两次输入的密码不一致',
@@ -549,6 +552,9 @@ export const translations = {
 
     // Create/Edit Product Page
     backToProducts: '返回商品列表',
+    sellerProducts: '商品列表',
+    back: '返回',
+    userNotFound: '用户未找到',
     fillDetails: '填写商品详情以发布您的商品',
     productTitle: '商品标题',
     enterProductTitle: '输入商品标题',
@@ -859,8 +865,8 @@ export const translations = {
     fullName: 'ชื่อ-นามสกุล',
     studentStaffId: 'รหัสนักศึกษา/เจ้าหน้าที่',
     universityEmail: 'อีเมลมหาวิทยาลัย',
-    campusVerification: 'การยืนยันวิทยาเขต',
-    campusVerificationDesc: 'เราจะส่งรหัสยืนยันไปยังอีเมลมหาวิทยาลัยของคุณเพื่อความปลอดภัยของชุมชน',
+    campusVerification: 'การยืนยันอีเมล',
+    campusVerificationDesc: 'เราจะส่งรหัสยืนยันไปยังอีเมลที่คุณให้ไว้เพื่อยืนยันว่าอีเมลนั้นเป็นของจริงและใช้งานได้',
     creatingAccount: 'กำลังสร้างบัญชี...',
     confirmPassword: 'ยืนยันรหัสผ่าน',
     passwordMismatch: 'รหัสผ่านไม่ตรงกัน',
@@ -880,6 +886,9 @@ export const translations = {
 
     // Create/Edit Product Page
     backToProducts: 'กลับไปหน้าสินค้า',
+    sellerProducts: 'สินค้า',
+    back: 'กลับ',
+    userNotFound: 'ไม่พบผู้ใช้',
     fillDetails: 'กรอกรายละเอียดเพื่อลงขายสินค้าของคุณ',
     productTitle: 'ชื่อสินค้า',
     enterProductTitle: 'กรอกชื่อสินค้า',

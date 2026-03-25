@@ -513,6 +513,37 @@ router.get('/',
 );
 
 /**
+ * @route   GET /api/products/seller/:sellerId/profile
+ * @desc    Get public seller profile info
+ * @access  Public
+ */
+router.get('/seller/:sellerId/profile', async (req: express.Request, res: express.Response) => {
+  try {
+    const { sellerId } = req.params;
+    const user = await getUserModel().getUserById(sellerId);
+    if (!user) {
+      return res.status(404).json({ success: false, error: { code: 'USER_NOT_FOUND', message: 'User not found' } });
+    }
+    return res.json({
+      success: true,
+      data: {
+        user: {
+          userID: user.userID,
+          name: user.name,
+          profileImage: user.profileImage,
+          bio: (user as any).bio || '',
+          eduVerified: (user as any).eduVerified || false,
+          createdAt: user.createdAt,
+        }
+      }
+    });
+  } catch (error) {
+    console.error('Get seller profile error:', error);
+    return res.status(500).json({ success: false, error: { code: 'PROFILE_FETCH_FAILED', message: 'Failed to fetch seller profile' } });
+  }
+});
+
+/**
  * @route   GET /api/products/seller/:sellerId
  * @desc    Get products by seller
  * @access  Public

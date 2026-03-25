@@ -71,6 +71,7 @@ export default function CreateProductPage() {
   const [images, setImages] = useState<File[]>([]);
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
 
   // Handle input change
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -122,6 +123,32 @@ export default function CreateProductPage() {
   const removeImage = (index: number) => {
     setImages(prev => prev.filter((_, i) => i !== index));
     setImagePreviews(prev => prev.filter((_, i) => i !== index));
+  };
+
+  // Handle drag and drop
+  const handleDrop = async (e: React.DragEvent<HTMLLabelElement>) => {
+    e.preventDefault();
+    setIsDragging(false);
+    const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'));
+    if (files.length === 0) return;
+    if (images.length + files.length > 5) {
+      toast.error(t(language, 'maxImagesError'));
+      return;
+    }
+    try {
+      const compressed = await compressImages(files);
+      setImages(prev => [...prev, ...compressed]);
+      compressed.forEach(file => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          setImagePreviews(prev => [...prev, reader.result as string]);
+        };
+        reader.readAsDataURL(file);
+      });
+    } catch (error) {
+      console.error('Image compression error:', error);
+      toast.error(t(language, 'failedProcessImages'));
+    }
   };
 
   // Handle submit
@@ -374,18 +401,18 @@ export default function CreateProductPage() {
                 
                 {/* Image Previews */}
                 {imagePreviews.length > 0 && (
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-4">
+                  <div className="flex flex-wrap gap-3 mb-4">
                     {imagePreviews.map((preview, index) => (
-                      <div key={index} className="relative group">
+                      <div key={index} className="relative group flex-shrink-0" style={{ width: 200, height: 200 }}>
                         <img
                           src={preview}
                           alt={`Preview ${index + 1}`}
-                          className="w-full rounded-lg"
+                          style={{ width: 200, height: 200, objectFit: 'cover', borderRadius: 8, display: 'block' }}
                         />
                         <button
                           type="button"
                           onClick={() => removeImage(index)}
-                          className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                          style={{ position: 'absolute', top: 4, right: 4, background: '#ef4444', color: 'white', border: 'none', borderRadius: '50%', padding: 4, cursor: 'pointer' }}
                         >
                           <X className="w-4 h-4" />
                         </button>
@@ -396,10 +423,15 @@ export default function CreateProductPage() {
 
                 {/* Upload Area */}
                 {images.length < 5 && (
-                  <label className="flex items-center justify-center w-full px-4 py-8 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-blue-500 transition-colors">
+                  <label
+                    className={`flex items-center justify-center w-full px-4 py-8 border-2 border-dashed rounded-lg cursor-pointer transition-colors ${isDragging ? 'border-blue-500 bg-blue-50' : 'border-gray-300 hover:border-blue-500'}`}
+                    onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+                    onDragLeave={() => setIsDragging(false)}
+                    onDrop={handleDrop}
+                  >
                     <div className="text-center">
                       <Upload className="w-8 h-8 mx-auto text-gray-400 mb-2" />
-                      <p className="text-sm text-gray-600">{t(language, 'clickToUpload')}</p>
+                      <p className="text-sm text-gray-600">{t(language, 'dragDropImages')}</p>
                       <p className="text-xs text-gray-500">{t(language, 'imageFormat')}</p>
                     </div>
                     <input
