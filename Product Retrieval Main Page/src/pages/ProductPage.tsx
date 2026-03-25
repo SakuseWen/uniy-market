@@ -53,12 +53,15 @@ export default function ProductPage() {
   }
 
   return (
-    <ProductDetailPage
-      product={product}
-      relatedProducts={[]}
-      language={language}
-      onBack={() => navigate(-1)}
-      onProductClick={(p) => navigate(`/product/${p.id}`)}
-    />
+    <div className="min-h-screen bg-gray-50">
+      <Header language={language} onLanguageChange={setLanguage} unreadMessages={0} />
+      <ProductDetailPage
+        product={product}
+        relatedProducts={[]}
+        language={language}
+        onBack={() => navigate(-1)}
+        onProductClick={(p) => navigate(`/product/${p.id}`)}
+      />
+    </div>
   );
 }
