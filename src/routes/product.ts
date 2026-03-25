@@ -367,7 +367,10 @@ router.delete('/:id', authenticateToken, async (req: express.Request, res: expre
       });
     }
 
-    // Hard delete (remove from database)
+    // Get product images before deleting
+    const images = await getProductModel().getProductImages(id!);
+
+    // Hard delete (remove from database, CASCADE will delete ProductImage rows)
     const deleted = await getProductModel().deleteProduct(id!);
 
     if (!deleted) {
@@ -379,6 +382,13 @@ router.delete('/:id', authenticateToken, async (req: express.Request, res: expre
           timestamp: new Date().toISOString(),
           requestId: req.get('x-request-id') || 'unknown'
         }
+      });
+    }
+
+    // Delete image files from disk
+    for (const img of images) {
+      await deleteImageFile(img.imagePath).catch(err => {
+        console.warn('Failed to delete image file:', img.imagePath, err);
       });
     }
 
