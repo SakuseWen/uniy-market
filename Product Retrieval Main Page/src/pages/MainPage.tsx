@@ -82,8 +82,18 @@ export default function MainPage() {
       limit: 100,
     };
 
-    if (filters.category !== 'all') {
-      result.category = parseInt(filters.category);
+    // Map frontend category string to backend categoryID
+    const categoryIdMap: Record<string, number> = {
+      'electronics': 1,
+      'books': 2,
+      'clothing': 3,
+      'dormFurniture': 4,
+      'sports': 5,
+      'others': 6,
+    };
+
+    if (filters.category !== 'all' && categoryIdMap[filters.category]) {
+      result.category = categoryIdMap[filters.category];
     }
     if (filters.priceMin > 0) {
       result.minPrice = filters.priceMin;
@@ -91,8 +101,16 @@ export default function MainPage() {
     if (filters.priceMax > 0) {
       result.maxPrice = filters.priceMax;
     }
-    if (filters.condition !== 'all') {
-      result.condition = filters.condition;
+
+    // Map frontend condition to backend condition
+    const conditionMap: Record<string, string> = {
+      'new': 'new',
+      'ninetyNew': 'like_new',
+      'eightyNew': 'used',
+    };
+
+    if (filters.condition !== 'all' && conditionMap[filters.condition]) {
+      result.condition = conditionMap[filters.condition];
     }
     if (filters.campus !== 'all') {
       result.location = filters.campus;

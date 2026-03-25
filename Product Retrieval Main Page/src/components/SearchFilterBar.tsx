@@ -83,12 +83,11 @@ export function SearchFilterBar({
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">{t('category')}</SelectItem>
-              <SelectItem value="books">{t('books')}</SelectItem>
               <SelectItem value="electronics">{t('electronics')}</SelectItem>
+              <SelectItem value="books">{t('books')}</SelectItem>
+              <SelectItem value="clothing">{t('clothing')}</SelectItem>
               <SelectItem value="dormFurniture">{t('dormFurniture')}</SelectItem>
               <SelectItem value="sports">{t('sports')}</SelectItem>
-              <SelectItem value="clothing">{t('clothing')}</SelectItem>
-              <SelectItem value="tickets">{t('tickets')}</SelectItem>
               <SelectItem value="others">{t('others')}</SelectItem>
             </SelectContent>
           </Select>
@@ -103,7 +102,6 @@ export function SearchFilterBar({
               <SelectItem value="new">{t('new')}</SelectItem>
               <SelectItem value="ninetyNew">{t('ninetyNew')}</SelectItem>
               <SelectItem value="eightyNew">{t('eightyNew')}</SelectItem>
-              <SelectItem value="repairable">{t('repairable')}</SelectItem>
             </SelectContent>
           </Select>
 

@@ -62,15 +62,34 @@ function transformProduct(backendProduct: BackendProduct): Product {
     }
   }
 
+  // Map backend condition to frontend condition
+  const conditionMap: Record<string, Product['condition']> = {
+    'new': 'new',
+    'like_new': 'ninetyNew',
+    'used': 'eightyNew',
+  };
+
+  // Map backend category name to frontend category key
+  const categoryMap: Record<string, Product['category']> = {
+    'Electronics': 'electronics',
+    'Books': 'books',
+    'Clothing': 'clothing',
+    'Furniture': 'dormFurniture',
+    'Sports': 'sports',
+    'Other': 'others',
+  };
+
+  const categoryName = backendProduct.category?.name || '';
+  const frontendCategory = categoryMap[categoryName] || 'others';
+
   return {
     id: backendProduct.listingID,
     title: backendProduct.title,
     price: backendProduct.price,
     negotiable: false,
-    condition: backendProduct.condition === 'new' ? 'new' : 
-               backendProduct.condition === 'like_new' ? 'ninetyNew' : 'eightyNew',
+    condition: conditionMap[backendProduct.condition] || 'eightyNew',
     campus: 'mainCampus' as const,
-    category: 'others' as const,
+    category: frontendCategory,
     image: imageUrl,
     images: backendProduct.images?.map(img => {
       // Also convert image paths to full URLs
