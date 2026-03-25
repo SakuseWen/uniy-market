@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router';
 import { ChevronLeft, Heart, Scale, Flag, MessageCircle } from 'lucide-react';
 import { Product } from '../lib/mockData';
 import { Language, translate } from '../lib/i18n';
@@ -34,6 +35,7 @@ export function ProductDetailPage({
   onProductClick,
 }: ProductDetailPageProps) {
   const t = (key: any) => translate(language, key);
+  const navigate = useNavigate();
   const [isFavorite, setIsFavorite] = useState(false);
 
   const getLocalizedTitle = () => {
@@ -166,7 +168,7 @@ export function ProductDetailPage({
 
             {/* Action Buttons */}
             <div className="grid grid-cols-2 gap-3 mb-3">
-              <Button className="w-full bg-gradient-to-r from-blue-500 to-purple-600">
+              <Button className="w-full bg-gradient-to-r from-blue-500 to-purple-600" onClick={() => product.seller.id && navigate(`/chat/${product.seller.id}`)}>
                 <MessageCircle className="w-4 h-4 mr-2" />
                 {t('contactSeller')}
               </Button>
