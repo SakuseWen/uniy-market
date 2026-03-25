@@ -432,17 +432,16 @@ export default function EditProductPage() {
                     {formData.images
                       .filter(img => !imagesToDelete.includes(img.imageID))
                       .map(image => {
-                        // Construct full URL for image - backend serves at http://localhost:3000
                         const imageUrl = image.imagePath.startsWith('http') 
                           ? image.imagePath 
                           : `http://localhost:3000${image.imagePath}`;
                         
                         return (
-                          <div key={image.imageID} className="relative flex-shrink-0" style={{ width: '160px', height: '160px' }}>
+                          <div key={image.imageID} className="relative flex-shrink-0" style={{ width: 160, height: 160 }}>
                             <img
                               src={imageUrl}
                               alt="Product"
-                              className="block rounded-lg" style={{ width: '160px', height: '160px', objectFit: 'cover' }}
+                              style={{ width: 160, height: 160, objectFit: 'cover', borderRadius: 8, display: 'block' }}
                               onError={(e) => {
                                 console.error('Image failed to load:', imageUrl);
                                 (e.target as HTMLImageElement).src = '/placeholder-product.jpg';
@@ -451,7 +450,7 @@ export default function EditProductPage() {
                             <button
                               type="button"
                               onClick={() => markImageForDeletion(image.imageID)}
-                              className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
+                              style={{ position: 'absolute', top: 4, right: 4, background: '#ef4444', color: 'white', border: 'none', borderRadius: '50%', padding: 4, cursor: 'pointer' }}
                             >
                               <X className="w-4 h-4" />
                             </button>
@@ -492,16 +491,16 @@ export default function EditProductPage() {
                 {newImagePreviews.length > 0 && (
                   <div className="flex flex-wrap gap-3 mt-4">
                     {newImagePreviews.map((preview, index) => (
-                      <div key={index} className="relative flex-shrink-0" style={{ width: '160px', height: '160px' }}>
+                      <div key={index} className="relative flex-shrink-0" style={{ width: 160, height: 160 }}>
                         <img
                           src={preview}
                           alt={`Preview ${index}`}
-                          className="block rounded-lg" style={{ width: '160px', height: '160px', objectFit: 'cover' }}
+                          style={{ width: 160, height: 160, objectFit: 'cover', borderRadius: 8, display: 'block' }}
                         />
                         <button
                           type="button"
                           onClick={() => removeNewImage(index)}
-                          className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
+                          style={{ position: 'absolute', top: 4, right: 4, background: '#ef4444', color: 'white', border: 'none', borderRadius: '50%', padding: 4, cursor: 'pointer' }}
                         >
                           <X className="w-4 h-4" />
                         </button>

@@ -403,16 +403,16 @@ export default function CreateProductPage() {
                 {imagePreviews.length > 0 && (
                   <div className="flex flex-wrap gap-3 mb-4">
                     {imagePreviews.map((preview, index) => (
-                      <div key={index} className="relative group flex-shrink-0" style={{ width: '160px', height: '160px' }}>
+                      <div key={index} className="relative group flex-shrink-0" style={{ width: 160, height: 160 }}>
                         <img
                           src={preview}
                           alt={`Preview ${index + 1}`}
-                          className="block rounded-lg" style={{ width: '160px', height: '160px', objectFit: 'cover' }}
+                          style={{ width: 160, height: 160, objectFit: 'cover', borderRadius: 8, display: 'block' }}
                         />
                         <button
                           type="button"
                           onClick={() => removeImage(index)}
-                          className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                          style={{ position: 'absolute', top: 4, right: 4, background: '#ef4444', color: 'white', border: 'none', borderRadius: '50%', padding: 4, cursor: 'pointer' }}
                         >
                           <X className="w-4 h-4" />
                         </button>
