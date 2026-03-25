@@ -438,7 +438,7 @@ export default function EditProductPage() {
                           : `http://localhost:3000${image.imagePath}`;
                         
                         return (
-                          <div key={image.imageID} className="relative flex-shrink-0 overflow-hidden rounded-lg" style={{ width: '160px', height: '160px' }}>
+                          <div key={image.imageID} className="relative flex-shrink-0 rounded-lg" style={{ width: '160px', height: '160px' }}>
                             <img
                               src={imageUrl}
                               alt="Product"
@@ -492,7 +492,7 @@ export default function EditProductPage() {
                 {newImagePreviews.length > 0 && (
                   <div className="flex flex-wrap gap-3 mt-4">
                     {newImagePreviews.map((preview, index) => (
-                      <div key={index} className="relative flex-shrink-0 overflow-hidden rounded-lg" style={{ width: '160px', height: '160px' }}>
+                      <div key={index} className="relative flex-shrink-0 rounded-lg" style={{ width: '160px', height: '160px' }}>
                         <img
                           src={preview}
                           alt={`Preview ${index}`}

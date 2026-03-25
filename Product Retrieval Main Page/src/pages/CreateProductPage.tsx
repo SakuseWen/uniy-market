@@ -403,7 +403,7 @@ export default function CreateProductPage() {
                 {imagePreviews.length > 0 && (
                   <div className="flex flex-wrap gap-3 mb-4">
                     {imagePreviews.map((preview, index) => (
-                      <div key={index} className="relative group flex-shrink-0 overflow-hidden rounded-lg" style={{ width: '160px', height: '160px' }}>
+                      <div key={index} className="relative group flex-shrink-0 rounded-lg" style={{ width: '160px', height: '160px' }}>
                         <img
                           src={preview}
                           alt={`Preview ${index + 1}`}
