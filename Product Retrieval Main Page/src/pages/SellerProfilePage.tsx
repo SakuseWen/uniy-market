@@ -148,7 +148,7 @@ export default function SellerProfilePage() {
         ) : (
           <div className="grid gap-4 mt-4">
             {products.map((product) => (
-              <Card key={product.listingID} className="hover:shadow-lg transition-shadow">
+              <Card key={product.listingID} className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate(`/product/${product.listingID}`)}>
                 <CardContent className="p-4">
                   <div className="flex gap-4">
                     <div className="flex-shrink-0">
