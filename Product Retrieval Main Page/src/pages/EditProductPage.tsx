@@ -223,11 +223,20 @@ export default function EditProductPage() {
 
       // Upload new images
       if (newImages.length > 0) {
-        const formDataObj = new FormData();
-        newImages.forEach(file => {
-          formDataObj.append('images', file);
-        });
-        await productService.uploadProductImages(productId, formDataObj);
+        try {
+          const formDataObj = new FormData();
+          newImages.forEach(file => {
+            formDataObj.append('images', file);
+          });
+          await productService.uploadProductImages(productId, formDataObj);
+        } catch (imgError: any) {
+          console.error('Image upload error:', imgError);
+          console.error('Image upload response:', imgError.response?.data);
+          // Product info was updated successfully, just images failed
+          toast.warning(t(language, 'productUpdatedImageFailed') || 'Product updated but image upload failed');
+          navigate('/my-page');
+          return;
+        }
       }
 
       toast.success(t(language, 'productUpdated'));
