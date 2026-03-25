@@ -6,6 +6,7 @@ import { useLanguage } from '../lib/LanguageContext';
 import { productService } from '../services';
 import { Product } from '../lib/mockData';
 import { Loader2 } from 'lucide-react';
+import { Toaster } from '../components/ui/sonner';
 
 export default function ProductPage() {
   const { productId } = useParams<{ productId: string }>();
@@ -54,6 +55,7 @@ export default function ProductPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <Toaster position="top-right" />
       <Header language={language} onLanguageChange={setLanguage} unreadMessages={0} />
       <ProductDetailPage
         product={product}
