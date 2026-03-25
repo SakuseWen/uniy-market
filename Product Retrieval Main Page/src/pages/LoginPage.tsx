@@ -142,7 +142,7 @@ export default function LoginPage() {
                 <CardDescription>{t('loginDesc')}</CardDescription>
               </CardHeader>
               <CardContent>
-                <form onSubmit={handleLogin}>
+                <form onSubmit={handleLogin} id="login-form">
                   <div className="space-y-4">
                     {error && (
                       <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-sm text-red-700">
@@ -186,7 +186,8 @@ export default function LoginPage() {
               <CardFooter className="flex flex-col gap-3">
                 <Button
                   className="w-full bg-gradient-to-r from-blue-500 to-purple-600"
-                  onClick={handleLogin}
+                  type="submit"
+                  form="login-form"
                   disabled={isLoading}
                 >
                   {isLoading ? t('loggingIn') : t('login')}
@@ -220,7 +221,7 @@ export default function LoginPage() {
                 <CardDescription>{t('joinCommunity')}</CardDescription>
               </CardHeader>
               <CardContent>
-                <form onSubmit={handleRegister}>
+                <form onSubmit={handleRegister} id="register-form">
                   <div className="space-y-4">
                     {error && (
                       <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-sm text-red-700">
@@ -286,7 +287,8 @@ export default function LoginPage() {
               <CardFooter className="flex flex-col gap-3">
                 <Button
                   className="w-full bg-gradient-to-r from-blue-500 to-purple-600"
-                  onClick={handleRegister}
+                  type="submit"
+                  form="register-form"
                   disabled={isLoading}
                 >
                   {isLoading ? t('creatingAccount') : t('createAccount')}
