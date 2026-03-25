@@ -56,7 +56,7 @@ export function compressImage(file: File): Promise<File> {
             resolve(file);
             return;
           }
-          const compressed = new File([blob], file.name, {
+          const compressed = new File([blob], file.name.replace(/\.[^.]+$/, '.jpg'), {
             type: 'image/jpeg',
             lastModified: Date.now(),
           });

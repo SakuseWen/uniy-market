@@ -134,9 +134,20 @@ export default function EditProductPage() {
     } : null);
   };
 
+  const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+
   // Handle image selection
   const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
+
+    // Validate file types
+    const invalidFiles = files.filter(f => !ALLOWED_IMAGE_TYPES.includes(f.type));
+    if (invalidFiles.length > 0) {
+      toast.error(t(language, 'unsupportedImageFormat'));
+      e.target.value = '';
+      return;
+    }
+
     if (newImages.length + files.length > 5) {
       toast.error(t(language, 'maxImagesError'));
       return;
@@ -173,6 +184,11 @@ export default function EditProductPage() {
     setIsDragging(false);
     const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'));
     if (files.length === 0) return;
+    const invalidFiles = files.filter(f => !ALLOWED_IMAGE_TYPES.includes(f.type));
+    if (invalidFiles.length > 0) {
+      toast.error(t(language, 'unsupportedImageFormat'));
+      return;
+    }
     if (newImages.length + files.length > 5) {
       toast.error(t(language, 'maxImagesError'));
       return;
@@ -223,15 +239,24 @@ export default function EditProductPage() {
 
       // Upload new images
       if (newImages.length > 0) {
-        const formDataObj = new FormData();
-        newImages.forEach(file => {
-          formDataObj.append('images', file);
-        });
-        await productService.uploadProductImages(productId, formDataObj);
+        try {
+          const formDataObj = new FormData();
+          newImages.forEach(file => {
+            formDataObj.append('images', file);
+          });
+          await productService.uploadProductImages(productId, formDataObj);
+        } catch (imgError: any) {
+          console.error('Image upload error:', imgError);
+          console.error('Image upload response:', imgError.response?.data);
+          // Product info was updated successfully, just images failed
+          toast.warning(t(language, 'productUpdatedImageFailed') || 'Product updated but image upload failed');
+          setTimeout(() => navigate('/my-page'), 1000);
+          return;
+        }
       }
 
       toast.success(t(language, 'productUpdated'));
-      navigate('/my-page');
+      setTimeout(() => navigate('/my-page'), 1000);
     } catch (error: any) {
       console.error('Update product error:', error);
       
@@ -475,7 +500,7 @@ export default function EditProductPage() {
                   <input
                     type="file"
                     multiple
-                    accept="image/*"
+                    accept="image/jpeg,image/png,image/webp"
                     onChange={handleImageSelect}
                     className="hidden"
                     id="image-input"

@@ -136,8 +136,13 @@ export async function processUploadedImages(req: Request, res: Response, next: N
           continue;
         }
 
-        // Optimize image
-        await optimizeImage(file.path);
+        // Optimize image (skip on failure, keep original)
+        try {
+          await optimizeImage(file.path);
+        } catch (optError) {
+          console.warn(`Image optimization skipped for ${file.originalname}:`, optError);
+          // Keep the original file as-is
+        }
       } catch (error) {
         console.error(`Error processing image ${file.originalname}:`, error);
         validationErrors.push(`${file.originalname}: Failed to process image`);

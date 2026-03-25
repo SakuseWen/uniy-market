@@ -16,7 +16,7 @@ const apiClient: AxiosInstance = axios.create({
 // 请求拦截器 - 添加认证 token
 apiClient.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('authToken');
+    const token = sessionStorage.getItem('authToken');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -35,8 +35,8 @@ apiClient.interceptors.response.use(
     // 这样可以显示错误提示而不是直接跳转
     if (error.response?.status === 401) {
       // Token 过期或无效，清除本地存储
-      localStorage.removeItem('authToken');
-      localStorage.removeItem('authUser');
+      sessionStorage.removeItem('authToken');
+      sessionStorage.removeItem('authUser');
       // 让应用层决定是否重定向
     }
     return Promise.reject(error);
