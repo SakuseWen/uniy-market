@@ -30,10 +30,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // 初始化：从 localStorage 恢复认证状态
+  // 初始化：从 sessionStorage 恢复认证状态（关闭标签页后自动清除）
   useEffect(() => {
-    const savedToken = localStorage.getItem('authToken');
-    const savedUser = localStorage.getItem('authUser');
+    const savedToken = sessionStorage.getItem('authToken');
+    const savedUser = sessionStorage.getItem('authUser');
     
     if (savedToken && savedUser) {
       try {
@@ -41,8 +41,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(JSON.parse(savedUser));
       } catch (error) {
         console.error('Failed to restore auth state:', error);
-        localStorage.removeItem('authToken');
-        localStorage.removeItem('authUser');
+        sessionStorage.removeItem('authToken');
+        sessionStorage.removeItem('authUser');
       }
     }
     setIsLoading(false);
@@ -69,8 +69,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       setToken(newToken);
       setUser(newUser);
-      localStorage.setItem('authToken', newToken);
-      localStorage.setItem('authUser', JSON.stringify(newUser));
+      sessionStorage.setItem('authToken', newToken);
+      sessionStorage.setItem('authUser', JSON.stringify(newUser));
     } catch (error) {
       console.error('Login error:', error);
       throw error;
@@ -80,13 +80,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const logout = () => {
     setUser(null);
     setToken(null);
-    localStorage.removeItem('authToken');
-    localStorage.removeItem('authUser');
+    sessionStorage.removeItem('authToken');
+    sessionStorage.removeItem('authUser');
   };
 
   const updateUser = (updatedUser: User) => {
     setUser(updatedUser);
-    localStorage.setItem('authUser', JSON.stringify(updatedUser));
+    sessionStorage.setItem('authUser', JSON.stringify(updatedUser));
   };
 
   return (
