@@ -40,7 +40,7 @@ interface UserProduct {
 
 function MyPage() {
   const navigate = useNavigate();
-  const { user, isAuthenticated, updateUser, logout } = useAuth();
+  const { user, isAuthenticated, isLoading, updateUser, logout } = useAuth();
   const { language, setLanguage } = useLanguage();
   const t = (key: any) => translate(language, key);
 
@@ -73,13 +73,13 @@ function MyPage() {
   const [sendingEduCode, setSendingEduCode] = useState(false);
   const [verifyingEdu, setVerifyingEdu] = useState(false);
 
-  // Redirect to login if not authenticated
+  // Redirect to login if not authenticated (wait for auth loading to finish)
   useEffect(() => {
-    if (!isAuthenticated) {
+    if (!isLoading && !isAuthenticated) {
       navigate('/login');
       return;
     }
-  }, [isAuthenticated, navigate]);
+  }, [isLoading, isAuthenticated, navigate]);
 
   // Fetch user products
   useEffect(() => {

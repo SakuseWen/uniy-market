@@ -27,7 +27,7 @@ import { compressImages } from '../lib/imageUtils';
 
 export default function CreateProductPage() {
   const navigate = useNavigate();
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, isLoading } = useAuth();
   const { language, setLanguage } = useLanguage();
   const { categories } = useCategories();
 
@@ -44,14 +44,14 @@ export default function CreateProductPage() {
 
   // Redirect to login if not authenticated
   useEffect(() => {
-    if (!isAuthenticated) {
+    if (!isLoading && !isAuthenticated) {
       navigate('/login');
     }
-  }, [isAuthenticated, navigate]);
+  }, [isLoading, isAuthenticated, navigate]);
 
   // Redirect if not edu verified
   useEffect(() => {
-    if (isAuthenticated && user && !user.eduVerified) {
+    if (!isLoading && isAuthenticated && user && !user.eduVerified) {
       toast.error(t(language, 'eduRequiredToPost'));
       navigate('/my-page');
     }
