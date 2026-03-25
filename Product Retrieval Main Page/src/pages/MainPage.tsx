@@ -205,6 +205,10 @@ export default function MainPage() {
   };
 
   const handleContact = (sellerId: string) => {
+    if (!user) {
+      navigate('/login');
+      return;
+    }
     navigate(`/chat/${sellerId}`);
   };
 
