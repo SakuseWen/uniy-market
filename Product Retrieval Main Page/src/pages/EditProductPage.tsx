@@ -134,9 +134,20 @@ export default function EditProductPage() {
     } : null);
   };
 
+  const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+
   // Handle image selection
   const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
+
+    // Validate file types
+    const invalidFiles = files.filter(f => !ALLOWED_IMAGE_TYPES.includes(f.type));
+    if (invalidFiles.length > 0) {
+      toast.error(t(language, 'unsupportedImageFormat'));
+      e.target.value = '';
+      return;
+    }
+
     if (newImages.length + files.length > 5) {
       toast.error(t(language, 'maxImagesError'));
       return;
@@ -173,6 +184,11 @@ export default function EditProductPage() {
     setIsDragging(false);
     const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'));
     if (files.length === 0) return;
+    const invalidFiles = files.filter(f => !ALLOWED_IMAGE_TYPES.includes(f.type));
+    if (invalidFiles.length > 0) {
+      toast.error(t(language, 'unsupportedImageFormat'));
+      return;
+    }
     if (newImages.length + files.length > 5) {
       toast.error(t(language, 'maxImagesError'));
       return;
@@ -484,7 +500,7 @@ export default function EditProductPage() {
                   <input
                     type="file"
                     multiple
-                    accept="image/*"
+                    accept="image/jpeg,image/png,image/webp"
                     onChange={handleImageSelect}
                     className="hidden"
                     id="image-input"
