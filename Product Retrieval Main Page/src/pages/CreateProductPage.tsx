@@ -403,11 +403,11 @@ export default function CreateProductPage() {
                 {imagePreviews.length > 0 && (
                   <div className="flex flex-wrap gap-3 mb-4">
                     {imagePreviews.map((preview, index) => (
-                      <div key={index} className="relative group w-[288px] h-[288px]">
+                      <div key={index} className="relative group w-40 h-40">
                         <img
                           src={preview}
                           alt={`Preview ${index + 1}`}
-                          className="w-[288px] h-[288px] object-cover rounded-lg"
+                          className="w-40 h-40 object-cover rounded-lg"
                         />
                         <button
                           type="button"
