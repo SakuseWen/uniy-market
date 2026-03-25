@@ -438,11 +438,11 @@ export default function EditProductPage() {
                           : `http://localhost:3000${image.imagePath}`;
                         
                         return (
-                          <div key={image.imageID} className="relative flex-shrink-0 overflow-hidden rounded-lg" style={{ width: '160px', height: '160px' }}>
+                          <div key={image.imageID} className="relative flex-shrink-0" style={{ width: '160px', height: '160px' }}>
                             <img
                               src={imageUrl}
                               alt="Product"
-                              className="w-full h-full object-cover"
+                              className="block rounded-lg" style={{ width: '160px', height: '160px', objectFit: 'cover' }}
                               onError={(e) => {
                                 console.error('Image failed to load:', imageUrl);
                                 (e.target as HTMLImageElement).src = '/placeholder-product.jpg';
@@ -451,7 +451,7 @@ export default function EditProductPage() {
                             <button
                               type="button"
                               onClick={() => markImageForDeletion(image.imageID)}
-                              className="absolute top-1 right-1 z-10 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
+                              className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
                             >
                               <X className="w-4 h-4" />
                             </button>
@@ -492,16 +492,16 @@ export default function EditProductPage() {
                 {newImagePreviews.length > 0 && (
                   <div className="flex flex-wrap gap-3 mt-4">
                     {newImagePreviews.map((preview, index) => (
-                      <div key={index} className="relative flex-shrink-0 overflow-hidden rounded-lg" style={{ width: '160px', height: '160px' }}>
+                      <div key={index} className="relative flex-shrink-0" style={{ width: '160px', height: '160px' }}>
                         <img
                           src={preview}
                           alt={`Preview ${index}`}
-                          className="w-full h-full object-cover"
+                          className="block rounded-lg" style={{ width: '160px', height: '160px', objectFit: 'cover' }}
                         />
                         <button
                           type="button"
                           onClick={() => removeNewImage(index)}
-                          className="absolute top-1 right-1 z-10 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
+                          className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
                         >
                           <X className="w-4 h-4" />
                         </button>
