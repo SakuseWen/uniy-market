@@ -11,7 +11,8 @@ interface ProductListViewProps {
   language: Language;
   onFavorite: (id: string) => void;
   onCompare: (id: string) => void;
-  onContact: (sellerId: string) => void;
+  /** 12.2 更新签名：接收 listingID 和 sellerID / Updated signature: receives listingID and sellerID */
+  onContact: (listingID: string, sellerID: string) => void;
   isFavorited?: boolean;
 }
 
@@ -145,7 +146,7 @@ export function ProductListView({
               className="gap-1 bg-gradient-to-r from-blue-500 to-purple-600 hover:shadow-lg hover:scale-105 transition-all duration-200"
               onClick={(e) => {
                 e.stopPropagation();
-                onContact(product.seller.id);
+                onContact(product.id, product.seller.id || product.id);
               }}
             >
               <MessageCircle className="w-3 h-3" />

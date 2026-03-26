@@ -19,7 +19,9 @@ export const router = createBrowserRouter([
     Component: LoginPage,
   },
   {
-    path: '/chat/:sellerId',
+    // Route changed from /chat/:sellerId to /chat/:chatId
+    // 路由从 /chat/:sellerId 改为 /chat/:chatId
+    path: '/chat/:chatId',
     Component: ChatPage,
   },
   {

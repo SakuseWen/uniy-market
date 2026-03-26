@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router';
+import { useNavigate, useSearchParams } from 'react-router';
 import { Header } from '../components/Header';
 import { AvatarCropper } from '../components/AvatarCropper';
 import { translate } from '../lib/i18n';
@@ -17,6 +17,7 @@ import { Toaster } from '../components/ui/sonner';
 import { productService } from '../services';
 import { useAuth } from '../services/authContext';
 import apiClient from '../services/api';
+import { chatService, ChatSummary } from '../services/chatService';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -40,6 +41,10 @@ interface UserProduct {
 
 function MyPage() {
   const navigate = useNavigate();
+  // 8.1: 通过 URL 查询参数持久化 Tab 状态 / Persist tab state via URL query params
+  const [searchParams, setSearchParams] = useSearchParams();
+  const activeTab = searchParams.get('tab') || 'my-products';
+
   const { user, isAuthenticated, isLoading, updateUser, logout } = useAuth();
   const { language, setLanguage } = useLanguage();
   const t = (key: any) => translate(language, key);
@@ -48,7 +53,14 @@ function MyPage() {
   const [loading, setLoading] = useState(true);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
-  const [showChat, setShowChat] = useState(true);
+
+  // 8.3: 聊天历史真实数据状态 / Real chat history state
+  const [chats, setChats] = useState<ChatSummary[]>([]);
+  const [chatsLoading, setChatsLoading] = useState(false);
+  const [chatsError, setChatsError] = useState(false);
+
+  // 8.4: 删除对话弹窗状态 / Delete chat dialog state
+  const [deleteChatTarget, setDeleteChatTarget] = useState<string | null>(null);
 
   // Profile editing state
   const [isEditing, setIsEditing] = useState(false);
@@ -73,7 +85,12 @@ function MyPage() {
   const [sendingEduCode, setSendingEduCode] = useState(false);
   const [verifyingEdu, setVerifyingEdu] = useState(false);
 
-  // Redirect to login if not authenticated (wait for auth loading to finish)
+  // 8.1: Tab 切换处理 / Handle tab change — sync to URL
+  const handleTabChange = (value: string) => {
+    setSearchParams({ tab: value });
+  };
+
+  // Redirect to login if not authenticated
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
       navigate('/login');
@@ -86,9 +103,7 @@ function MyPage() {
     const fetchUserProducts = async () => {
       try {
         setLoading(true);
-        if (!user?.userID) {
-          throw new Error('User ID not found');
-        }
+        if (!user?.userID) throw new Error('User ID not found');
         const response = await productService.getUserProducts(user.userID, 1, 20, true);
         setProducts((response.data as any) || []);
       } catch (error: any) {
@@ -98,19 +113,35 @@ function MyPage() {
         setLoading(false);
       }
     };
-
-    if (isAuthenticated && user?.userID) {
-      fetchUserProducts();
-    }
+    if (isAuthenticated && user?.userID) fetchUserProducts();
   }, [isAuthenticated, user?.userID]);
+
+  // 8.3: 当切换到聊天历史 Tab 时加载真实对话列表 / Load real chats when chat-history tab is active
+  useEffect(() => {
+    if (activeTab !== 'chat-history' || !isAuthenticated) return;
+    const fetchChats = async () => {
+      setChatsLoading(true);
+      setChatsError(false);
+      try {
+        const response = await chatService.getChats();
+        const data = response.data?.data?.data ?? [];
+        setChats(data);
+      } catch (error: any) {
+        console.error('Fetch chats error:', error);
+        setChatsError(true);
+      } finally {
+        setChatsLoading(false);
+      }
+    };
+    fetchChats();
+  }, [activeTab, isAuthenticated]);
 
   // Handle delete product
   const handleDeleteProduct = async (productId: string) => {
     setDeleting(true);
     try {
       await productService.deleteProduct(productId);
-      const updatedProducts = products.filter((p: any) => p.listingID !== productId);
-      setProducts(updatedProducts);
+      setProducts(products.filter((p: any) => p.listingID !== productId));
       toast.success(t('productDeleted'));
       setDeleteConfirm(null);
     } catch (error: any) {
@@ -126,20 +157,14 @@ function MyPage() {
     }
   };
 
-  const handleLanguageChange = (lang: any) => {
-    setLanguage(lang);
-  };
+  const handleLanguageChange = (lang: any) => setLanguage(lang);
 
   // Save profile changes
   const handleSaveProfile = async () => {
     setSavingProfile(true);
     try {
-      const response = await apiClient.put('/auth/profile', {
-        name: editName,
-        bio: editBio,
-      });
-      const updatedUser = response.data.data.user;
-      updateUser(updatedUser);
+      const response = await apiClient.put('/auth/profile', { name: editName, bio: editBio });
+      updateUser(response.data.data.user);
       setIsEditing(false);
       toast.success(t('profileUpdated'));
     } catch (error: any) {
@@ -155,12 +180,8 @@ function MyPage() {
     const file = e.target.files?.[0];
     if (!file) return;
     const reader = new FileReader();
-    reader.onload = () => {
-      setCropperImage(reader.result as string);
-      setShowCropper(true);
-    };
+    reader.onload = () => { setCropperImage(reader.result as string); setShowCropper(true); };
     reader.readAsDataURL(file);
-    // Reset input so same file can be selected again
     e.target.value = '';
   };
 
@@ -173,8 +194,7 @@ function MyPage() {
       const response = await apiClient.post('/auth/profile/avatar', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
-      const updatedUser = response.data.data.user;
-      updateUser(updatedUser);
+      updateUser(response.data.data.user);
       toast.success(t('avatarUpdated'));
       setShowCropper(false);
       setCropperImage(null);
@@ -229,15 +249,10 @@ function MyPage() {
       setEduStep('code');
     } catch (error: any) {
       const code = error.response?.data?.error?.code;
-      if (code === 'NOT_EDU_EMAIL') {
-        toast.error(t('notEduEmail'));
-      } else if (code === 'ALREADY_EDU_VERIFIED') {
-        toast.error(t('alreadyEduVerified'));
-      } else if (code === 'EDU_EMAIL_ALREADY_USED') {
-        toast.error(t('eduEmailAlreadyUsed'));
-      } else {
-        toast.error(t('eduCodeFailed'));
-      }
+      if (code === 'NOT_EDU_EMAIL') toast.error(t('notEduEmail'));
+      else if (code === 'ALREADY_EDU_VERIFIED') toast.error(t('alreadyEduVerified'));
+      else if (code === 'EDU_EMAIL_ALREADY_USED') toast.error(t('eduEmailAlreadyUsed'));
+      else toast.error(t('eduCodeFailed'));
     } finally {
       setSendingEduCode(false);
     }
@@ -249,19 +264,15 @@ function MyPage() {
     setVerifyingEdu(true);
     try {
       const response = await apiClient.post('/auth/edu-verify/confirm', { eduEmail, code: eduCode });
-      const updatedUser = response.data.data.user;
-      updateUser(updatedUser);
+      updateUser(response.data.data.user);
       toast.success(t('eduVerifySuccess'));
       setEduStep('closed');
       setEduEmail('');
       setEduCode('');
     } catch (error: any) {
       const code = error.response?.data?.error?.code;
-      if (code === 'EDU_EMAIL_ALREADY_USED') {
-        toast.error(t('eduEmailAlreadyUsed'));
-      } else {
-        toast.error(t('eduVerifyFailed'));
-      }
+      if (code === 'EDU_EMAIL_ALREADY_USED') toast.error(t('eduEmailAlreadyUsed'));
+      else toast.error(t('eduVerifyFailed'));
     } finally {
       setVerifyingEdu(false);
     }
@@ -294,6 +305,25 @@ function MyPage() {
       case 'inactive': return t('inactive');
       default: return status.charAt(0).toUpperCase() + status.slice(1);
     }
+  };
+
+  // 8.3: 判断对方用户信息 / Determine the other party based on buyer/seller role
+  const getOtherParty = (chat: ChatSummary) => {
+    const isBuyer = user?.userID === chat.buyerID;
+    return {
+      name: isBuyer ? chat.sellerName : chat.buyerName,
+      image: isBuyer ? chat.sellerImage : chat.buyerImage,
+    };
+  };
+
+  // 8.3: 格式化最后消息时间 / Format last message timestamp
+  const formatLastTime = (ts: string) => {
+    const diff = Date.now() - new Date(ts).getTime();
+    const mins = Math.floor(diff / 60000);
+    if (mins < 60) return `${mins}m ${t('mAgo')}`;
+    const hrs = Math.floor(mins / 60);
+    if (hrs < 24) return `${hrs}h ${t('mAgo')}`;
+    return new Date(ts).toLocaleDateString();
   };
 
   return (
@@ -348,11 +378,7 @@ function MyPage() {
                 <div className="flex-1 space-y-3">
                   <div>
                     <label className="text-sm text-gray-500 mb-1 block">{t('profileName')}</label>
-                    <Input
-                      value={editName}
-                      onChange={(e) => setEditName(e.target.value)}
-                      maxLength={100}
-                    />
+                    <Input value={editName} onChange={(e) => setEditName(e.target.value)} maxLength={100} />
                   </div>
                   <div>
                     <label className="text-sm text-gray-500 mb-1 block">{t('profileBio')}</label>
@@ -412,47 +438,86 @@ function MyPage() {
           )}
         </div>
 
-        {/* Tabs: Chat History / My Products */}
-        <Tabs defaultValue="my-products" className="w-full">
+        {/* 8.1: Tabs — value 绑定到 URL 参数 / Tabs value bound to URL param */}
+        <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
           <TabsList className="w-full mb-4">
             <TabsTrigger value="chat-history" className="flex-1">{t('chatHistory')}</TabsTrigger>
             <TabsTrigger value="my-products" className="flex-1">{t('myProducts')}</TabsTrigger>
           </TabsList>
 
-          {/* Chat History Tab */}
+          {/* 8.3: Chat History Tab — 真实数据 / Real chat data */}
           <TabsContent value="chat-history">
-            {showChat ? (
-              <div className="flex items-center gap-3 p-4 bg-white rounded-lg border hover:bg-gray-50">
-                <div
-                  className="flex items-center gap-3 flex-1 min-w-0 cursor-pointer"
-                  onClick={() => navigate('/chat/example-seller')}
-                >
-                  <Avatar className="w-12 h-12 flex-shrink-0">
-                    <AvatarImage src="" />
-                    <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white text-sm">
-                      ES
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex justify-between items-center mb-1">
-                      <p className="font-semibold text-sm">Example Seller</p>
-                      <span className="text-xs text-gray-400">2m {t('mAgo')}</span>
-                    </div>
-                    <p className="text-sm text-gray-500 truncate">Hi! Is this item still available?</p>
-                  </div>
-                </div>
+            {chatsLoading ? (
+              /* 加载中 / Loading state */
+              <div className="flex items-center justify-center py-16">
+                <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+                <span className="ml-3 text-gray-600">{t('loadingYourProducts')}</span>
+              </div>
+            ) : chatsError ? (
+              /* 加载失败 / Error state */
+              <div className="text-center py-8 bg-white rounded-lg border">
+                <p className="text-gray-500 mb-4">{t('networkError')}</p>
                 <Button
                   variant="outline"
                   size="sm"
-                  className="flex-shrink-0 text-red-500 border-red-200 hover:bg-red-50 hover:text-red-600"
-                  onClick={() => setShowChat(false)}
+                  onClick={() => setSearchParams({ tab: 'chat-history' })}
                 >
-                  {t('delete')}
+                  {t('retry')}
                 </Button>
               </div>
-            ) : (
+            ) : chats.length === 0 ? (
+              /* 空状态 / Empty state */
               <div className="text-center py-8 text-gray-400 text-sm bg-white rounded-lg border">
                 {t('chatHistory')} —
+              </div>
+            ) : (
+              /* 对话列表 / Chat list */
+              <div className="flex flex-col gap-2">
+                {chats.map((chat) => {
+                  const other = getOtherParty(chat);
+                  const preview = (chat.productTitle || '').slice(0, 50);
+                  return (
+                    <div key={chat.chatID} className="flex items-center gap-3 p-4 bg-white rounded-lg border hover:bg-gray-50">
+                      {/* 点击跳转聊天页 / Click to navigate to chat */}
+                      <div
+                        className="flex items-center gap-3 flex-1 min-w-0 cursor-pointer"
+                        onClick={() => navigate(`/chat/${chat.chatID}`)}
+                      >
+                        <Avatar className="w-12 h-12 flex-shrink-0">
+                          <AvatarImage src={other.image ? `http://localhost:3000${other.image}` : ''} />
+                          <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white text-sm">
+                            {other.name ? other.name.substring(0, 2).toUpperCase() : '??'}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex justify-between items-center mb-1">
+                            <p className="font-semibold text-sm">{other.name}</p>
+                            <span className="text-xs text-gray-400">{formatLastTime(chat.lastMessageAt)}</span>
+                          </div>
+                          {/* 商品名称 / Product title */}
+                          <p className="text-xs text-blue-500 truncate mb-0.5">{chat.productTitle}</p>
+                          {/* 最新消息预览（来自 lastMessageText，truncate 样式）/ Latest message preview (from lastMessageText, truncate style) */}
+                          <p className="text-sm text-gray-500 truncate">{chat.lastMessageText ?? ''}</p>
+                        </div>
+                        {/* 未读数徽章（药丸状）/ Unread badge (pill shape) */}
+                        {chat.unreadCount > 0 && (
+                          <Badge className="bg-red-500 text-white text-xs px-2 min-w-[1.5rem] h-5 flex items-center justify-center rounded-full flex-shrink-0">
+                            {chat.unreadCount}
+                          </Badge>
+                        )}
+                      </div>
+                      {/* 8.4: 删除按钮 / Delete button */}
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="flex-shrink-0 text-red-500 border-red-200 hover:bg-red-50 hover:text-red-600"
+                        onClick={() => setDeleteChatTarget(chat.chatID)}
+                      >
+                        {t('delete')}
+                      </Button>
+                    </div>
+                  );
+                })}
               </div>
             )}
           </TabsContent>
@@ -468,10 +533,7 @@ function MyPage() {
                   </div>
                   <Button
                     onClick={() => {
-                      if (!user?.eduVerified) {
-                        toast.error(t('eduRequiredToPost'));
-                        return;
-                      }
+                      if (!user?.eduVerified) { toast.error(t('eduRequiredToPost')); return; }
                       navigate('/create-product');
                     }}
                     className="bg-gradient-to-r from-blue-500 to-purple-600 hover:shadow-lg hover:scale-105 transition-all duration-200"
@@ -500,10 +562,7 @@ function MyPage() {
                   <p className="text-gray-600 mb-6">{t('startSelling')}</p>
                   <Button
                     onClick={() => {
-                      if (!user?.eduVerified) {
-                        toast.error(t('eduRequiredToPost'));
-                        return;
-                      }
+                      if (!user?.eduVerified) { toast.error(t('eduRequiredToPost')); return; }
                       navigate('/create-product');
                     }}
                     className="bg-gradient-to-r from-blue-500 to-purple-600 hover:shadow-lg hover:scale-105 transition-all duration-200"
@@ -624,14 +683,12 @@ function MyPage() {
         />
       )}
 
-      {/* Delete Confirmation Dialog */}
+      {/* Delete Product Confirmation Dialog */}
       <AlertDialog open={!!deleteConfirm} onOpenChange={(open: any) => !open && setDeleteConfirm(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>{t('deleteProduct')}</AlertDialogTitle>
-            <AlertDialogDescription>
-              {t('deleteProductConfirm')}
-            </AlertDialogDescription>
+            <AlertDialogDescription>{t('deleteProductConfirm')}</AlertDialogDescription>
           </AlertDialogHeader>
           <div className="flex gap-4">
             <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
@@ -640,21 +697,82 @@ function MyPage() {
               disabled={deleting}
               className="bg-red-600 hover:bg-red-700"
             >
-              {deleting ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  {t('deleting')}
-                </>
-              ) : (
-                t('delete')
-              )}
+              {deleting ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />{t('deleting')}</> : t('delete')}
             </AlertDialogAction>
           </div>
         </AlertDialogContent>
       </AlertDialog>
 
+      {/* 8.4: 删除对话三选项弹窗 / Delete chat dialog with three options */}
+      <Dialog open={!!deleteChatTarget} onOpenChange={(v: boolean) => { if (!v) setDeleteChatTarget(null); }}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle>{t('delete')} {t('chatHistory')}</DialogTitle>
+          </DialogHeader>
+          <div className="flex flex-col gap-3 pt-2">
+            {/* 选项1: 隐藏/关闭 / Option 1: Hide/close */}
+            <Button
+              variant="outline"
+              className="w-full justify-start"
+              onClick={async () => {
+                const chatId = deleteChatTarget!;
+                setDeleteChatTarget(null);
+                try {
+                  await chatService.hideChat(chatId);
+                  setChats((prev) => prev.filter((c) => c.chatID !== chatId));
+                  toast.success(t('productUnlisted')); // reuse "unlisted" success key
+                } catch (err) {
+                  toast.error(t('networkError'));
+                }
+              }}
+            >
+              {/* 隐藏对话（软删除）/ Hide chat (soft delete) */}
+              🙈 {language === 'zh' ? '隐藏对话' : language === 'th' ? 'ซ่อนการสนทนา' : 'Hide Chat'}
+            </Button>
+
+            {/* 选项2: 永久删除 / Option 2: Hard delete */}
+            <Button
+              variant="outline"
+              className="w-full justify-start text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700"
+              onClick={async () => {
+                const chatId = deleteChatTarget!;
+                // 二次确认 / Secondary confirmation
+                const confirmed = window.confirm(
+                  language === 'zh'
+                    ? '确定要永久删除此对话吗？所有消息将被清除，无法恢复。'
+                    : language === 'th'
+                    ? 'คุณแน่ใจหรือไม่ว่าต้องการลบการสนทนานี้อย่างถาวร?'
+                    : 'Permanently delete this chat? All messages will be removed and cannot be recovered.'
+                );
+                if (!confirmed) return;
+                setDeleteChatTarget(null);
+                try {
+                  await chatService.hardDeleteChat(chatId);
+                  setChats((prev) => prev.filter((c) => c.chatID !== chatId));
+                  toast.success(t('productDeleted')); // reuse "deleted" success key
+                } catch (err) {
+                  toast.error(t('networkError'));
+                }
+              }}
+            >
+              {/* 永久删除 / Permanently delete */}
+              🗑️ {language === 'zh' ? '永久删除' : language === 'th' ? 'ลบถาวร' : 'Delete Permanently'}
+            </Button>
+
+            {/* 选项3: 取消 / Option 3: Cancel */}
+            <Button
+              variant="ghost"
+              className="w-full"
+              onClick={() => setDeleteChatTarget(null)}
+            >
+              {t('cancel')}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {/* Delete Account Dialog */}
-      <Dialog open={deleteStep !== 'closed'} onOpenChange={(v) => { if (!v) { setDeleteStep('closed'); setDeleteCode(''); } }}>
+      <Dialog open={deleteStep !== 'closed'} onOpenChange={(v: boolean) => { if (!v) { setDeleteStep('closed'); setDeleteCode(''); } }}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="text-red-600">{t('deleteAccountNotice')}</DialogTitle>
@@ -703,7 +821,7 @@ function MyPage() {
       </Dialog>
 
       {/* Education Verification Dialog */}
-      <Dialog open={eduStep !== 'closed'} onOpenChange={(v) => { if (!v) { setEduStep('closed'); setEduEmail(''); setEduCode(''); } }}>
+      <Dialog open={eduStep !== 'closed'} onOpenChange={(v: boolean) => { if (!v) { setEduStep('closed'); setEduEmail(''); setEduCode(''); } }}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
@@ -716,12 +834,7 @@ function MyPage() {
               <p className="text-sm text-gray-600">{t('eduVerifyDesc')}</p>
               <div>
                 <label className="text-sm text-gray-500 mb-1 block">{t('eduEmailLabel')}</label>
-                <Input
-                  value={eduEmail}
-                  onChange={(e) => setEduEmail(e.target.value)}
-                  placeholder={t('eduEmailPlaceholder')}
-                  type="email"
-                />
+                <Input value={eduEmail} onChange={(e) => setEduEmail(e.target.value)} placeholder={t('eduEmailPlaceholder')} type="email" />
               </div>
               <p className="text-xs text-gray-400">{t('eduEmailHint')}</p>
               <div className="flex justify-end gap-2 pt-2">

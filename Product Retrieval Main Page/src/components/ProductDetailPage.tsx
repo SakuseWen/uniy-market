@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
-import { ChevronLeft, Heart, Scale, Flag, MessageCircle } from 'lucide-react';
+import { ChevronLeft, Heart, Scale, Flag, MessageCircle, Pencil } from 'lucide-react';
 import { Product } from '../lib/mockData';
 import { Language, translate } from '../lib/i18n';
 import { Button } from './ui/button';
 import { useAuth } from '../services/authContext';
 import { Badge } from './ui/badge';
+import { chatService } from '../services/chatService';
+import { toast } from 'sonner';
 import { ProductImageCarousel } from './ProductImageCarousel';
 import { SellerInfoCard } from './SellerInfoCard';
 import { ProductTabs } from './ProductTabs';
@@ -39,6 +41,33 @@ export function ProductDetailPage({
   const navigate = useNavigate();
   const { user } = useAuth();
   const [isFavorite, setIsFavorite] = useState(false);
+
+  // 判断当前用户是否为该商品的卖家 / Check if current user is the seller of this product
+  const isSeller = !!user && !!product.seller.id && user.userID === product.seller.id;
+
+  /**
+   * 买家点击"联系卖家"：创建或获取聊天房间后跳转
+   * Buyer clicks "Contact Seller": create/get chat room then navigate
+   */
+  const handleContactSeller = async () => {
+    if (!user) {
+      navigate('/login');
+      return;
+    }
+    try {
+      const res = await chatService.createOrGetChat(product.id, product.seller.id!);
+      const chatID = res.data.data.chatID;
+      navigate(`/chat/${chatID}`);
+    } catch (err: any) {
+      // 后端返回 403 表示自聊天被拒绝 / Backend 403 means self-chat rejected
+      const status = err?.response?.status;
+      if (status === 403) {
+        toast.error(err?.response?.data?.message || 'Cannot start a chat with yourself');
+      } else {
+        toast.error('Failed to open chat. Please try again.');
+      }
+    }
+  };
 
   const getLocalizedTitle = () => {
     if (language === 'zh' && product.titleZh) return product.titleZh;
@@ -170,13 +199,24 @@ export function ProductDetailPage({
 
             {/* Action Buttons */}
             <div className="grid grid-cols-2 gap-3 mb-3">
-              <Button className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:shadow-lg hover:scale-105 transition-all duration-200" onClick={() => {
-                if (!user) { navigate('/login'); return; }
-                if (product.seller.id) navigate(`/chat/${product.seller.id}`);
-              }}>
-                <MessageCircle className="w-4 h-4 mr-2" />
-                {t('contactSeller')}
-              </Button>
+              {/* 卖家看到"编辑商品"，买家看到"联系卖家" / Seller sees "Edit Product", buyer sees "Contact Seller" */}
+              {isSeller ? (
+                <Button
+                  className="w-full bg-gradient-to-r from-green-500 to-teal-600 hover:shadow-lg hover:scale-105 transition-all duration-200"
+                  onClick={() => navigate(`/edit-product/${product.id}`)}
+                >
+                  <Pencil className="w-4 h-4 mr-2" />
+                  {t('editProduct')}
+                </Button>
+              ) : (
+                <Button
+                  className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:shadow-lg hover:scale-105 transition-all duration-200"
+                  onClick={handleContactSeller}
+                >
+                  <MessageCircle className="w-4 h-4 mr-2" />
+                  {t('contactSeller')}
+                </Button>
+              )}
               <Button
                 variant="outline"
                 className="w-full"

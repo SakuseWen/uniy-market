@@ -258,6 +258,22 @@ export class MessageModel extends BaseModel {
   }
 
   /**
+   * Check if a buyer has sent at least one message in a chat
+   * 检查买家是否在对话中发送过至少一条消息
+   *
+   * Used for seller access control: sellers may only enter a chat room
+   * if the buyer has already initiated the conversation.
+   * 用于卖家访问控制：仅当买家已发起对话时，卖家才可进入聊天房间。
+   */
+  async hasBuyerMessage(chatID: string, buyerID: string): Promise<boolean> {
+    const result = await this.queryOne(
+      'SELECT 1 as found FROM Message WHERE chatID = ? AND senderID = ? LIMIT 1',
+      [chatID, buyerID]
+    );
+    return !!result;
+  }
+
+  /**
    * Get message statistics for a chat
    */
   async getChatMessageStats(chatID: string): Promise<{

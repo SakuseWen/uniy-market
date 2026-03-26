@@ -125,16 +125,16 @@ router.post('/', authenticateToken, async (req: Request, res: Response) => {
       return res.status(404).json(response);
     }
 
-    // Prevent user from chatting with themselves
+    // Prevent user from chatting with themselves / 禁止用户与自己发起聊天（双重防线后端层）
     if (user.userID === sellerID) {
       const response: ApiResponse = {
         success: false,
         error: {
-          message: 'Cannot create chat with yourself'
+          message: 'Cannot create a chat with yourself'
         },
         timestamp: new Date().toISOString()
       };
-      return res.status(400).json(response);
+      return res.status(403).json(response);
     }
 
     // Create or get existing chat
@@ -212,6 +212,22 @@ router.get('/:chatId', authenticateToken, async (req: Request, res: Response) =>
         timestamp: new Date().toISOString()
       };
       return res.status(404).json(response);
+    }
+
+    // Seller access control: seller may only enter if buyer has sent at least one message
+    // 卖家访问控制：仅当买家已发送至少一条消息时，卖家才可进入对话
+    if (chat.sellerID === user.userID) {
+      const hasBuyerMsg = await messageModel.hasBuyerMessage(chatId, chat.buyerID);
+      if (!hasBuyerMsg) {
+        const response: ApiResponse = {
+          success: false,
+          error: {
+            message: '请等待买家发起咨询后再进入对话'
+          },
+          timestamp: new Date().toISOString()
+        };
+        return res.status(403).json(response);
+      }
     }
 
     const response: ApiResponse = {
@@ -327,6 +343,89 @@ router.delete('/:chatId', authenticateToken, async (req: Request, res: Response)
       error: {
         message: error instanceof Error ? error.message : 'Failed to delete chat'
       },
+      timestamp: new Date().toISOString()
+    };
+    return res.status(500).json(response);
+  }
+});
+
+/**
+ * DELETE /api/chats/:chatId/hard
+ * Permanently delete a chat and all its messages from the database
+ * 永久删除聊天及其所有消息记录（硬删除）
+ */
+router.delete('/:chatId/hard', authenticateToken, async (req: Request, res: Response) => {
+  try {
+    const user = (req as any).user;
+    const { chatId } = req.params;
+
+    if (!chatId) {
+      const response: ApiResponse = {
+        success: false,
+        error: { message: 'Chat ID is required' },
+        timestamp: new Date().toISOString()
+      };
+      res.status(400).json(response);
+      return;
+    }
+
+    // Verify user is participant in chat / 验证用户是对话参与者
+    const isParticipant = await chatModel.isUserInChat(chatId, user.userID);
+    if (!isParticipant) {
+      const response: ApiResponse = {
+        success: false,
+        error: { message: 'Access denied: You are not a participant in this chat' },
+        timestamp: new Date().toISOString()
+      };
+      return res.status(403).json(response);
+    }
+
+    // Get chat details before deletion for WebSocket notification
+    // 删除前获取对话详情，用于 WebSocket 通知
+    const chatDetails = await chatModel.getChatWithDetails(chatId);
+
+    // Perform hard delete (removes Chat + all Messages) / 执行硬删除（删除 Chat 及所有 Message）
+    const success = await chatModel.hardDeleteChat(chatId);
+    if (!success) {
+      const response: ApiResponse = {
+        success: false,
+        error: { message: 'Chat not found' },
+        timestamp: new Date().toISOString()
+      };
+      return res.status(404).json(response);
+    }
+
+    // Notify the other participant via WebSocket / 通过 WebSocket 通知对方
+    if (webSocketService && chatDetails) {
+      const otherUserId = chatDetails.buyerID === user.userID
+        ? chatDetails.sellerID
+        : chatDetails.buyerID;
+
+      webSocketService.sendNotificationToUser(otherUserId, {
+        type: 'chat_hard_deleted',
+        chatId,
+        deletedBy: user.userID,
+        productTitle: chatDetails.productTitle,
+        timestamp: new Date().toISOString()
+      });
+    }
+
+    const response: ApiResponse = {
+      success: true,
+      data: {
+        message: 'Chat permanently deleted',
+        chatId,
+        deletedAt: new Date().toISOString()
+      },
+      timestamp: new Date().toISOString()
+    };
+
+    return res.json(response);
+  } catch (error) {
+    console.error('Error hard-deleting chat:', error);
+    const response: ApiResponse = {
+      success: false,
+      error: { message: error instanceof Error ? error.message : 'Failed to permanently delete chat' },
       timestamp: new Date().toISOString()
     };
     return res.status(500).json(response);

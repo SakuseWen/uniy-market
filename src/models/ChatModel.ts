@@ -89,7 +89,8 @@ export class ChatModel extends BaseModel {
         buyer.profileImage as buyerImage,
         seller.name as sellerName,
         seller.profileImage as sellerImage,
-        (SELECT COUNT(*) FROM Message WHERE chatID = c.chatID AND isRead = 0 AND senderID != ?) as unreadCount
+        (SELECT COUNT(*) FROM Message WHERE chatID = c.chatID AND isRead = 0 AND senderID != ?) as unreadCount,
+        (SELECT m.messageText FROM Message m WHERE m.chatID = c.chatID ORDER BY m.timestamp DESC LIMIT 1) as lastMessageText
       FROM Chat c
       LEFT JOIN ProductListing p ON c.listingID = p.listingID
       LEFT JOIN (SELECT listingID, imagePath FROM ProductImage WHERE isPrimary = 1) pi ON p.listingID = pi.listingID

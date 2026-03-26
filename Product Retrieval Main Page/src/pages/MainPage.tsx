@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router';
 import { Header } from '../components/Header';
 import { SearchFilterBar } from '../components/SearchFilterBar';
@@ -24,6 +24,7 @@ import { toast } from 'sonner';
 import { Toaster } from '../components/ui/sonner';
 import { useAuth } from '../services/authContext';
 import { useLanguage } from '../lib/LanguageContext';
+import { chatService } from '../services/chatService';
 
 export default function MainPage() {
   const navigate = useNavigate();
@@ -35,6 +36,8 @@ export default function MainPage() {
 
   // User state
   const [unreadMessages] = useState(3);
+  // 12.1 联系卖家 loading 状态 / Loading state for contacting seller
+  const [contactingId, setContactingId] = useState<string | null>(null);
 
   // View state
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
@@ -204,13 +207,24 @@ export default function MainPage() {
     });
   };
 
-  const handleContact = (sellerId: string) => {
+  // 12.1 修复 handleContact：调用 createOrGetChat 获取真实 chatID
+  // Fix handleContact: call createOrGetChat to get the real chatID
+  const handleContact = useCallback(async (listingID: string, sellerID: string) => {
     if (!user) {
       navigate('/login');
       return;
     }
-    navigate(`/chat/${sellerId}`);
-  };
+    setContactingId(listingID);
+    try {
+      const res = await chatService.createOrGetChat(listingID, sellerID);
+      const chatID = res.data.data?.chatID;
+      navigate(`/chat/${chatID}`);
+    } catch {
+      toast.error('无法发起对话，请稍后重试');
+    } finally {
+      setContactingId(null);
+    }
+  }, [user, navigate]);
 
   const handleLanguageChange = (lang: Language) => {
     setLanguage(lang);
@@ -392,6 +406,8 @@ export default function MainPage() {
                   onContact={handleContact}
                   isFavorited={favoritedIds.includes(product.id)}
                   isInComparison={comparisonIds.includes(product.id)}
+                  currentUserId={user?.userID}
+                  isContactLoading={contactingId === product.id}
                 />
               </div>
             ))}

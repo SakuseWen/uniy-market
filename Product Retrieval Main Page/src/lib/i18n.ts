@@ -66,6 +66,7 @@ export const translations = {
     favorite: 'Favorite',
     compare: 'Compare',
     contactSeller: 'Contact Seller',
+    editProduct: 'Edit Product',
     machineTranslation: 'Machine Translation',
     
     // Advanced Filters
@@ -401,6 +402,7 @@ export const translations = {
     favorite: '收藏',
     compare: '对比',
     contactSeller: '联系卖家',
+    editProduct: '编辑商品',
     machineTranslation: '机器翻译',
     
     // Advanced Filters
@@ -736,6 +738,7 @@ export const translations = {
     favorite: 'รายการโปรด',
     compare: 'เปรียบเทียบ',
     contactSeller: 'ติดต่อผู้ขาย',
+    editProduct: 'แก้ไขสินค้า',
     machineTranslation: 'แปลด้วยเครื่อง',
     
     // Advanced Filters
