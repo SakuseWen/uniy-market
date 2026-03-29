@@ -16,7 +16,7 @@ const favoriteModel = new FavoriteModel();
  */
 router.get('/', authenticateToken, async (req: Request, res: Response) => {
   try {
-    const userID = (req as any).user?.userId;
+    const userID = (req as any).user?.userID;
     if (!userID) {
       return res.status(401).json({ error: 'Unauthorized' });
     }
@@ -48,7 +48,7 @@ router.get('/', authenticateToken, async (req: Request, res: Response) => {
  */
 router.post('/', authenticateToken, async (req: Request, res: Response) => {
   try {
-    const userID = (req as any).user?.userId;
+    const userID = (req as any).user?.userID;
     if (!userID) {
       return res.status(401).json({ error: 'Unauthorized' });
     }
@@ -86,7 +86,7 @@ router.post('/', authenticateToken, async (req: Request, res: Response) => {
  */
 router.delete('/:listingID', authenticateToken, async (req: Request, res: Response) => {
   try {
-    const userID = (req as any).user?.userId;
+    const userID = (req as any).user?.userID;
     if (!userID) {
       return res.status(401).json({ error: 'Unauthorized' });
     }
@@ -112,7 +112,7 @@ router.delete('/:listingID', authenticateToken, async (req: Request, res: Respon
  */
 router.get('/check/:listingID', authenticateToken, async (req: Request, res: Response) => {
   try {
-    const userID = (req as any).user?.userId;
+    const userID = (req as any).user?.userID;
     if (!userID) {
       return res.status(401).json({ error: 'Unauthorized' });
     }
@@ -134,7 +134,7 @@ router.get('/check/:listingID', authenticateToken, async (req: Request, res: Res
  */
 router.post('/check-batch', authenticateToken, async (req: Request, res: Response) => {
   try {
-    const userID = (req as any).user?.userId;
+    const userID = (req as any).user?.userID;
     if (!userID) {
       return res.status(401).json({ error: 'Unauthorized' });
     }
@@ -177,7 +177,7 @@ router.get('/count/:listingID', async (req: Request, res: Response) => {
  */
 router.get('/my/count', authenticateToken, async (req: Request, res: Response) => {
   try {
-    const userID = (req as any).user?.userId;
+    const userID = (req as any).user?.userID;
     if (!userID) {
       return res.status(401).json({ error: 'Unauthorized' });
     }

@@ -2,7 +2,7 @@ import apiClient from './api';
 
 export const favoriteService = {
   async getFavorites(): Promise<any[]> {
-    const res = await apiClient.get('/favorites?includeProducts=true&active=true');
+    const res = await apiClient.get('/favorites?include=products&active=true');
     return res.data.favorites || [];
   },
 

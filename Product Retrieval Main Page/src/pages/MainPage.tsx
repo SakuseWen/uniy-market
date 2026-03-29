@@ -201,8 +201,9 @@ export default function MainPage() {
         setFavoritedIds(prev => [...prev, id]);
         toast.success(t('addedToFavorites'));
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Favorite error:', err);
+      toast.error(err.response?.data?.error || 'Failed to update favorite');
     }
   };
 
