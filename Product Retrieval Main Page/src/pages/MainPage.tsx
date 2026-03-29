@@ -247,6 +247,7 @@ export default function MainPage() {
     if (!user) { navigate('/login'); return; }
     const product = apiProducts.find(p => p.id === productId);
     if (!product || !product.seller?.id) return;
+    if (product.seller.id === user.userID) { toast.error(t('cannotBuyOwnProduct') || 'You cannot buy your own product'); return; }
     try {
       await dealService.createDeal(productId, user.userID, product.seller.id, product.price);
       toast.success(t('dealRequestSent'));
@@ -422,7 +423,7 @@ export default function MainPage() {
                   onFavorite={handleFavorite}
                   onCompare={handleCompare}
                   onContact={handleContact}
-                  onBuy={user && product.seller?.id !== user.userID && !product.sold ? handleBuy : undefined}
+                  onBuy={!product.sold ? handleBuy : undefined}
                   isFavorited={favoritedIds.includes(product.id)}
                   isInComparison={comparisonIds.includes(product.id)}
                   inTransaction={inTransactionIds.includes(product.id)}
