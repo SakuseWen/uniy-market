@@ -427,7 +427,7 @@ export default function EditProductPage() {
                       {displayCategories && displayCategories.length > 0 ? (
                         displayCategories.map((cat: any) => (
                           <SelectItem key={cat.categoryID} value={cat.categoryID.toString()}>
-                            {cat.name}
+                            {language === 'zh' ? (cat.nameZh || cat.name) : language === 'th' ? (cat.nameTh || cat.name) : (cat.nameEn || cat.name)}
                           </SelectItem>
                         ))
                       ) : (
