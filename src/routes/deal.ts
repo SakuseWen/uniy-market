@@ -155,10 +155,11 @@ router.get('/', authenticateToken, async (req: Request, res: Response) => {
       deals = deals.filter((deal: any) => deal.status === status);
     }
 
-    // Enrich with product title
+    // Enrich with product title and images
     const enriched = await Promise.all(deals.map(async (deal: any) => {
       const product = await productModel.getProductById(deal.listingID);
-      return { ...deal, title: product?.title || deal.listingID };
+      const images = await productModel.getProductImages(deal.listingID);
+      return { ...deal, title: product?.title || deal.listingID, images };
     }));
 
     res.json({

@@ -729,9 +729,27 @@ function MyPage() {
                   return (
                     <Card key={deal.dealID}>
                       <CardContent className="p-4">
-                        <div className="flex items-center justify-between mb-2">
-                          <h3 className="font-semibold">{deal.title || deal.listingID}</h3>
-                          <Badge variant="secondary" style={{
+                        <div className="flex gap-4">
+                          <div className="flex-shrink-0">
+                            {deal.images && deal.images.length > 0 ? (
+                              <img
+                                src={`http://localhost:3000${deal.images[0].imagePath}`}
+                                alt={deal.title}
+                                className="w-32 h-32 object-cover rounded-lg"
+                                onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
+                                  (e.target as HTMLImageElement).src = '/placeholder-product.jpg';
+                                }}
+                              />
+                            ) : (
+                              <div className="w-32 h-32 bg-gray-200 rounded-lg flex items-center justify-center">
+                                <span className="text-gray-400">{t('noImage')}</span>
+                              </div>
+                            )}
+                          </div>
+                          <div className="flex-1">
+                            <div className="flex items-center justify-between mb-2">
+                              <h3 className="font-semibold">{deal.title || deal.listingID}</h3>
+                              <Badge variant="secondary" style={{
                             background: isCompleted ? '#dcfce7' : isCancelled ? '#fee2e2' : isAccepted ? '#dbeafe' : '#fef3c7',
                             color: isCompleted ? '#16a34a' : isCancelled ? '#dc2626' : isAccepted ? '#2563eb' : '#d97706'
                           }}>
@@ -776,6 +794,8 @@ function MyPage() {
                           {!isSeller && isPending && (
                             <span className="text-sm" style={{ color: '#d97706' }}>{t('waitingSellerAccept')}</span>
                           )}
+                        </div>
+                          </div>
                         </div>
                       </CardContent>
                     </Card>
