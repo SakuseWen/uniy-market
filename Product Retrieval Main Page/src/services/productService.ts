@@ -196,14 +196,14 @@ export const productService = {
   },
 
   // 获取分类列表
-  async getCategories(): Promise<Array<{ categoryID: number; name: string }>> {
+  async getCategories(): Promise<Array<{ categoryID: number; name: string; nameEn?: string; nameZh?: string; nameTh?: string }>> {
     const response = await apiClient.get<{
       success: boolean;
-      data: { categories: Array<{ categoryID: number; name: string }> };
+      data: { categories: Array<{ categoryID: number; name: string; nameEn?: string; nameZh?: string; nameTh?: string }> };
     }>('/products/categories/all');
     
     const data = response.data.data;
-    let categoriesArray: Array<{ categoryID: number; name: string }> = [];
+    let categoriesArray: Array<any> = [];
     
     if (Array.isArray(data)) {
       categoriesArray = data;
@@ -212,16 +212,18 @@ export const productService = {
     }
     
     // Remove duplicates based on name
-    const uniqueMap = new Map<string, { categoryID: number; name: string }>();
+    const uniqueMap = new Map<string, { categoryID: number; name: string; nameEn?: string; nameZh?: string; nameTh?: string }>();
     
     categoriesArray.forEach(cat => {
       const name = cat.name || '';
       
-      // Use name as key to avoid duplicates with same name
       if (cat.categoryID > 0 && name && !uniqueMap.has(name)) {
         uniqueMap.set(name, {
           categoryID: cat.categoryID,
-          name: name
+          name: name,
+          nameEn: cat.nameEn,
+          nameZh: cat.nameZh,
+          nameTh: cat.nameTh,
         });
       }
     });
