@@ -509,4 +509,97 @@ router.get('/stats/summary', authenticateToken, async (req: Request, res: Respon
   }
 });
 
+/**
+ * PUT /api/deals/:dealId/accept
+ * Seller accepts a pending deal request
+ */
+router.put('/:dealId/accept', authenticateToken, async (req: Request, res: Response) => {
+  try {
+    const { dealId } = req.params;
+    const userID = (req as any).user.userID;
+    const deal = await dealModel.getDealById(dealId);
+    if (!deal) return res.status(404).json({ success: false, error: { message: 'Deal not found' } });
+    if (deal.sellerID !== userID) return res.status(403).json({ success: false, error: { message: 'Only the seller can accept' } });
+    if (deal.status !== 'pending') return res.status(400).json({ success: false, error: { message: 'Deal is not pending' } });
+
+    const updated = await dealModel.updateDeal(dealId, { status: 'pending', notes: 'accepted' });
+    // Keep status pending but mark as accepted (in-transaction)
+    res.json({ success: true, data: updated });
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: { message: error.message } });
+  }
+});
+
+/**
+ * PUT /api/deals/:dealId/reject
+ * Seller rejects a pending deal request
+ */
+router.put('/:dealId/reject', authenticateToken, async (req: Request, res: Response) => {
+  try {
+    const { dealId } = req.params;
+    const userID = (req as any).user.userID;
+    const deal = await dealModel.getDealById(dealId);
+    if (!deal) return res.status(404).json({ success: false, error: { message: 'Deal not found' } });
+    if (deal.sellerID !== userID) return res.status(403).json({ success: false, error: { message: 'Only the seller can reject' } });
+    if (deal.status !== 'pending') return res.status(400).json({ success: false, error: { message: 'Deal is not pending' } });
+
+    const updated = await dealModel.updateDealStatus(dealId, 'cancelled');
+    res.json({ success: true, data: updated, rejected: true });
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: { message: error.message } });
+  }
+});
+
+/**
+ * PUT /api/deals/:dealId/confirm
+ * Buyer or seller confirms deal completion (dual confirmation)
+ */
+router.put('/:dealId/confirm', authenticateToken, async (req: Request, res: Response) => {
+  try {
+    const { dealId } = req.params;
+    const userID = (req as any).user.userID;
+    const db = (await import('../config/database')).DatabaseManager.getInstance().getDatabase();
+    const deal = await dealModel.getDealById(dealId);
+    if (!deal) return res.status(404).json({ success: false, error: { message: 'Deal not found' } });
+    if (deal.buyerID !== userID && deal.sellerID !== userID) return res.status(403).json({ success: false, error: { message: 'Unauthorized' } });
+    if (deal.status !== 'pending') return res.status(400).json({ success: false, error: { message: 'Deal is not in transaction' } });
+
+    const isBuyer = deal.buyerID === userID;
+    const field = isBuyer ? 'buyerConfirmed' : 'sellerConfirmed';
+    await db.run(`UPDATE Deal SET ${field} = 1, updatedAt = ? WHERE dealID = ?`, [new Date().toISOString(), dealId]);
+
+    // Check if both confirmed
+    const updated = await db.get('SELECT * FROM Deal WHERE dealID = ?', [dealId]);
+    if (updated.buyerConfirmed && updated.sellerConfirmed) {
+      await dealModel.updateDealStatus(dealId, 'completed');
+      await productModel.updateProduct(deal.listingID, { status: 'sold' });
+      return res.json({ success: true, data: { ...updated, status: 'completed' }, completed: true });
+    }
+
+    res.json({ success: true, data: updated, completed: false });
+  } catch (error: any) {
+    console.error('Confirm deal error:', error);
+    res.status(500).json({ success: false, error: { message: error.message } });
+  }
+});
+
+/**
+ * GET /api/deals/product/:listingID
+ * Get active deal for a product
+ */
+router.get('/product/:listingID', authenticateToken, async (req: Request, res: Response) => {
+  try {
+    const { listingID } = req.params;
+    const userID = (req as any).user.userID;
+    const db = (await import('../config/database')).DatabaseManager.getInstance().getDatabase();
+    const deal = await db.get(
+      "SELECT * FROM Deal WHERE listingID = ? AND status = 'pending' AND (buyerID = ? OR sellerID = ?)",
+      [listingID, userID, userID]
+    );
+    res.json({ success: true, data: deal || null });
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: { message: error.message } });
+  }
+});
+
 export default router;

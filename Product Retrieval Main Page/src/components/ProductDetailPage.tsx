@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router';
-import { ChevronLeft, Heart, Scale, Flag, MessageCircle } from 'lucide-react';
+import { ChevronLeft, Heart, Scale, Flag, MessageCircle, ShoppingCart, Check, X as XIcon, Loader2 } from 'lucide-react';
 import { Product } from '../lib/mockData';
 import { Language, translate } from '../lib/i18n';
 import { Button } from './ui/button';
 import { useAuth } from '../services/authContext';
 import { favoriteService } from '../services/favoriteService';
+import { dealService } from '../services/dealService';
+import { toast } from 'sonner';
 import { Badge } from './ui/badge';
 import { ProductImageCarousel } from './ProductImageCarousel';
 import { SellerInfoCard } from './SellerInfoCard';
@@ -40,6 +42,8 @@ export function ProductDetailPage({
   const navigate = useNavigate();
   const { user } = useAuth();
   const [isFavorite, setIsFavorite] = useState(false);
+  const [deal, setDeal] = useState<any>(null);
+  const [dealLoading, setDealLoading] = useState(false);
 
   // Check if product is favorited
   useEffect(() => {
@@ -48,6 +52,75 @@ export function ProductDetailPage({
       setIsFavorite(!!result[product.id]);
     }).catch(() => {});
   }, [user, product.id]);
+
+  // Load deal status for this product
+  useEffect(() => {
+    if (!user || !product.id) return;
+    dealService.getDealForProduct(product.id).then(d => setDeal(d)).catch(() => {});
+  }, [user, product.id]);
+
+  const handleBuy = async () => {
+    if (!user) { navigate('/login'); return; }
+    if (!product.seller?.id) return;
+    setDealLoading(true);
+    try {
+      const newDeal = await dealService.createDeal(product.id, user.userID, product.seller.id, product.price);
+      setDeal(newDeal);
+      toast.success(t('dealRequestSent') || 'Purchase request sent');
+    } catch (err: any) {
+      toast.error(err.response?.data?.error?.message || 'Failed to create deal');
+    } finally { setDealLoading(false); }
+  };
+
+  const handleAcceptDeal = async () => {
+    if (!deal) return;
+    setDealLoading(true);
+    try {
+      await dealService.acceptDeal(deal.dealID);
+      setDeal({ ...deal, notes: 'accepted' });
+      toast.success(t('dealAccepted') || 'Deal accepted');
+    } catch (err: any) { toast.error(err.response?.data?.error?.message || 'Failed'); }
+    finally { setDealLoading(false); }
+  };
+
+  const handleRejectDeal = async () => {
+    if (!deal) return;
+    setDealLoading(true);
+    try {
+      await dealService.rejectDeal(deal.dealID);
+      setDeal(null);
+      toast.success(t('dealRejected') || 'Deal rejected');
+    } catch (err: any) { toast.error(err.response?.data?.error?.message || 'Failed'); }
+    finally { setDealLoading(false); }
+  };
+
+  const handleConfirmDeal = async () => {
+    if (!deal) return;
+    setDealLoading(true);
+    try {
+      const res = await dealService.confirmDeal(deal.dealID);
+      if (res.completed) {
+        setDeal({ ...deal, status: 'completed' });
+        toast.success(t('dealCompleted') || 'Transaction completed');
+      } else {
+        const isBuyer = user?.userID === deal.buyerID;
+        setDeal({ ...deal, [isBuyer ? 'buyerConfirmed' : 'sellerConfirmed']: true });
+        toast.success(t('dealConfirmedWaiting') || 'Confirmed. Waiting for the other party.');
+      }
+    } catch (err: any) { toast.error(err.response?.data?.error?.message || 'Failed'); }
+    finally { setDealLoading(false); }
+  };
+
+  const handleCancelDeal = async () => {
+    if (!deal) return;
+    setDealLoading(true);
+    try {
+      await dealService.cancelDeal(deal.dealID);
+      setDeal(null);
+      toast.success(t('dealCancelled') || 'Deal cancelled');
+    } catch (err: any) { toast.error(err.response?.data?.error?.message || 'Failed'); }
+    finally { setDealLoading(false); }
+  };
 
   const handleToggleFavorite = async () => {
     if (!user) { navigate('/login'); return; }
@@ -198,6 +271,53 @@ export function ProductDetailPage({
 
             {/* Action Buttons */}
             <div className="grid grid-cols-2 gap-3 mb-3">
+              {/* Buy / Deal buttons - only show if not own product */}
+              {user && product.seller?.id !== user.userID && !product.sold && !deal && (
+                <Button className="w-full bg-green-600 hover:bg-green-700 hover:shadow-lg hover:scale-105 transition-all duration-200 col-span-2" onClick={handleBuy} disabled={dealLoading}>
+                  {dealLoading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <ShoppingCart className="w-4 h-4 mr-2" />}
+                  {t('buyNow') || 'Buy / Request'}
+                </Button>
+              )}
+
+              {/* Seller: accept/reject pending deal */}
+              {deal && deal.status === 'pending' && !deal.notes && user?.userID === deal.sellerID && (
+                <>
+                  <Button className="w-full bg-green-600 hover:bg-green-700" onClick={handleAcceptDeal} disabled={dealLoading}>
+                    <Check className="w-4 h-4 mr-2" /> {t('acceptDeal') || 'Accept'}
+                  </Button>
+                  <Button variant="destructive" className="w-full" onClick={handleRejectDeal} disabled={dealLoading}>
+                    <XIcon className="w-4 h-4 mr-2" /> {t('rejectDeal') || 'Reject'}
+                  </Button>
+                </>
+              )}
+
+              {/* In transaction: confirm / cancel */}
+              {deal && deal.status === 'pending' && deal.notes === 'accepted' && (
+                <>
+                  <Button className="w-full bg-green-600 hover:bg-green-700" onClick={handleConfirmDeal} disabled={dealLoading || (user?.userID === deal.buyerID ? deal.buyerConfirmed : deal.sellerConfirmed)}>
+                    <Check className="w-4 h-4 mr-2" />
+                    {(user?.userID === deal.buyerID ? deal.buyerConfirmed : deal.sellerConfirmed) ? (t('confirmed') || 'Confirmed ✓') : (t('confirmDeal') || 'Confirm Complete')}
+                  </Button>
+                  <Button variant="outline" className="w-full text-red-500" onClick={handleCancelDeal} disabled={dealLoading}>
+                    <XIcon className="w-4 h-4 mr-2" /> {t('cancelDeal') || 'Cancel Deal'}
+                  </Button>
+                </>
+              )}
+
+              {/* Buyer waiting for seller to accept */}
+              {deal && deal.status === 'pending' && !deal.notes && user?.userID === deal.buyerID && (
+                <div className="col-span-2 text-center py-2 text-sm text-orange-600 bg-orange-50 rounded-lg">
+                  {t('waitingSellerAccept') || 'Waiting for seller to accept...'}
+                </div>
+              )}
+
+              {/* Deal completed */}
+              {deal && deal.status === 'completed' && (
+                <div className="col-span-2 text-center py-2 text-sm text-green-600 bg-green-50 rounded-lg font-semibold">
+                  ✓ {t('dealCompleted') || 'Transaction Completed'}
+                </div>
+              )}
+
               <Button className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:shadow-lg hover:scale-105 transition-all duration-200" onClick={() => {
                 if (!user) { navigate('/login'); return; }
                 if (product.seller.id) navigate(`/chat/${product.seller.id}`);

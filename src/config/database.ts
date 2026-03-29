@@ -390,6 +390,14 @@ export class DatabaseManager {
       CREATE INDEX IF NOT EXISTS idx_comment_parent ON Comment(parentID);
     `);
 
+    // Migration: add buyerConfirmed/sellerConfirmed to Deal
+    try {
+      await this.db.exec('ALTER TABLE Deal ADD COLUMN buyerConfirmed BOOLEAN DEFAULT FALSE');
+    } catch (_e) { /* ignore */ }
+    try {
+      await this.db.exec('ALTER TABLE Deal ADD COLUMN sellerConfirmed BOOLEAN DEFAULT FALSE');
+    } catch (_e) { /* ignore */ }
+
     // Insert default data
     await this.insertDefaultData();
 
