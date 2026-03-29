@@ -24,6 +24,7 @@ import { toast } from 'sonner';
 import { Toaster } from '../components/ui/sonner';
 import { useAuth } from '../services/authContext';
 import { useLanguage } from '../lib/LanguageContext';
+import { favoriteService } from '../services/favoriteService';
 
 export default function MainPage() {
   const navigate = useNavigate();
@@ -69,6 +70,14 @@ export default function MainPage() {
   // Comparison state
   const [comparisonIds, setComparisonIds] = useState<string[]>([]);
   const [favoritedIds, setFavoritedIds] = useState<string[]>([]);
+
+  // Load user's favorites from API
+  useEffect(() => {
+    if (!user) return;
+    favoriteService.checkBatch(apiProducts.map(p => p.id)).then(result => {
+      setFavoritedIds(Object.entries(result).filter(([, v]) => v).map(([k]) => k));
+    }).catch(() => {});
+  }, [user, apiProducts]);
 
   // Fetch products from API
   const apiFilters = useMemo(() => {
@@ -177,16 +186,24 @@ export default function MainPage() {
   }, [comparisonIds, apiProducts]);
 
   // Handlers
-  const handleFavorite = (id: string) => {
-    setFavoritedIds((prev) => {
-      if (prev.includes(id)) {
+  const handleFavorite = async (id: string) => {
+    if (!user) {
+      navigate('/login');
+      return;
+    }
+    try {
+      if (favoritedIds.includes(id)) {
+        await favoriteService.removeFavorite(id);
+        setFavoritedIds(prev => prev.filter(fId => fId !== id));
         toast.success(t('removedFromFavorites'));
-        return prev.filter((fId) => fId !== id);
       } else {
+        await favoriteService.addFavorite(id);
+        setFavoritedIds(prev => [...prev, id]);
         toast.success(t('addedToFavorites'));
-        return [...prev, id];
       }
-    });
+    } catch (err) {
+      console.error('Favorite error:', err);
+    }
   };
 
   const handleCompare = (id: string) => {

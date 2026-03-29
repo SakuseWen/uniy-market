@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router';
 import { ChevronLeft, Heart, Scale, Flag, MessageCircle } from 'lucide-react';
 import { Product } from '../lib/mockData';
 import { Language, translate } from '../lib/i18n';
 import { Button } from './ui/button';
 import { useAuth } from '../services/authContext';
+import { favoriteService } from '../services/favoriteService';
 import { Badge } from './ui/badge';
 import { ProductImageCarousel } from './ProductImageCarousel';
 import { SellerInfoCard } from './SellerInfoCard';
@@ -39,6 +40,29 @@ export function ProductDetailPage({
   const navigate = useNavigate();
   const { user } = useAuth();
   const [isFavorite, setIsFavorite] = useState(false);
+
+  // Check if product is favorited
+  useEffect(() => {
+    if (!user || !product.id) return;
+    favoriteService.checkBatch([product.id]).then(result => {
+      setIsFavorite(!!result[product.id]);
+    }).catch(() => {});
+  }, [user, product.id]);
+
+  const handleToggleFavorite = async () => {
+    if (!user) { navigate('/login'); return; }
+    try {
+      if (isFavorite) {
+        await favoriteService.removeFavorite(product.id);
+        setIsFavorite(false);
+      } else {
+        await favoriteService.addFavorite(product.id);
+        setIsFavorite(true);
+      }
+    } catch (err) {
+      console.error('Favorite error:', err);
+    }
+  };
 
   const getLocalizedTitle = () => {
     if (language === 'zh' && product.titleZh) return product.titleZh;
@@ -180,7 +204,7 @@ export function ProductDetailPage({
               <Button
                 variant="outline"
                 className="w-full"
-                onClick={() => setIsFavorite(!isFavorite)}
+                onClick={handleToggleFavorite}
               >
                 <Heart className={`w-4 h-4 mr-2 ${isFavorite ? 'fill-red-500 text-red-500' : ''}`} />
                 {t('addToFavorites')}
