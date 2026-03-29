@@ -7,6 +7,7 @@ import { Button } from './ui/button';
 import { useAuth } from '../services/authContext';
 import { favoriteService } from '../services/favoriteService';
 import { dealService } from '../services/dealService';
+import apiClient from '../services/api';
 import { toast } from 'sonner';
 import { Badge } from './ui/badge';
 import { ProductImageCarousel } from './ProductImageCarousel';
@@ -53,10 +54,19 @@ export function ProductDetailPage({
     }).catch(() => {});
   }, [user, product.id]);
 
-  // Load deal status for this product
+  // Load deal status (public check for all users, detailed for logged-in)
   useEffect(() => {
-    if (!user || !product.id) return;
-    dealService.getDealForProduct(product.id).then(d => setDeal(d)).catch(() => {});
+    if (!product.id) return;
+    // Public check
+    apiClient.get(`/deals/product/${product.id}/status`).then(r => {
+      if (r.data.inTransaction) {
+        setDeal({ status: 'pending', notes: 'accepted' });
+      }
+    }).catch(() => {});
+    // Detailed check for logged-in user
+    if (user) {
+      dealService.getDealForProduct(product.id).then(d => { if (d) setDeal(d); }).catch(() => {});
+    }
   }, [user, product.id]);
 
   const handleBuy = async () => {

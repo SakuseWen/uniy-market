@@ -26,6 +26,7 @@ import { useAuth } from '../services/authContext';
 import { useLanguage } from '../lib/LanguageContext';
 import { favoriteService } from '../services/favoriteService';
 import { dealService } from '../services/dealService';
+import apiClient from '../services/api';
 
 export default function MainPage() {
   const navigate = useNavigate();
@@ -137,17 +138,18 @@ export default function MainPage() {
     }).catch(() => {});
   }, [user, apiProducts]);
 
-  // Track products in transaction
+  // Track products in transaction (public, works for all users)
   const [inTransactionIds, setInTransactionIds] = useState<string[]>([]);
   useEffect(() => {
-    if (!user) return;
-    dealService.getMyDeals().then((deals: any[]) => {
-      const ids = deals
-        .filter((d: any) => d.status === 'pending' && d.notes === 'accepted')
-        .map((d: any) => d.listingID);
-      setInTransactionIds(ids);
-    }).catch(() => {});
-  }, [user]);
+    if (apiProducts.length === 0) return;
+    Promise.all(
+      apiProducts.map(p =>
+        apiClient.get(`/deals/product/${p.id}/status`).then(r => r.data.inTransaction ? p.id : null).catch(() => null)
+      )
+    ).then(results => {
+      setInTransactionIds(results.filter(Boolean) as string[]);
+    });
+  }, [apiProducts]);
 
   // Filter products (client-side filtering for advanced filters)
   const filteredProducts = useMemo(() => {

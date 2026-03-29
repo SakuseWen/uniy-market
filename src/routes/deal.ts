@@ -598,6 +598,24 @@ router.put('/:dealId/confirm', authenticateToken, async (req: Request, res: Resp
 });
 
 /**
+ * GET /api/deals/product/:listingID/status
+ * Public - check if product is in transaction
+ */
+router.get('/product/:listingID/status', async (req: Request, res: Response) => {
+  try {
+    const { listingID } = req.params;
+    const db = (await import('../config/database')).DatabaseManager.getInstance().getDatabase();
+    const deal = await db.get(
+      "SELECT dealID, status, notes FROM Deal WHERE listingID = ? AND status = 'pending' AND notes = 'accepted'",
+      [listingID]
+    );
+    res.json({ success: true, inTransaction: !!deal });
+  } catch (error: any) {
+    res.status(500).json({ success: false, inTransaction: false });
+  }
+});
+
+/**
  * GET /api/deals/product/:listingID
  * Get active deal for a product
  */
