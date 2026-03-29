@@ -71,14 +71,6 @@ export default function MainPage() {
   const [comparisonIds, setComparisonIds] = useState<string[]>([]);
   const [favoritedIds, setFavoritedIds] = useState<string[]>([]);
 
-  // Load user's favorites from API
-  useEffect(() => {
-    if (!user) return;
-    favoriteService.checkBatch(apiProducts.map(p => p.id)).then(result => {
-      setFavoritedIds(Object.entries(result).filter(([, v]) => v).map(([k]) => k));
-    }).catch(() => {});
-  }, [user, apiProducts]);
-
   // Fetch products from API
   const apiFilters = useMemo(() => {
     const result: any = {
@@ -135,6 +127,14 @@ export default function MainPage() {
 
   const { products: apiProducts, loading, error } = useProducts(apiFilters);
   const { categories } = useCategories();
+
+  // Load user's favorites from API
+  useEffect(() => {
+    if (!user || apiProducts.length === 0) return;
+    favoriteService.checkBatch(apiProducts.map(p => p.id)).then(result => {
+      setFavoritedIds(Object.entries(result).filter(([, v]) => v).map(([k]) => k));
+    }).catch(() => {});
+  }, [user, apiProducts]);
 
   // Filter products (client-side filtering for advanced filters)
   const filteredProducts = useMemo(() => {
