@@ -175,7 +175,7 @@ export function ProductCard({
         {onBuy && (
           <Button
             size="sm"
-            className="w-full mt-2 gap-1 text-white hover:shadow-lg hover:scale-105 transition-all duration-200"
+            className="w-full mt-3 gap-1 text-white hover:shadow-lg hover:scale-105 transition-all duration-200"
             style={{ background: '#16a34a' }}
             onClick={(e) => {
               e.stopPropagation();
