@@ -239,6 +239,8 @@ export function ProductDetailPage({
             description={getLocalizedDescription() || ''}
             specifications={product.specifications}
             language={language}
+            listingID={product.id}
+            sellerID={product.seller?.id}
           />
         </div>
 
