@@ -29,4 +29,8 @@ export const dealService = {
     const res = await apiClient.put(`/deals/${dealId}/status`, { status: 'cancelled' });
     return res.data;
   },
+  async deleteDeal(dealId: string) {
+    const res = await apiClient.delete(`/deals/${dealId}`);
+    return res.data;
+  },
 };

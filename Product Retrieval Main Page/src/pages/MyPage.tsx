@@ -794,6 +794,13 @@ function MyPage() {
                           {!isSeller && isPending && (
                             <span className="text-sm" style={{ color: '#d97706' }}>{t('waitingSellerAccept')}</span>
                           )}
+                          {/* Delete completed/cancelled deals */}
+                          {(isCompleted || isCancelled) && (
+                            <Button size="sm" variant="outline" style={{ color: '#dc2626' }} onClick={async () => {
+                              await dealService.deleteDeal(deal.dealID);
+                              loadDeals();
+                            }}><Trash2 className="w-3 h-3 mr-1" />{t('delete')}</Button>
+                          )}
                         </div>
                           </div>
                         </div>

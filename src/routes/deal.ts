@@ -440,12 +440,12 @@ router.delete('/:dealId', authenticateToken, async (req: Request, res: Response)
       } as ApiResponse);
     }
 
-    // Only allow deletion of pending deals
-    if (deal.status !== 'pending') {
+    // Only allow deletion of non-active deals
+    if (deal.status === 'pending' && deal.notes === 'accepted') {
       return res.status(400).json({
         success: false,
         error: {
-          message: 'Only pending deals can be deleted'
+          message: 'Cannot delete a deal that is in transaction'
         },
         timestamp: new Date().toISOString()
       } as ApiResponse);
