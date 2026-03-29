@@ -164,6 +164,18 @@ export function ProductCard({
           )}
           <Button
             size="sm"
+            variant="outline"
+            className="flex-1 gap-1 hover:bg-gray-50 transition-colors"
+            onClick={(e) => {
+              e.stopPropagation();
+              onCompare(product.id);
+            }}
+          >
+            <GitCompare className="w-3 h-3" />
+            {t('compare')}
+          </Button>
+          <Button
+            size="sm"
             className="flex-1 gap-1 bg-gradient-to-r from-blue-500 to-purple-600 hover:shadow-lg hover:scale-105 transition-all duration-200"
             onClick={(e) => {
               e.stopPropagation();
