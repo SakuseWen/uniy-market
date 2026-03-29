@@ -273,20 +273,20 @@ export function ProductDetailPage({
             <div className="grid grid-cols-2 gap-3 mb-3">
               {/* Buy / Deal buttons - only show if not own product */}
               {user && product.seller?.id !== user.userID && !product.sold && !deal && (
-                <Button className="w-full bg-green-600 hover:bg-green-700 hover:shadow-lg hover:scale-105 transition-all duration-200 col-span-2" onClick={handleBuy} disabled={dealLoading}>
+                <Button className="w-full col-span-2 text-white hover:shadow-lg hover:scale-105 transition-all duration-200" style={{ background: '#16a34a' }} onClick={handleBuy} disabled={dealLoading}>
                   {dealLoading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <ShoppingCart className="w-4 h-4 mr-2" />}
-                  {t('buyNow') || 'Buy / Request'}
+                  {t('buyNow')}
                 </Button>
               )}
 
               {/* Seller: accept/reject pending deal */}
               {deal && deal.status === 'pending' && !deal.notes && user?.userID === deal.sellerID && (
                 <>
-                  <Button className="w-full bg-green-600 hover:bg-green-700" onClick={handleAcceptDeal} disabled={dealLoading}>
-                    <Check className="w-4 h-4 mr-2" /> {t('acceptDeal') || 'Accept'}
+                  <Button className="w-full text-white" style={{ background: '#16a34a' }} onClick={handleAcceptDeal} disabled={dealLoading}>
+                    <Check className="w-4 h-4 mr-2" /> {t('acceptDeal')}
                   </Button>
-                  <Button variant="destructive" className="w-full" onClick={handleRejectDeal} disabled={dealLoading}>
-                    <XIcon className="w-4 h-4 mr-2" /> {t('rejectDeal') || 'Reject'}
+                  <Button className="w-full text-white" style={{ background: '#dc2626' }} onClick={handleRejectDeal} disabled={dealLoading}>
+                    <XIcon className="w-4 h-4 mr-2" /> {t('rejectDeal')}
                   </Button>
                 </>
               )}
@@ -294,12 +294,12 @@ export function ProductDetailPage({
               {/* In transaction: confirm / cancel */}
               {deal && deal.status === 'pending' && deal.notes === 'accepted' && (
                 <>
-                  <Button className="w-full bg-green-600 hover:bg-green-700" onClick={handleConfirmDeal} disabled={dealLoading || (user?.userID === deal.buyerID ? deal.buyerConfirmed : deal.sellerConfirmed)}>
+                  <Button className="w-full text-white" style={{ background: '#16a34a' }} onClick={handleConfirmDeal} disabled={dealLoading || (user?.userID === deal.buyerID ? deal.buyerConfirmed : deal.sellerConfirmed)}>
                     <Check className="w-4 h-4 mr-2" />
-                    {(user?.userID === deal.buyerID ? deal.buyerConfirmed : deal.sellerConfirmed) ? (t('confirmed') || 'Confirmed ✓') : (t('confirmDeal') || 'Confirm Complete')}
+                    {(user?.userID === deal.buyerID ? deal.buyerConfirmed : deal.sellerConfirmed) ? t('confirmed') : t('confirmDeal')}
                   </Button>
-                  <Button variant="outline" className="w-full text-red-500" onClick={handleCancelDeal} disabled={dealLoading}>
-                    <XIcon className="w-4 h-4 mr-2" /> {t('cancelDeal') || 'Cancel Deal'}
+                  <Button variant="outline" className="w-full" style={{ color: '#dc2626' }} onClick={handleCancelDeal} disabled={dealLoading}>
+                    <XIcon className="w-4 h-4 mr-2" /> {t('cancelDeal')}
                   </Button>
                 </>
               )}

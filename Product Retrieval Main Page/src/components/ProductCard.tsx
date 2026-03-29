@@ -1,4 +1,4 @@
-import { Heart, MessageCircle, GitCompare, CheckCircle, MapPin, Star } from 'lucide-react';
+import { Heart, MessageCircle, GitCompare, CheckCircle, MapPin, Star, ShoppingCart } from 'lucide-react';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
@@ -13,6 +13,7 @@ interface ProductCardProps {
   onFavorite: (id: string) => void;
   onCompare: (id: string) => void;
   onContact: (sellerId: string) => void;
+  onBuy?: (productId: string) => void;
   isFavorited?: boolean;
   isInComparison?: boolean;
 }
@@ -23,6 +24,7 @@ export function ProductCard({
   onFavorite,
   onCompare,
   onContact,
+  onBuy,
   isFavorited = false,
   isInComparison = false,
 }: ProductCardProps) {
@@ -146,18 +148,20 @@ export function ProductCard({
 
         {/* Action Buttons */}
         <div className="flex gap-2">
-          <Button
-            size="sm"
-            variant="outline"
-            className="flex-1 gap-1 hover:bg-gray-50 transition-colors"
-            onClick={(e) => {
-              e.stopPropagation();
-              onCompare(product.id);
-            }}
-          >
-            <GitCompare className="w-3 h-3" />
-            {t('compare')}
-          </Button>
+          {onBuy && (
+            <Button
+              size="sm"
+              className="flex-1 gap-1 text-white hover:shadow-lg hover:scale-105 transition-all duration-200"
+              style={{ background: '#16a34a' }}
+              onClick={(e) => {
+                e.stopPropagation();
+                onBuy(product.id);
+              }}
+            >
+              <ShoppingCart className="w-3 h-3" />
+              {t('buyNow')}
+            </Button>
+          )}
           <Button
             size="sm"
             className="flex-1 gap-1 bg-gradient-to-r from-blue-500 to-purple-600 hover:shadow-lg hover:scale-105 transition-all duration-200"

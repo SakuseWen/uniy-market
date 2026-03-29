@@ -25,6 +25,7 @@ import { Toaster } from '../components/ui/sonner';
 import { useAuth } from '../services/authContext';
 import { useLanguage } from '../lib/LanguageContext';
 import { favoriteService } from '../services/favoriteService';
+import { dealService } from '../services/dealService';
 
 export default function MainPage() {
   const navigate = useNavigate();
@@ -230,6 +231,18 @@ export default function MainPage() {
     navigate(`/chat/${sellerId}`);
   };
 
+  const handleBuy = async (productId: string) => {
+    if (!user) { navigate('/login'); return; }
+    const product = apiProducts.find(p => p.id === productId);
+    if (!product || !product.seller?.id) return;
+    try {
+      await dealService.createDeal(productId, user.userID, product.seller.id, product.price);
+      toast.success(t('dealRequestSent'));
+    } catch (err: any) {
+      toast.error(err.response?.data?.error?.message || 'Failed');
+    }
+  };
+
   const handleLanguageChange = (lang: Language) => {
     setLanguage(lang);
   };
@@ -397,6 +410,7 @@ export default function MainPage() {
                   onFavorite={handleFavorite}
                   onCompare={handleCompare}
                   onContact={handleContact}
+                  onBuy={user && product.seller?.id !== user.userID && !product.sold ? handleBuy : undefined}
                   isFavorited={favoritedIds.includes(product.id)}
                   isInComparison={comparisonIds.includes(product.id)}
                 />
