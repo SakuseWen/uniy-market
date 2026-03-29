@@ -242,6 +242,8 @@ export function ProductDetailPage({
                 <div>
                   {product.sold ? (
                     <Badge variant="secondary">{t('sold')}</Badge>
+                  ) : deal && deal.status === 'pending' && deal.notes === 'accepted' ? (
+                    <Badge style={{ background: '#dbeafe', color: '#2563eb' }}>{t('inTransaction')}</Badge>
                   ) : (
                     <Badge className="bg-green-500">{t('inStock')}</Badge>
                   )}
@@ -279,23 +281,6 @@ export function ProductDetailPage({
                   {dealLoading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <ShoppingCart className="w-4 h-4 mr-2" />}
                   {t('buy')}
                 </Button>
-              )}
-
-              {/* Status indicators */}
-              {deal && deal.status === 'pending' && !deal.notes && (
-                <div className="col-span-2 text-center py-2 text-sm" style={{ color: '#ea580c', background: '#fff7ed', borderRadius: 8 }}>
-                  {t('waitingSellerAccept')}
-                </div>
-              )}
-              {deal && deal.status === 'pending' && deal.notes === 'accepted' && (
-                <div className="col-span-2 text-center py-2 text-sm" style={{ color: '#2563eb', background: '#eff6ff', borderRadius: 8 }}>
-                  {t('inTransaction') || 'In Transaction'}
-                </div>
-              )}
-              {deal && deal.status === 'completed' && (
-                <div className="col-span-2 text-center py-2 text-sm font-semibold" style={{ color: '#16a34a', background: '#f0fdf4', borderRadius: 8 }}>
-                  ✓ {t('dealCompleted')}
-                </div>
               )}
 
               <Button className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:shadow-lg hover:scale-105 transition-all duration-200" onClick={() => {

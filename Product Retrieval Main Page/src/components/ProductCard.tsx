@@ -16,6 +16,7 @@ interface ProductCardProps {
   onBuy?: (productId: string) => void;
   isFavorited?: boolean;
   isInComparison?: boolean;
+  inTransaction?: boolean;
 }
 
 export function ProductCard({
@@ -27,6 +28,7 @@ export function ProductCard({
   onBuy,
   isFavorited = false,
   isInComparison = false,
+  inTransaction = false,
 }: ProductCardProps) {
   const t = (key: any) => translate(language, key);
   const [showTranslation, setShowTranslation] = useState(false);
@@ -74,6 +76,13 @@ export function ProductCard({
         {product.sold && (
           <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
             <span className="text-white px-4 py-2 bg-red-600 rounded">SOLD</span>
+          </div>
+        )}
+
+        {/* In Transaction Overlay */}
+        {!product.sold && inTransaction && (
+          <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
+            <span className="text-white px-3 py-1.5 rounded text-sm font-semibold" style={{ background: '#2563eb' }}>{t('inTransaction')}</span>
           </div>
         )}
       </div>

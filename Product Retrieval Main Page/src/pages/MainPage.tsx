@@ -137,6 +137,18 @@ export default function MainPage() {
     }).catch(() => {});
   }, [user, apiProducts]);
 
+  // Track products in transaction
+  const [inTransactionIds, setInTransactionIds] = useState<string[]>([]);
+  useEffect(() => {
+    if (!user) return;
+    dealService.getMyDeals().then((deals: any[]) => {
+      const ids = deals
+        .filter((d: any) => d.status === 'pending' && d.notes === 'accepted')
+        .map((d: any) => d.listingID);
+      setInTransactionIds(ids);
+    }).catch(() => {});
+  }, [user]);
+
   // Filter products (client-side filtering for advanced filters)
   const filteredProducts = useMemo(() => {
     let results = [...apiProducts];
@@ -413,6 +425,7 @@ export default function MainPage() {
                   onBuy={user && product.seller?.id !== user.userID && !product.sold ? handleBuy : undefined}
                   isFavorited={favoritedIds.includes(product.id)}
                   isInComparison={comparisonIds.includes(product.id)}
+                  inTransaction={inTransactionIds.includes(product.id)}
                 />
               </div>
             ))}
