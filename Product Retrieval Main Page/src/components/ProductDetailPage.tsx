@@ -128,9 +128,11 @@ export function ProductDetailPage({
       if (isFavorite) {
         await favoriteService.removeFavorite(product.id);
         setIsFavorite(false);
+        toast.success(t('removedFromFavorites'));
       } else {
         await favoriteService.addFavorite(product.id);
         setIsFavorite(true);
+        toast.success(t('addedToFavorites'));
       }
     } catch (err) {
       console.error('Favorite error:', err);
