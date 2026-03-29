@@ -148,20 +148,6 @@ export function ProductCard({
 
         {/* Action Buttons */}
         <div className="flex gap-2">
-          {onBuy && (
-            <Button
-              size="sm"
-              className="flex-1 gap-1 text-white hover:shadow-lg hover:scale-105 transition-all duration-200"
-              style={{ background: '#16a34a' }}
-              onClick={(e) => {
-                e.stopPropagation();
-                onBuy(product.id);
-              }}
-            >
-              <ShoppingCart className="w-3 h-3" />
-              {t('buyNow')}
-            </Button>
-          )}
           <Button
             size="sm"
             variant="outline"
@@ -186,6 +172,20 @@ export function ProductCard({
             {t('contactSeller')}
           </Button>
         </div>
+        {onBuy && (
+          <Button
+            size="sm"
+            className="w-full mt-2 gap-1 text-white hover:shadow-lg hover:scale-105 transition-all duration-200"
+            style={{ background: '#16a34a' }}
+            onClick={(e) => {
+              e.stopPropagation();
+              onBuy(product.id);
+            }}
+          >
+            <ShoppingCart className="w-3 h-3" />
+            {t('buy')}
+          </Button>
+        )}
       </div>
     </div>
   );
