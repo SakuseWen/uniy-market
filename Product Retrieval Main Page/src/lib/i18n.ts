@@ -160,6 +160,14 @@ export const translations = {
     dealConfirmedWaiting: 'Confirmed. Waiting for the other party.',
     waitingSellerAccept: 'Waiting for seller to accept...',
     sellerRejectedDeal: 'The seller has rejected this deal',
+    deals: 'Deals',
+    noDeals: 'No deals yet',
+    inTransaction: 'In Transaction',
+    asSeller: 'As Seller',
+    asBuyer: 'As Buyer',
+    notifications: 'Notifications',
+    markAllRead: 'Mark all read',
+    noNotifications: 'No notifications',
     logout: 'Logout',
 
     // Chat Page UI
@@ -518,6 +526,14 @@ export const translations = {
     dealConfirmedWaiting: '已确认，等待对方确认。',
     waitingSellerAccept: '等待卖家接受...',
     sellerRejectedDeal: '发布此商品的用户拒绝了此次交易',
+    deals: '交易管理',
+    noDeals: '暂无交易',
+    inTransaction: '交易中',
+    asSeller: '作为卖家',
+    asBuyer: '作为买家',
+    notifications: '通知',
+    markAllRead: '全部已读',
+    noNotifications: '暂无通知',
     logout: '退出登录',
 
     // Chat Page UI
@@ -876,6 +892,14 @@ export const translations = {
     dealConfirmedWaiting: 'ยืนยันแล้ว รอฝ่ายตรงข้าม',
     waitingSellerAccept: 'รอผู้ขายยอมรับ...',
     sellerRejectedDeal: 'ผู้ขายปฏิเสธการซื้อขายนี้',
+    deals: 'การซื้อขาย',
+    noDeals: 'ยังไม่มีการซื้อขาย',
+    inTransaction: 'กำลังซื้อขาย',
+    asSeller: 'ในฐานะผู้ขาย',
+    asBuyer: 'ในฐานะผู้ซื้อ',
+    notifications: 'การแจ้งเตือน',
+    markAllRead: 'อ่านทั้งหมด',
+    noNotifications: 'ไม่มีการแจ้งเตือน',
     logout: 'ออกจากระบบ',
 
     // Chat Page UI

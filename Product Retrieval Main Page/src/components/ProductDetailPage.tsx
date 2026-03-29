@@ -273,51 +273,30 @@ export function ProductDetailPage({
 
             {/* Action Buttons */}
             <div className="grid grid-cols-2 gap-3 mb-3">
-              {/* Buy / Deal buttons - only show if not own product */}
+              {/* Buy button - only for non-owner, non-sold, no active deal */}
               {user && product.seller?.id !== user.userID && !product.sold && !deal && (
                 <Button className="w-full col-span-2 text-white hover:shadow-lg hover:scale-105 transition-all duration-200" style={{ background: '#16a34a' }} onClick={handleBuy} disabled={dealLoading}>
                   {dealLoading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <ShoppingCart className="w-4 h-4 mr-2" />}
-                  {t('buyNow')}
+                  {t('buy')}
                 </Button>
               )}
 
-              {/* Seller: accept/reject pending deal */}
-              {deal && deal.status === 'pending' && !deal.notes && user?.userID === deal.sellerID && (
-                <>
-                  <Button className="w-full text-white" style={{ background: '#16a34a' }} onClick={handleAcceptDeal} disabled={dealLoading}>
-                    <Check className="w-4 h-4 mr-2" /> {t('acceptDeal')}
-                  </Button>
-                  <Button className="w-full text-white" style={{ background: '#dc2626' }} onClick={handleRejectDeal} disabled={dealLoading}>
-                    <XIcon className="w-4 h-4 mr-2" /> {t('rejectDeal')}
-                  </Button>
-                </>
+              {/* Status indicators */}
+              {deal && deal.status === 'pending' && !deal.notes && (
+                <div className="col-span-2 text-center py-2 text-sm" style={{ color: '#ea580c', background: '#fff7ed', borderRadius: 8 }}>
+                  {t('waitingSellerAccept')}
+                </div>
               )}
-
-              {/* In transaction: confirm / cancel */}
               {deal && deal.status === 'pending' && deal.notes === 'accepted' && (
-                <>
-                  <Button className="w-full text-white" style={{ background: '#16a34a' }} onClick={handleConfirmDeal} disabled={dealLoading || (user?.userID === deal.buyerID ? deal.buyerConfirmed : deal.sellerConfirmed)}>
-                    <Check className="w-4 h-4 mr-2" />
-                    {(user?.userID === deal.buyerID ? deal.buyerConfirmed : deal.sellerConfirmed) ? t('confirmed') : t('confirmDeal')}
-                  </Button>
-                  <Button variant="outline" className="w-full" style={{ color: '#dc2626' }} onClick={handleCancelDeal} disabled={dealLoading}>
-                    <XIcon className="w-4 h-4 mr-2" /> {t('cancelDeal')}
-                  </Button>
-                </>
-              )}
-
-              {/* Buyer waiting for seller to accept */}
-              {deal && deal.status === 'pending' && !deal.notes && user?.userID === deal.buyerID && (
-                <div className="col-span-2 text-center py-2 text-sm text-orange-600 bg-orange-50 rounded-lg">
-                  {t('waitingSellerAccept') || 'Waiting for seller to accept...'}
+                <div className="col-span-2 text-center py-2 text-sm" style={{ color: '#2563eb', background: '#eff6ff', borderRadius: 8 }}>
+                  {t('inTransaction') || 'In Transaction'}
                 </div>
               )}
-
-              {/* Deal completed */}
               {deal && deal.status === 'completed' && (
-                <div className="col-span-2 text-center py-2 text-sm text-green-600 bg-green-50 rounded-lg font-semibold">
-                  ✓ {t('dealCompleted') || 'Transaction Completed'}
+                <div className="col-span-2 text-center py-2 text-sm font-semibold" style={{ color: '#16a34a', background: '#f0fdf4', borderRadius: 8 }}>
+                  ✓ {t('dealCompleted')}
                 </div>
+              )}
               )}
 
               <Button className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:shadow-lg hover:scale-105 transition-all duration-200" onClick={() => {

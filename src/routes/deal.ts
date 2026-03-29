@@ -4,6 +4,7 @@ import { ProductModel } from '../models/ProductModel';
 import { UserModel } from '../models/UserModel';
 import { authenticateToken } from '../middleware/auth';
 import { ApiResponse } from '../types';
+import { createDealNotification } from './dealNotification';
 
 const router = express.Router();
 const dealModel = new DealModel();
@@ -110,6 +111,9 @@ router.post('/', authenticateToken, async (req: Request, res: Response) => {
       notes
     });
 
+    // Notify seller about new purchase request
+    await createDealNotification(sellerID, deal.dealID, 'new_request', `New purchase request for "${product.title}"`);
+
     res.status(201).json({
       success: true,
       data: deal,
@@ -151,9 +155,15 @@ router.get('/', authenticateToken, async (req: Request, res: Response) => {
       deals = deals.filter((deal: any) => deal.status === status);
     }
 
+    // Enrich with product title
+    const enriched = await Promise.all(deals.map(async (deal: any) => {
+      const product = await productModel.getProductById(deal.listingID);
+      return { ...deal, title: product?.title || deal.listingID };
+    }));
+
     res.json({
       success: true,
-      data: deals,
+      data: enriched,
       timestamp: new Date().toISOString()
     } as ApiResponse);
   } catch (error: any) {
@@ -523,7 +533,8 @@ router.put('/:dealId/accept', authenticateToken, async (req: Request, res: Respo
     if (deal.status !== 'pending') return res.status(400).json({ success: false, error: { message: 'Deal is not pending' } });
 
     const updated = await dealModel.updateDeal(dealId, { status: 'pending', notes: 'accepted' });
-    // Keep status pending but mark as accepted (in-transaction)
+    // Notify buyer that seller accepted
+    await createDealNotification(deal.buyerID, dealId, 'accepted', 'The seller has accepted your purchase request');
     res.json({ success: true, data: updated });
   } catch (error: any) {
     res.status(500).json({ success: false, error: { message: error.message } });
@@ -544,6 +555,8 @@ router.put('/:dealId/reject', authenticateToken, async (req: Request, res: Respo
     if (deal.status !== 'pending') return res.status(400).json({ success: false, error: { message: 'Deal is not pending' } });
 
     const updated = await dealModel.updateDealStatus(dealId, 'cancelled');
+    // Notify buyer about rejection
+    await createDealNotification(deal.buyerID, dealId, 'rejected', 'The seller has rejected your purchase request');
     res.json({ success: true, data: updated, rejected: true });
   } catch (error: any) {
     res.status(500).json({ success: false, error: { message: error.message } });

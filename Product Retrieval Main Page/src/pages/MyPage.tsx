@@ -11,13 +11,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs'
 import { Avatar, AvatarFallback, AvatarImage } from '../components/ui/avatar';
 import { Input } from '../components/ui/input';
 import { Textarea } from '../components/ui/textarea';
-import { ArrowLeft, Edit2, Trash2, Loader2, Camera, GraduationCap, UserX, Heart } from 'lucide-react';
+import { ArrowLeft, Edit2, Trash2, Loader2, Camera, GraduationCap, UserX, Heart, Check, X as XIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import { Toaster } from '../components/ui/sonner';
 import { productService } from '../services';
 import { useAuth } from '../services/authContext';
 import apiClient from '../services/api';
 import { favoriteService } from '../services/favoriteService';
+import { dealService } from '../services/dealService';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -119,6 +120,22 @@ function MyPage() {
       console.error('Failed to load favorites:', err);
     } finally {
       setLoadingFavorites(false);
+    }
+  };
+
+  // Deals state
+  const [deals, setDeals] = useState<any[]>([]);
+  const [loadingDeals, setLoadingDeals] = useState(false);
+
+  const loadDeals = async () => {
+    setLoadingDeals(true);
+    try {
+      const data = await dealService.getMyDeals();
+      setDeals(data);
+    } catch (err) {
+      console.error('Failed to load deals:', err);
+    } finally {
+      setLoadingDeals(false);
     }
   };
 
@@ -435,7 +452,8 @@ function MyPage() {
           <TabsList className="w-full mb-4">
             <TabsTrigger value="chat-history" className="flex-1">{t('chatHistory')}</TabsTrigger>
             <TabsTrigger value="my-products" className="flex-1">{t('myProducts')}</TabsTrigger>
-            <TabsTrigger value="favorites" className="flex-1" onClick={loadFavorites}>{t('favorites') || 'Favorites'}</TabsTrigger>
+            <TabsTrigger value="favorites" className="flex-1" onClick={loadFavorites}>{t('favorites')}</TabsTrigger>
+            <TabsTrigger value="deals" className="flex-1" onClick={loadDeals}>{t('deals') || 'Deals'}</TabsTrigger>
           </TabsList>
 
           {/* Chat History Tab */}
@@ -684,6 +702,85 @@ function MyPage() {
                     </CardContent>
                   </Card>
                 ))}
+              </div>
+            )}
+          </TabsContent>
+
+          {/* Deals Tab */}
+          <TabsContent value="deals">
+            {loadingDeals ? (
+              <div className="flex items-center justify-center py-16">
+                <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+              </div>
+            ) : deals.length === 0 ? (
+              <Card>
+                <CardContent className="py-8 text-center text-gray-400">
+                  {t('noDeals') || 'No deals yet'}
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="grid gap-4">
+                {deals.map((deal: any) => {
+                  const isSeller = deal.sellerID === user?.userID;
+                  const isPending = deal.status === 'pending' && !deal.notes;
+                  const isAccepted = deal.status === 'pending' && deal.notes === 'accepted';
+                  const isCompleted = deal.status === 'completed';
+                  const isCancelled = deal.status === 'cancelled';
+                  return (
+                    <Card key={deal.dealID}>
+                      <CardContent className="p-4">
+                        <div className="flex items-center justify-between mb-2">
+                          <h3 className="font-semibold">{deal.title || deal.listingID}</h3>
+                          <Badge variant="secondary" style={{
+                            background: isCompleted ? '#dcfce7' : isCancelled ? '#fee2e2' : isAccepted ? '#dbeafe' : '#fef3c7',
+                            color: isCompleted ? '#16a34a' : isCancelled ? '#dc2626' : isAccepted ? '#2563eb' : '#d97706'
+                          }}>
+                            {isCompleted ? t('dealCompleted') : isCancelled ? (t('dealCancelled') || 'Cancelled') : isAccepted ? (t('inTransaction') || 'In Transaction') : (t('waitingSellerAccept') || 'Pending')}
+                          </Badge>
+                        </div>
+                        <p className="text-sm text-gray-500 mb-2">
+                          {isSeller ? (t('asSeller') || 'As Seller') : (t('asBuyer') || 'As Buyer')} · ${deal.finalPrice?.toFixed(2) || '0.00'}
+                        </p>
+                        <div className="flex gap-2">
+                          {/* Seller: accept/reject pending */}
+                          {isSeller && isPending && (
+                            <>
+                              <Button size="sm" className="text-white" style={{ background: '#16a34a' }} onClick={async () => {
+                                await dealService.acceptDeal(deal.dealID);
+                                toast.success(t('dealAccepted'));
+                                loadDeals();
+                              }}><Check className="w-3 h-3 mr-1" />{t('acceptDeal')}</Button>
+                              <Button size="sm" className="text-white" style={{ background: '#dc2626' }} onClick={async () => {
+                                await dealService.rejectDeal(deal.dealID);
+                                toast.success(t('dealRejected'));
+                                loadDeals();
+                              }}><XIcon className="w-3 h-3 mr-1" />{t('rejectDeal')}</Button>
+                            </>
+                          )}
+                          {/* Both: confirm/cancel in-transaction */}
+                          {isAccepted && (
+                            <>
+                              <Button size="sm" className="text-white" style={{ background: '#16a34a' }} disabled={isSeller ? deal.sellerConfirmed : deal.buyerConfirmed} onClick={async () => {
+                                const res = await dealService.confirmDeal(deal.dealID);
+                                toast.success(res.completed ? t('dealCompleted') : t('dealConfirmedWaiting'));
+                                loadDeals();
+                              }}><Check className="w-3 h-3 mr-1" />{(isSeller ? deal.sellerConfirmed : deal.buyerConfirmed) ? t('confirmed') : t('confirmDeal')}</Button>
+                              <Button size="sm" variant="outline" style={{ color: '#dc2626' }} onClick={async () => {
+                                await dealService.cancelDeal(deal.dealID);
+                                toast.success(t('dealCancelled'));
+                                loadDeals();
+                              }}><XIcon className="w-3 h-3 mr-1" />{t('cancelDeal')}</Button>
+                            </>
+                          )}
+                          {/* Buyer waiting */}
+                          {!isSeller && isPending && (
+                            <span className="text-sm" style={{ color: '#d97706' }}>{t('waitingSellerAccept')}</span>
+                          )}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
               </div>
             )}
           </TabsContent>
