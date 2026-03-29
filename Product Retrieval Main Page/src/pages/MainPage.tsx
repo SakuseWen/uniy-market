@@ -441,6 +441,7 @@ export default function MainPage() {
                   onCompare={handleCompare}
                   onContact={handleContact}
                   isFavorited={favoritedIds.includes(product.id)}
+                  inTransaction={inTransactionIds.includes(product.id)}
                 />
               </div>
             ))}
