@@ -327,6 +327,7 @@ function MyPage() {
     switch (status.toLowerCase()) {
       case 'active': return t('active');
       case 'inactive': return t('inactive');
+      case 'sold': return t('sold');
       default: return status.charAt(0).toUpperCase() + status.slice(1);
     }
   };
