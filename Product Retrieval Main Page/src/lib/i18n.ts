@@ -140,6 +140,11 @@ export const translations = {
     detail: 'Detail',
     postQuestion: 'Post a question or comment...',
     noCommentsYet: 'No comments yet. Be the first to ask!',
+    loginToComment: 'Login to comment',
+    reply: 'Reply',
+    writeReply: 'Write a reply...',
+    send: 'Send',
+    seller: 'Seller',
     logout: 'Logout',
 
     // Chat Page UI
@@ -478,6 +483,11 @@ export const translations = {
     detail: '详情',
     postQuestion: '发布问题或评论...',
     noCommentsYet: '暂无评论。来做第一个提问的人吧！',
+    loginToComment: '登录后评论',
+    reply: '回复',
+    writeReply: '写回复...',
+    send: '发送',
+    seller: '卖家',
     logout: '退出登录',
 
     // Chat Page UI
@@ -816,6 +826,11 @@ export const translations = {
     detail: 'รายละเอียด',
     postQuestion: 'โพสต์คำถามหรือความคิดเห็น...',
     noCommentsYet: 'ยังไม่มีความคิดเห็น เป็นคนแรกที่ถาม!',
+    loginToComment: 'เข้าสู่ระบบเพื่อแสดงความคิดเห็น',
+    reply: 'ตอบกลับ',
+    writeReply: 'เขียนคำตอบ...',
+    send: 'ส่ง',
+    seller: 'ผู้ขาย',
     logout: 'ออกจากระบบ',
 
     // Chat Page UI

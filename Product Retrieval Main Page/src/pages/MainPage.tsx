@@ -238,17 +238,6 @@ export default function MainPage() {
     navigate(`/product/${product.id}`);
   };
 
-  const handleBackToList = () => {
-    navigate('/');
-  };
-
-  // Get related products (same category, different id)
-  const getRelatedProducts = (product: Product) => {
-    return apiProducts
-      .filter((p) => p.category === product.category && p.id !== product.id)
-      .slice(0, 6);
-  };
-
   return (
     <div className="min-h-screen bg-gray-50">
       <Toaster position="top-right" />

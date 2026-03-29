@@ -13,6 +13,7 @@ interface BackendProduct {
   categoryID: number;
   sellerID: string;
   status: 'active' | 'sold' | 'inactive';
+  deliveryType?: 'faceToFace' | 'campusLocker' | 'courier';
   views: number;
   createdAt: string;
   updatedAt: string;
@@ -110,7 +111,7 @@ function transformProduct(backendProduct: BackendProduct): Product {
       responseTime: '< 1 hour',
       joinDate: '2024-01-01',
     },
-    deliveryType: ['faceToFace'],
+    deliveryType: backendProduct.deliveryType ? [backendProduct.deliveryType] : ['faceToFace'],
     badges: [],
     views: backendProduct.views,
     publishedDate: backendProduct.createdAt,
@@ -237,6 +238,7 @@ export const productService = {
     condition: 'new' | 'used' | 'like_new';
     location?: string;
     categoryID: number;
+    deliveryType?: 'faceToFace' | 'campusLocker' | 'courier';
   }): Promise<Product> {
     const response = await apiClient.post<{
       success: boolean;
@@ -256,6 +258,7 @@ export const productService = {
       condition: 'new' | 'used' | 'like_new';
       location: string;
       categoryID: number;
+      deliveryType: 'faceToFace' | 'campusLocker' | 'courier';
       status: 'active' | 'sold' | 'inactive';
     }>
   ): Promise<Product> {

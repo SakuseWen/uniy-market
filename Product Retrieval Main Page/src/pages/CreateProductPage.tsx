@@ -66,6 +66,7 @@ export default function CreateProductPage() {
     condition: 'used',
     location: '',
     categoryID: '',
+    deliveryType: 'faceToFace',
   });
 
   const [images, setImages] = useState<File[]>([]);
@@ -208,6 +209,7 @@ export default function CreateProductPage() {
         condition: formData.condition as 'new' | 'used' | 'like_new',
         location: formData.location,
         categoryID: parseInt(formData.categoryID),
+        deliveryType: formData.deliveryType as 'faceToFace' | 'campusLocker' | 'courier',
       };
 
       const product = await productService.createProduct(productData);
@@ -395,6 +397,21 @@ export default function CreateProductPage() {
                     </SelectContent>
                   </Select>
                 </div>
+              </div>
+
+              {/* Delivery Type */}
+              <div className="space-y-2">
+                <Label>{t(language, 'deliveryType')} *</Label>
+                <Select value={formData.deliveryType || 'faceToFace'} onValueChange={(value) => handleSelectChange('deliveryType', value)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder={t(language, 'deliveryType')} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="faceToFace">{t(language, 'faceToFace')}</SelectItem>
+                    <SelectItem value="campusLocker">{t(language, 'campusLocker')}</SelectItem>
+                    <SelectItem value="courier">{t(language, 'courier')}</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
 
               {/* Location */}

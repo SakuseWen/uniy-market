@@ -368,6 +368,28 @@ export class DatabaseManager {
       await this.db.exec('ALTER TABLE User ADD COLUMN eduEmail TEXT');
     } catch (_e) { /* ignore */ }
 
+    // Migration: add deliveryType column to ProductListing
+    try {
+      await this.db.exec("ALTER TABLE ProductListing ADD COLUMN deliveryType TEXT DEFAULT 'faceToFace'");
+    } catch (_e) { /* ignore */ }
+
+    // Migration: create Comment table
+    await this.db.exec(`
+      CREATE TABLE IF NOT EXISTS Comment (
+        commentID TEXT PRIMARY KEY,
+        listingID TEXT NOT NULL,
+        userID TEXT NOT NULL,
+        content TEXT NOT NULL,
+        parentID TEXT,
+        createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (listingID) REFERENCES ProductListing(listingID) ON DELETE CASCADE,
+        FOREIGN KEY (userID) REFERENCES User(userID) ON DELETE CASCADE,
+        FOREIGN KEY (parentID) REFERENCES Comment(commentID) ON DELETE CASCADE
+      );
+      CREATE INDEX IF NOT EXISTS idx_comment_listing ON Comment(listingID);
+      CREATE INDEX IF NOT EXISTS idx_comment_parent ON Comment(parentID);
+    `);
+
     // Insert default data
     await this.insertDefaultData();
 

@@ -13,22 +13,30 @@ export default function ProductPage() {
   const navigate = useNavigate();
   const { language, setLanguage } = useLanguage();
   const [product, setProduct] = useState<Product | null>(null);
+  const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!productId) return;
-    const fetch = async () => {
+    const fetchData = async () => {
       try {
         setLoading(true);
         const data = await productService.getProductById(productId);
         setProduct(data);
+
+        // Fetch related products (same category)
+        const allProducts = await productService.getProducts({ limit: 20 });
+        const related = allProducts.products
+          .filter(p => p.category === data.category && p.id !== data.id)
+          .slice(0, 6);
+        setRelatedProducts(related);
       } catch (err) {
         console.error('Failed to load product:', err);
       } finally {
         setLoading(false);
       }
     };
-    fetch();
+    fetchData();
   }, [productId]);
 
   if (loading) {
@@ -59,7 +67,7 @@ export default function ProductPage() {
       <Header language={language} onLanguageChange={setLanguage} unreadMessages={0} />
       <ProductDetailPage
         product={product}
-        relatedProducts={[]}
+        relatedProducts={relatedProducts}
         language={language}
         onBack={() => navigate(-1)}
         onProductClick={(p) => navigate(`/product/${p.id}`)}
