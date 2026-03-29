@@ -5,10 +5,12 @@
 
 import express, { Request, Response } from 'express';
 import { FavoriteModel } from '../models/FavoriteModel';
+import { ProductModel } from '../models/ProductModel';
 import { authenticateToken } from '../middleware/auth';
 
 const router = express.Router();
 const favoriteModel = new FavoriteModel();
+const productModel = new ProductModel();
 
 /**
  * Get all favorites for current user
@@ -31,6 +33,14 @@ router.get('/', authenticateToken, async (req: Request, res: Response) => {
       } else {
         favorites = await favoriteModel.findByUserWithProducts(userID);
       }
+      // Enrich with images
+      const enriched = await Promise.all(
+        favorites.map(async (fav: any) => {
+          const images = await productModel.getProductImages(fav.listingID);
+          return { ...fav, images };
+        })
+      );
+      return res.json({ favorites: enriched });
     } else {
       favorites = await favoriteModel.findByUser(userID);
     }

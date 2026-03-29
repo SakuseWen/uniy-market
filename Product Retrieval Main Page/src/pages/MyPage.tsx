@@ -640,16 +640,32 @@ function MyPage() {
                 {favorites.map((fav: any) => (
                   <Card key={fav.favID} className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate(`/product/${fav.listingID}`)}>
                     <CardContent className="p-4">
-                      <div className="flex gap-4 items-center">
+                      <div className="flex gap-4">
+                        <div className="flex-shrink-0">
+                          {fav.images && fav.images.length > 0 ? (
+                            <img
+                              src={`http://localhost:3000${fav.images[0].imagePath}`}
+                              alt={fav.title}
+                              className="w-32 h-32 object-cover rounded-lg"
+                              onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
+                                (e.target as HTMLImageElement).src = '/placeholder-product.jpg';
+                              }}
+                            />
+                          ) : (
+                            <div className="w-32 h-32 bg-gray-200 rounded-lg flex items-center justify-center">
+                              <span className="text-gray-400">{t('noImage')}</span>
+                            </div>
+                          )}
+                        </div>
                         <div className="flex-1">
                           <h3 className="font-semibold">{fav.title}</h3>
-                          <p className="text-lg font-bold text-blue-600">${fav.price?.toFixed(2)}</p>
+                          <p className="text-lg font-bold text-blue-600 mt-1">${fav.price?.toFixed(2)}</p>
                           <span className="text-sm text-gray-500">{fav.condition === 'new' ? t('new') : fav.condition === 'like_new' ? t('ninetyNew') : t('eightyNew')}</span>
                         </div>
                         <Button
                           variant="outline"
                           size="sm"
-                          className="text-red-500 border-red-200 hover:bg-red-50"
+                          className="text-red-500 border-red-200 hover:bg-red-50 self-center"
                           onClick={async (e) => {
                             e.stopPropagation();
                             try {
