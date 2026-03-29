@@ -176,6 +176,10 @@ export function ProductDetailPage({
                 <div className="text-gray-500 mb-1">{t('views')}</div>
                 <div>{product.views.toLocaleString()} {t('views')}</div>
               </div>
+              <div>
+                <div className="text-gray-500 mb-1">{t('deliveryType')}</div>
+                <div>{product.deliveryType?.map(d => t(d)).join(', ') || t('faceToFace')}</div>
+              </div>
             </div>
 
             {/* Tags */}

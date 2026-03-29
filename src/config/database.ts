@@ -368,6 +368,11 @@ export class DatabaseManager {
       await this.db.exec('ALTER TABLE User ADD COLUMN eduEmail TEXT');
     } catch (_e) { /* ignore */ }
 
+    // Migration: add deliveryType column to ProductListing
+    try {
+      await this.db.exec("ALTER TABLE ProductListing ADD COLUMN deliveryType TEXT DEFAULT 'faceToFace'");
+    } catch (_e) { /* ignore */ }
+
     // Insert default data
     await this.insertDefaultData();
 

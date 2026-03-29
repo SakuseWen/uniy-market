@@ -230,6 +230,7 @@ export default function EditProductPage() {
         condition: formData.condition as 'new' | 'used' | 'like_new',
         location: formData.location,
         categoryID: formData.categoryID,
+        deliveryType: (formData as any).deliveryType || 'faceToFace',
       });
 
       // Delete marked images
@@ -435,6 +436,21 @@ export default function EditProductPage() {
                     </SelectContent>
                   </Select>
                 </div>
+              </div>
+
+              {/* Delivery Type */}
+              <div className="space-y-2">
+                <Label>{t(language, 'deliveryType')}</Label>
+                <Select value={(formData as any).deliveryType || 'faceToFace'} onValueChange={(value) => handleSelectChange('deliveryType', value)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder={t(language, 'deliveryType')} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="faceToFace">{t(language, 'faceToFace')}</SelectItem>
+                    <SelectItem value="campusLocker">{t(language, 'campusLocker')}</SelectItem>
+                    <SelectItem value="courier">{t(language, 'courier')}</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
 
               {/* Location */}
