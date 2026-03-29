@@ -11,12 +11,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs'
 import { Avatar, AvatarFallback, AvatarImage } from '../components/ui/avatar';
 import { Input } from '../components/ui/input';
 import { Textarea } from '../components/ui/textarea';
-import { ArrowLeft, Edit2, Trash2, Loader2, Camera, GraduationCap, UserX } from 'lucide-react';
+import { ArrowLeft, Edit2, Trash2, Loader2, Camera, GraduationCap, UserX, Heart } from 'lucide-react';
 import { toast } from 'sonner';
 import { Toaster } from '../components/ui/sonner';
 import { productService } from '../services';
 import { useAuth } from '../services/authContext';
 import apiClient from '../services/api';
+import { favoriteService } from '../services/favoriteService';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -49,6 +50,10 @@ function MyPage() {
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [showChat, setShowChat] = useState(true);
+
+  // Favorites state
+  const [favorites, setFavorites] = useState<any[]>([]);
+  const [loadingFavorites, setLoadingFavorites] = useState(false);
 
   // Profile editing state
   const [isEditing, setIsEditing] = useState(false);
@@ -103,6 +108,19 @@ function MyPage() {
       fetchUserProducts();
     }
   }, [isAuthenticated, user?.userID]);
+
+  // Load favorites
+  const loadFavorites = async () => {
+    setLoadingFavorites(true);
+    try {
+      const data = await favoriteService.getFavorites();
+      setFavorites(data);
+    } catch (err) {
+      console.error('Failed to load favorites:', err);
+    } finally {
+      setLoadingFavorites(false);
+    }
+  };
 
   // Handle delete product
   const handleDeleteProduct = async (productId: string) => {
@@ -417,6 +435,7 @@ function MyPage() {
           <TabsList className="w-full mb-4">
             <TabsTrigger value="chat-history" className="flex-1">{t('chatHistory')}</TabsTrigger>
             <TabsTrigger value="my-products" className="flex-1">{t('myProducts')}</TabsTrigger>
+            <TabsTrigger value="favorites" className="flex-1" onClick={loadFavorites}>{t('favorites') || 'Favorites'}</TabsTrigger>
           </TabsList>
 
           {/* Chat History Tab */}
@@ -596,6 +615,71 @@ function MyPage() {
                             </Button>
                           </div>
                         </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </TabsContent>
+
+          {/* Favorites Tab */}
+          <TabsContent value="favorites">
+            {loadingFavorites ? (
+              <div className="flex items-center justify-center py-16">
+                <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+              </div>
+            ) : favorites.length === 0 ? (
+              <Card>
+                <CardContent className="py-8 text-center text-gray-400">
+                  {t('noFavorites') || 'No favorites yet'}
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="grid gap-4">
+                {favorites.map((fav: any) => (
+                  <Card key={fav.favID} className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate(`/product/${fav.listingID}`)}>
+                    <CardContent className="p-4">
+                      <div className="flex gap-4">
+                        <div className="flex-shrink-0">
+                          {fav.images && fav.images.length > 0 ? (
+                            <img
+                              src={`http://localhost:3000${fav.images[0].imagePath}`}
+                              alt={fav.title}
+                              className="w-32 h-32 object-cover rounded-lg"
+                              onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
+                                (e.target as HTMLImageElement).src = '/placeholder-product.jpg';
+                              }}
+                            />
+                          ) : (
+                            <div className="w-32 h-32 bg-gray-200 rounded-lg flex items-center justify-center">
+                              <span className="text-gray-400">{t('noImage')}</span>
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex-1">
+                          <h3 className="font-semibold">{fav.title}</h3>
+                          <p className="text-lg font-bold text-blue-600 mt-1">${fav.price?.toFixed(2)}</p>
+                          <span className="text-sm text-gray-500">{fav.condition === 'new' ? t('new') : fav.condition === 'like_new' ? t('ninetyNew') : t('eightyNew')}</span>
+                        </div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="text-red-500 border-red-200 hover:bg-red-50 self-center"
+                          onClick={async (e) => {
+                            e.stopPropagation();
+                            try {
+                              await favoriteService.removeFavorite(fav.listingID);
+                              setFavorites(prev => prev.filter(f => f.favID !== fav.favID));
+                              toast.success(t('removedFromFavorites'));
+                            } catch (err) {
+                              console.error('Remove favorite error:', err);
+                            }
+                          }}
+                        >
+                          <Heart className="w-4 h-4 fill-red-500 text-red-500 mr-1" />
+                          {t('unfavorite') || 'Remove'}
+                        </Button>
                       </div>
                     </CardContent>
                   </Card>
