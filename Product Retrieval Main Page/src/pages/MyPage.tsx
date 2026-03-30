@@ -145,6 +145,8 @@ function MyPage() {
   const [reviewDeal, setReviewDeal] = useState<any>(null);
   const [reviewRating, setReviewRating] = useState(5);
   const [reviewComment, setReviewComment] = useState('');
+  const [reviewImages, setReviewImages] = useState<File[]>([]);
+  const [reviewImagePreviews, setReviewImagePreviews] = useState<string[]>([]);
   const [submittingReview, setSubmittingReview] = useState(false);
 
   const handleSubmitReview = async () => {
@@ -790,7 +792,10 @@ function MyPage() {
                           </Badge>
                         </div>
                         <p className="text-sm text-gray-500 mb-2">
-                          {isSeller ? (t('asSeller') || 'As Seller') : (t('asBuyer') || 'As Buyer')} · ${deal.finalPrice?.toFixed(2) || '0.00'}
+                          {isSeller ? (t('asSeller')) : (t('asBuyer'))} · ${deal.finalPrice?.toFixed(2) || '0.00'}
+                          {isSeller && deal.buyerName && (
+                            <span> · {t('buyer') || 'Buyer'}: <a className="text-blue-600 cursor-pointer hover:underline" onClick={(e) => { e.stopPropagation(); navigate(`/seller/${deal.buyerID}`); }}>{deal.buyerName}</a></span>
+                          )}
                         </p>
                         <div className="flex gap-2">
                           {/* Seller: accept/reject pending */}
@@ -828,10 +833,13 @@ function MyPage() {
                             <span className="text-sm" style={{ color: '#d97706' }}>{t('waitingSellerAccept')}</span>
                           )}
                           {/* Delete completed/cancelled deals */}
-                          {isCompleted && (
-                            <Button size="sm" className="text-white" style={{ background: '#f59e0b' }} onClick={() => { setReviewDeal(deal); setReviewRating(5); setReviewComment(''); }}>
-                              ⭐ {t('leaveReview') || 'Review'}
+                          {isCompleted && !deal.reviewed && (
+                            <Button size="sm" className="text-white" style={{ background: '#f59e0b' }} onClick={() => { setReviewDeal(deal); setReviewRating(5); setReviewComment(''); setReviewImages([]); setReviewImagePreviews([]); }}>
+                              ⭐ {t('leaveReview')}
                             </Button>
+                          )}
+                          {isCompleted && deal.reviewed && (
+                            <span className="text-sm font-semibold" style={{ color: '#16a34a' }}>✓ {t('reviewed') || 'Reviewed'}</span>
                           )}
                           {(isCompleted || isCancelled) && (
                             <Button size="sm" variant="outline" style={{ color: '#dc2626' }} onClick={async () => {
@@ -866,7 +874,35 @@ function MyPage() {
             </div>
             <div>
               <p className="text-sm text-gray-500 mb-2">{t('reviewComment') || 'Comment'}</p>
-              <Textarea value={reviewComment} onChange={e => setReviewComment(e.target.value)} placeholder={t('writeReview') || 'Write your review...'} rows={4} />
+              <Textarea value={reviewComment} onChange={e => setReviewComment(e.target.value)} placeholder={t('writeReview')} rows={4} />
+            </div>
+            <div>
+              <p className="text-sm text-gray-500 mb-2">{t('reviewImages') || 'Images'}</p>
+              <div className="flex gap-2 flex-wrap">
+                {reviewImagePreviews.map((p, i) => (
+                  <div key={i} className="relative" style={{ width: 60, height: 60 }}>
+                    <img src={p} alt="" style={{ width: 60, height: 60, objectFit: 'cover', borderRadius: 6 }} />
+                    <button style={{ position: 'absolute', top: -6, right: -6, background: '#ef4444', color: 'white', borderRadius: '50%', width: 18, height: 18, fontSize: 12, border: 'none', cursor: 'pointer' }} onClick={() => {
+                      setReviewImages(prev => prev.filter((_, idx) => idx !== i));
+                      setReviewImagePreviews(prev => prev.filter((_, idx) => idx !== i));
+                    }}>×</button>
+                  </div>
+                ))}
+                {reviewImages.length < 3 && (
+                  <label style={{ width: 60, height: 60, border: '2px dashed #d1d5db', borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', fontSize: 20, color: '#9ca3af' }}>
+                    +
+                    <input type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={e => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      setReviewImages(prev => [...prev, file]);
+                      const reader = new FileReader();
+                      reader.onloadend = () => setReviewImagePreviews(prev => [...prev, reader.result as string]);
+                      reader.readAsDataURL(file);
+                      e.target.value = '';
+                    }} />
+                  </label>
+                )}
+              </div>
             </div>
             <div className="flex justify-end gap-2">
               <Button variant="outline" onClick={() => setReviewDeal(null)}>{t('cancel')}</Button>

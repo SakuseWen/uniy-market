@@ -155,11 +155,28 @@ router.get('/', authenticateToken, async (req: Request, res: Response) => {
       deals = deals.filter((deal: any) => deal.status === status);
     }
 
-    // Enrich with product title and images
+    // Enrich with product title, images, and review status
+    const db = (await import('../config/database')).DatabaseManager.getInstance().getDatabase();
     const enriched = await Promise.all(deals.map(async (deal: any) => {
       const product = await productModel.getProductById(deal.listingID);
       const images = await productModel.getProductImages(deal.listingID);
-      return { ...deal, title: product?.title || deal.listingID, images };
+      // Check if current user already reviewed this deal
+      const existingReview = await db.get(
+        'SELECT reviewID FROM Review WHERE dealID = ? AND reviewerID = ?',
+        [deal.dealID, userID]
+      );
+      // Get buyer/seller names
+      const buyer = await userModel.getUserById(deal.buyerID);
+      const seller = await userModel.getUserById(deal.sellerID);
+      return {
+        ...deal,
+        title: product?.title || deal.listingID,
+        images,
+        reviewed: !!existingReview,
+        buyerName: buyer?.name || 'Unknown',
+        buyerProfileImage: buyer?.profileImage || null,
+        sellerName: seller?.name || 'Unknown',
+      };
     }));
 
     res.json({
