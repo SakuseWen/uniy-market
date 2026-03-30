@@ -168,6 +168,9 @@ export const translations = {
     notifications: 'Notifications',
     markAllRead: 'Mark all read',
     noNotifications: 'No notifications',
+    notifNewRequest: 'You have a new purchase request',
+    notifRejected: 'Your purchase request was rejected',
+    notifAccepted: 'Your purchase request was accepted',
     logout: 'Logout',
 
     // Chat Page UI
@@ -534,6 +537,9 @@ export const translations = {
     notifications: '通知',
     markAllRead: '全部已读',
     noNotifications: '暂无通知',
+    notifNewRequest: '您收到了一个新的购买请求',
+    notifRejected: '您的购买请求被拒绝了',
+    notifAccepted: '您的购买请求已被接受',
     logout: '退出登录',
 
     // Chat Page UI
@@ -900,6 +906,9 @@ export const translations = {
     notifications: 'การแจ้งเตือน',
     markAllRead: 'อ่านทั้งหมด',
     noNotifications: 'ไม่มีการแจ้งเตือน',
+    notifNewRequest: 'คุณมีคำขอซื้อใหม่',
+    notifRejected: 'คำขอซื้อของคุณถูกปฏิเสธ',
+    notifAccepted: 'คำขอซื้อของคุณได้รับการยอมรับ',
     logout: 'ออกจากระบบ',
 
     // Chat Page UI

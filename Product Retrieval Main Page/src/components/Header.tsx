@@ -143,7 +143,7 @@ export function Header({ language, onLanguageChange, unreadMessages }: HeaderPro
                         onClick={() => navigate('/my-page')}
                       >
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm">{n.productTitle ? `[${n.productTitle}] ` : ''}{n.message}</p>
+                          <p className="text-sm">{n.productTitle ? `[${n.productTitle}] ` : ''}{n.type === 'new_request' ? t('notifNewRequest') : n.type === 'rejected' ? t('notifRejected') : n.type === 'accepted' ? t('notifAccepted') : n.message}</p>
                           <p className="text-xs text-gray-400 mt-1">{new Date(n.createdAt).toLocaleString()}</p>
                         </div>
                       </div>
