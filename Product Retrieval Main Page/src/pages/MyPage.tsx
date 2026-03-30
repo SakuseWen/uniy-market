@@ -944,8 +944,25 @@ function MyPage() {
               <Textarea value={reviewComment} onChange={e => setReviewComment(e.target.value)} placeholder={t('writeReview')} rows={4} />
             </div>
             <div>
-              <p className="text-sm text-gray-500 mb-2">{t('reviewImages') || 'Images'}</p>
-              <div className="flex gap-2 flex-wrap">
+              <p className="text-sm text-gray-500 mb-2">{t('reviewImages')}</p>
+              <div
+                className="flex gap-2 flex-wrap p-3 rounded-lg transition-colors"
+                style={{ border: '2px dashed #d1d5db', minHeight: 80 }}
+                onDragOver={e => { e.preventDefault(); e.currentTarget.style.borderColor = '#3b82f6'; e.currentTarget.style.background = '#eff6ff'; }}
+                onDragLeave={e => { e.currentTarget.style.borderColor = '#d1d5db'; e.currentTarget.style.background = ''; }}
+                onDrop={e => {
+                  e.preventDefault();
+                  e.currentTarget.style.borderColor = '#d1d5db';
+                  e.currentTarget.style.background = '';
+                  const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'));
+                  files.slice(0, 3 - reviewImages.length).forEach(file => {
+                    setReviewImages(prev => [...prev, file]);
+                    const reader = new FileReader();
+                    reader.onloadend = () => setReviewImagePreviews(prev => [...prev, reader.result as string]);
+                    reader.readAsDataURL(file);
+                  });
+                }}
+              >
                 {reviewImagePreviews.map((p, i) => (
                   <div key={i} className="relative" style={{ width: 60, height: 60 }}>
                     <img src={p} alt="" style={{ width: 60, height: 60, objectFit: 'cover', borderRadius: 6 }} />
@@ -968,6 +985,9 @@ function MyPage() {
                       e.target.value = '';
                     }} />
                   </label>
+                )}
+                {reviewImages.length === 0 && (
+                  <p className="text-xs text-gray-400 self-center ml-2">{t('dragDropImages')}</p>
                 )}
               </div>
             </div>
