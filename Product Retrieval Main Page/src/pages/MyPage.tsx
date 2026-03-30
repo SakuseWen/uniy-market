@@ -19,6 +19,8 @@ import { useAuth } from '../services/authContext';
 import apiClient from '../services/api';
 import { favoriteService } from '../services/favoriteService';
 import { dealService } from '../services/dealService';
+import { reviewService } from '../services/reviewService';
+import { StarRating } from '../components/StarRating';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -136,6 +138,36 @@ function MyPage() {
       console.error('Failed to load deals:', err);
     } finally {
       setLoadingDeals(false);
+    }
+  };
+
+  // Review state
+  const [reviewDeal, setReviewDeal] = useState<any>(null);
+  const [reviewRating, setReviewRating] = useState(5);
+  const [reviewComment, setReviewComment] = useState('');
+  const [submittingReview, setSubmittingReview] = useState(false);
+
+  const handleSubmitReview = async () => {
+    if (!reviewDeal || !user) return;
+    setSubmittingReview(true);
+    try {
+      const isSeller = reviewDeal.sellerID === user.userID;
+      await reviewService.submitReview({
+        rating: reviewRating,
+        comment: reviewComment,
+        targetUserID: isSeller ? reviewDeal.buyerID : reviewDeal.sellerID,
+        dealID: reviewDeal.dealID,
+        reviewType: isSeller ? 'seller_to_buyer' : 'buyer_to_seller',
+      });
+      toast.success(t('reviewSubmitted') || 'Review submitted');
+      setReviewDeal(null);
+      setReviewRating(5);
+      setReviewComment('');
+      loadDeals();
+    } catch (err: any) {
+      toast.error(err.response?.data?.error?.message || 'Failed to submit review');
+    } finally {
+      setSubmittingReview(false);
     }
   };
 
@@ -796,6 +828,11 @@ function MyPage() {
                             <span className="text-sm" style={{ color: '#d97706' }}>{t('waitingSellerAccept')}</span>
                           )}
                           {/* Delete completed/cancelled deals */}
+                          {isCompleted && (
+                            <Button size="sm" className="text-white" style={{ background: '#f59e0b' }} onClick={() => { setReviewDeal(deal); setReviewRating(5); setReviewComment(''); }}>
+                              ⭐ {t('leaveReview') || 'Review'}
+                            </Button>
+                          )}
                           {(isCompleted || isCancelled) && (
                             <Button size="sm" variant="outline" style={{ color: '#dc2626' }} onClick={async () => {
                               await dealService.deleteDeal(deal.dealID);
@@ -814,6 +851,33 @@ function MyPage() {
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* Review Dialog */}
+      <Dialog open={!!reviewDeal} onOpenChange={(v) => { if (!v) setReviewDeal(null); }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>{t('leaveReview') || 'Leave a Review'}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <p className="text-sm text-gray-500 mb-2">{t('rating') || 'Rating'}</p>
+              <StarRating rating={reviewRating} size={28} interactive onChange={setReviewRating} />
+              <p className="text-sm text-gray-400 mt-1">{reviewRating} / 5</p>
+            </div>
+            <div>
+              <p className="text-sm text-gray-500 mb-2">{t('reviewComment') || 'Comment'}</p>
+              <Textarea value={reviewComment} onChange={e => setReviewComment(e.target.value)} placeholder={t('writeReview') || 'Write your review...'} rows={4} />
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setReviewDeal(null)}>{t('cancel')}</Button>
+              <Button className="text-white" style={{ background: '#f59e0b' }} onClick={handleSubmitReview} disabled={submittingReview}>
+                {submittingReview ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : null}
+                {t('submitReview') || 'Submit'}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Avatar Cropper Dialog */}
       {cropperImage && (

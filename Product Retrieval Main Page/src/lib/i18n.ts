@@ -171,6 +171,14 @@ export const translations = {
     notifNewRequest: 'You have a new purchase request',
     notifRejected: 'Your purchase request was rejected',
     notifAccepted: 'Your purchase request was accepted',
+    leaveReview: 'Leave a Review',
+    reviewComment: 'Comment',
+    writeReview: 'Write your review...',
+    submitReview: 'Submit Review',
+    reviewSubmitted: 'Review submitted successfully',
+    reviews: 'Reviews',
+    noReviews: 'No reviews yet',
+    rating: 'Rating',
     logout: 'Logout',
 
     // Chat Page UI
@@ -540,6 +548,14 @@ export const translations = {
     notifNewRequest: '您收到了一个新的购买请求',
     notifRejected: '您的购买请求被拒绝了',
     notifAccepted: '您的购买请求已被接受',
+    leaveReview: '评价',
+    reviewComment: '评论',
+    writeReview: '写下您的评价...',
+    submitReview: '提交评价',
+    reviewSubmitted: '评价提交成功',
+    reviews: '评价',
+    noReviews: '暂无评价',
+    rating: '评分',
     logout: '退出登录',
 
     // Chat Page UI
@@ -909,6 +925,14 @@ export const translations = {
     notifNewRequest: 'คุณมีคำขอซื้อใหม่',
     notifRejected: 'คำขอซื้อของคุณถูกปฏิเสธ',
     notifAccepted: 'คำขอซื้อของคุณได้รับการยอมรับ',
+    leaveReview: 'ให้คะแนน',
+    reviewComment: 'ความคิดเห็น',
+    writeReview: 'เขียนรีวิวของคุณ...',
+    submitReview: 'ส่งรีวิว',
+    reviewSubmitted: 'ส่งรีวิวสำเร็จ',
+    reviews: 'รีวิว',
+    noReviews: 'ยังไม่มีรีวิว',
+    rating: 'คะแนน',
     logout: 'ออกจากระบบ',
 
     // Chat Page UI

@@ -1,4 +1,5 @@
 import { Heart, MessageCircle, GitCompare, CheckCircle, MapPin, Star, ShoppingCart } from 'lucide-react';
+import { StarRating } from './StarRating';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
@@ -130,11 +131,12 @@ export function ProductCard({
             <AvatarImage src={product.seller.avatar} />
             <AvatarFallback>{product.seller.name[0]}</AvatarFallback>
           </Avatar>
-          <div className="flex items-center gap-1 text-sm">
-            <span className="text-gray-700">{product.seller.name}</span>
+          <div className="flex items-center gap-1 text-sm flex-1 min-w-0">
+            <span className="text-gray-700 truncate">{product.seller.name}</span>
             {product.seller.verified && (
-              <CheckCircle className="w-3 h-3 text-green-600" />
+              <CheckCircle className="w-3 h-3 text-green-600 flex-shrink-0" />
             )}
+            <StarRating rating={product.seller.rating} size={12} />
           </div>
           <Badge variant="secondary" className="text-xs ml-auto">
             {t(product.seller.role)}
