@@ -10,6 +10,8 @@ import { Avatar, AvatarFallback, AvatarImage } from '../components/ui/avatar';
 import { ArrowLeft, GraduationCap, Loader2, MessageCircle } from 'lucide-react';
 import { productService } from '../services';
 import apiClient from '../services/api';
+import { reviewService } from '../services/reviewService';
+import { StarRating } from '../components/StarRating';
 
 interface SellerInfo {
   userID: string;
@@ -39,6 +41,9 @@ export default function SellerProfilePage() {
   const [seller, setSeller] = useState<SellerInfo | null>(null);
   const [products, setProducts] = useState<SellerProduct[]>([]);
   const [loading, setLoading] = useState(true);
+  const [reviews, setReviews] = useState<any[]>([]);
+  const [avgRating, setAvgRating] = useState(5);
+  const [reviewCount, setReviewCount] = useState(0);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -52,6 +57,14 @@ export default function SellerProfilePage() {
         setSeller(profileRes.data.data.user);
         const items = productsRes.data.data?.data || productsRes.data.data || [];
         setProducts(Array.isArray(items) ? items.filter((p: any) => p.status === 'active') : []);
+        // Fetch reviews
+        try {
+          const reviewData = await reviewService.getUserReviews(sellerId);
+          setReviews(reviewData?.reviews || []);
+          const stats = reviewData?.statistics?.overall;
+          setAvgRating(stats?.count > 0 ? stats.average : 5);
+          setReviewCount(stats?.count || 0);
+        } catch (_e) {}
       } catch (error) {
         console.error('Failed to load seller profile:', error);
       } finally {
@@ -114,6 +127,8 @@ export default function SellerProfilePage() {
               <p className="text-xl font-bold">{seller.name}</p>
               {seller.bio && <p className="text-sm text-gray-600 mt-1">{seller.bio}</p>}
               <div className="flex items-center gap-2 mt-2">
+                <StarRating rating={avgRating} size={16} />
+                <span className="text-sm text-gray-500">{avgRating.toFixed(1)} ({reviewCount})</span>
                 {seller.eduVerified && (
                   <Badge variant="secondary" className="gap-1 py-1 px-2">
                     <GraduationCap className="w-3 h-3 text-green-600" />
@@ -171,6 +186,52 @@ export default function SellerProfilePage() {
                         <span>{t('condition')}: {getConditionLabel(product.condition)}</span>
                         <span>{t('posted')}: {new Date(product.createdAt).toLocaleDateString()}</span>
                       </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
+
+        {/* Reviews Section */}
+        <Card className="mt-6">
+          <CardContent className="py-4">
+            <p className="text-lg font-bold text-center mb-4">{t('reviews') || 'Reviews'} ({reviews.length})</p>
+          </CardContent>
+        </Card>
+        {reviews.length === 0 ? (
+          <Card className="mt-4">
+            <CardContent className="py-8 text-center text-gray-400">
+              {t('noReviews') || 'No reviews yet'}
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="grid gap-4 mt-4">
+            {reviews.map((review: any) => (
+              <Card key={review.reviewID}>
+                <CardContent className="p-4">
+                  <div className="flex items-start gap-3">
+                    <Avatar className="w-8 h-8 flex-shrink-0">
+                      <AvatarImage src={review.reviewerProfileImage?.startsWith('/') ? `http://localhost:3000${review.reviewerProfileImage}` : ''} />
+                      <AvatarFallback className="text-xs bg-gradient-to-br from-blue-500 to-purple-600 text-white">
+                        {review.reviewerName?.substring(0, 2).toUpperCase() || 'U'}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="font-semibold text-sm">{review.reviewerName}</span>
+                        <StarRating rating={review.rating} size={14} />
+                        <span className="text-xs text-gray-400">{new Date(review.createdAt).toLocaleDateString()}</span>
+                      </div>
+                      {review.comment && <p className="text-sm text-gray-700">{review.comment}</p>}
+                      {review.images && review.images.length > 0 && (
+                        <div className="flex gap-2 mt-2">
+                          {review.images.map((img: any) => (
+                            <img key={img.imageID} src={`http://localhost:3000${img.imagePath}`} alt="" style={{ width: 80, height: 80, objectFit: 'cover', borderRadius: 6 }} />
+                          ))}
+                        </div>
+                      )}
                     </div>
                   </div>
                 </CardContent>

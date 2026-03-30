@@ -5,10 +5,12 @@
 
 import express, { Request, Response } from 'express';
 import { FavoriteModel } from '../models/FavoriteModel';
+import { ProductModel } from '../models/ProductModel';
 import { authenticateToken } from '../middleware/auth';
 
 const router = express.Router();
 const favoriteModel = new FavoriteModel();
+const productModel = new ProductModel();
 
 /**
  * Get all favorites for current user
@@ -16,7 +18,7 @@ const favoriteModel = new FavoriteModel();
  */
 router.get('/', authenticateToken, async (req: Request, res: Response) => {
   try {
-    const userID = (req as any).user?.userId;
+    const userID = (req as any).user?.userID;
     if (!userID) {
       return res.status(401).json({ error: 'Unauthorized' });
     }
@@ -31,6 +33,14 @@ router.get('/', authenticateToken, async (req: Request, res: Response) => {
       } else {
         favorites = await favoriteModel.findByUserWithProducts(userID);
       }
+      // Enrich with images
+      const enriched = await Promise.all(
+        favorites.map(async (fav: any) => {
+          const images = await productModel.getProductImages(fav.listingID);
+          return { ...fav, images };
+        })
+      );
+      return res.json({ favorites: enriched });
     } else {
       favorites = await favoriteModel.findByUser(userID);
     }
@@ -48,7 +58,7 @@ router.get('/', authenticateToken, async (req: Request, res: Response) => {
  */
 router.post('/', authenticateToken, async (req: Request, res: Response) => {
   try {
-    const userID = (req as any).user?.userId;
+    const userID = (req as any).user?.userID;
     if (!userID) {
       return res.status(401).json({ error: 'Unauthorized' });
     }
@@ -86,7 +96,7 @@ router.post('/', authenticateToken, async (req: Request, res: Response) => {
  */
 router.delete('/:listingID', authenticateToken, async (req: Request, res: Response) => {
   try {
-    const userID = (req as any).user?.userId;
+    const userID = (req as any).user?.userID;
     if (!userID) {
       return res.status(401).json({ error: 'Unauthorized' });
     }
@@ -112,7 +122,7 @@ router.delete('/:listingID', authenticateToken, async (req: Request, res: Respon
  */
 router.get('/check/:listingID', authenticateToken, async (req: Request, res: Response) => {
   try {
-    const userID = (req as any).user?.userId;
+    const userID = (req as any).user?.userID;
     if (!userID) {
       return res.status(401).json({ error: 'Unauthorized' });
     }
@@ -134,7 +144,7 @@ router.get('/check/:listingID', authenticateToken, async (req: Request, res: Res
  */
 router.post('/check-batch', authenticateToken, async (req: Request, res: Response) => {
   try {
-    const userID = (req as any).user?.userId;
+    const userID = (req as any).user?.userID;
     if (!userID) {
       return res.status(401).json({ error: 'Unauthorized' });
     }
@@ -177,7 +187,7 @@ router.get('/count/:listingID', async (req: Request, res: Response) => {
  */
 router.get('/my/count', authenticateToken, async (req: Request, res: Response) => {
   try {
-    const userID = (req as any).user?.userId;
+    const userID = (req as any).user?.userID;
     if (!userID) {
       return res.status(401).json({ error: 'Unauthorized' });
     }

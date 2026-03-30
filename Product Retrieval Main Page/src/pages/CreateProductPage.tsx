@@ -24,6 +24,7 @@ import { productService } from '../services';
 import { useCategories } from '../hooks';
 import { useAuth } from '../services/authContext';
 import { compressImages } from '../lib/imageUtils';
+import { LocationPicker } from '../components/LocationPicker';
 
 export default function CreateProductPage() {
   const navigate = useNavigate();
@@ -66,6 +67,10 @@ export default function CreateProductPage() {
     condition: 'used',
     location: '',
     categoryID: '',
+    deliveryType: 'faceToFace',
+    latitude: 0,
+    longitude: 0,
+    address: '',
   });
 
   const [images, setImages] = useState<File[]>([]);
@@ -208,7 +213,11 @@ export default function CreateProductPage() {
         condition: formData.condition as 'new' | 'used' | 'like_new',
         location: formData.location,
         categoryID: parseInt(formData.categoryID),
-      };
+        deliveryType: formData.deliveryType as 'faceToFace' | 'campusLocker' | 'courier',
+        latitude: formData.latitude || undefined,
+        longitude: formData.longitude || undefined,
+        address: formData.address || undefined,
+      } as any;
 
       const product = await productService.createProduct(productData);
       console.log('Product created:', product);
@@ -386,7 +395,7 @@ export default function CreateProductPage() {
                       {displayCategories && displayCategories.length > 0 ? (
                         displayCategories.map((cat: any) => (
                           <SelectItem key={cat.categoryID} value={cat.categoryID.toString()}>
-                            {cat.name}
+                            {language === 'zh' ? (cat.nameZh || cat.name) : language === 'th' ? (cat.nameTh || cat.name) : (cat.nameEn || cat.name)}
                           </SelectItem>
                         ))
                       ) : (
@@ -395,6 +404,21 @@ export default function CreateProductPage() {
                     </SelectContent>
                   </Select>
                 </div>
+              </div>
+
+              {/* Delivery Type */}
+              <div className="space-y-2">
+                <Label>{t(language, 'deliveryType')} *</Label>
+                <Select value={formData.deliveryType || 'faceToFace'} onValueChange={(value) => handleSelectChange('deliveryType', value)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder={t(language, 'deliveryType')} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="faceToFace">{t(language, 'faceToFace')}</SelectItem>
+                    <SelectItem value="campusLocker">{t(language, 'campusLocker')}</SelectItem>
+                    <SelectItem value="courier">{t(language, 'courier')}</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
 
               {/* Location */}
@@ -407,6 +431,17 @@ export default function CreateProductPage() {
                   value={formData.location}
                   onChange={handleInputChange}
                   maxLength={200}
+                />
+              </div>
+
+              {/* Map Location */}
+              <div className="space-y-2">
+                <Label>{t(language, 'mapLocation') || 'Map Location'}</Label>
+                <LocationPicker
+                  latitude={formData.latitude}
+                  longitude={formData.longitude}
+                  address={formData.address}
+                  onChange={(lat, lng, addr) => setFormData(prev => ({ ...prev, latitude: lat, longitude: lng, address: addr }))}
                 />
               </div>
 

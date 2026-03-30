@@ -1,3 +1,4 @@
+import 'dotenv/config'; // CRITICAL: must be first line — loads .env before any other import / 关键：必须是第一行，确保 .env 在所有其他 import 之前加载
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
@@ -33,6 +34,8 @@ import dealRoutes from './routes/deal';
 import locationRoutes from './routes/location';
 import reportRoutes from './routes/report';
 import favoriteRoutes from './routes/favorite';
+import commentRoutes from './routes/comment';
+import dealNotificationRoutes from './routes/dealNotification';
 import adminRoutes from './routes/admin';
 
 // Load environment variables
@@ -192,6 +195,8 @@ app.use('/api/deals', apiLimiter, dealRoutes);
 app.use('/api/location', apiLimiter, locationRoutes);
 app.use('/api/reports', apiLimiter, reportRoutes);
 app.use('/api/favorites', apiLimiter, favoriteRoutes);
+app.use('/api/comments', apiLimiter, commentRoutes);
+app.use('/api/deal-notifications', apiLimiter, dealNotificationRoutes);
 app.use('/api/admin', adminLimiter, adminRoutes);
 
 // Error handling middleware

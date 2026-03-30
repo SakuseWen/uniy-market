@@ -24,6 +24,7 @@ import { productService } from '../services';
 import { useCategories } from '../hooks';
 import { useAuth } from '../services/authContext';
 import { compressImages } from '../lib/imageUtils';
+import { LocationPicker } from '../components/LocationPicker';
 
 interface ProductImage {
   imageID: string;
@@ -230,6 +231,10 @@ export default function EditProductPage() {
         condition: formData.condition as 'new' | 'used' | 'like_new',
         location: formData.location,
         categoryID: formData.categoryID,
+        deliveryType: (formData as any).deliveryType || 'faceToFace',
+        latitude: (formData as any).latitude || undefined,
+        longitude: (formData as any).longitude || undefined,
+        address: (formData as any).address || undefined,
       });
 
       // Delete marked images
@@ -426,7 +431,7 @@ export default function EditProductPage() {
                       {displayCategories && displayCategories.length > 0 ? (
                         displayCategories.map((cat: any) => (
                           <SelectItem key={cat.categoryID} value={cat.categoryID.toString()}>
-                            {cat.name}
+                            {language === 'zh' ? (cat.nameZh || cat.name) : language === 'th' ? (cat.nameTh || cat.name) : (cat.nameEn || cat.name)}
                           </SelectItem>
                         ))
                       ) : (
@@ -435,6 +440,21 @@ export default function EditProductPage() {
                     </SelectContent>
                   </Select>
                 </div>
+              </div>
+
+              {/* Delivery Type */}
+              <div className="space-y-2">
+                <Label>{t(language, 'deliveryType')}</Label>
+                <Select value={(formData as any).deliveryType || 'faceToFace'} onValueChange={(value) => handleSelectChange('deliveryType', value)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder={t(language, 'deliveryType')} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="faceToFace">{t(language, 'faceToFace')}</SelectItem>
+                    <SelectItem value="campusLocker">{t(language, 'campusLocker')}</SelectItem>
+                    <SelectItem value="courier">{t(language, 'courier')}</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
 
               {/* Location */}
@@ -446,6 +466,17 @@ export default function EditProductPage() {
                   value={formData.location}
                   onChange={handleInputChange}
                   placeholder={t(language, 'enterLocation')}
+                />
+              </div>
+
+              {/* Map Location */}
+              <div className="space-y-2">
+                <Label>{t(language, 'mapLocation') || 'Map Location'}</Label>
+                <LocationPicker
+                  latitude={(formData as any).latitude}
+                  longitude={(formData as any).longitude}
+                  address={(formData as any).address}
+                  onChange={(lat, lng, addr) => setFormData(prev => prev ? { ...prev, latitude: lat, longitude: lng, address: addr } as any : null)}
                 />
               </div>
 

@@ -1,4 +1,5 @@
-import { Heart, MessageCircle, GitCompare, CheckCircle, MapPin, Loader2 } from 'lucide-react';
+import { Heart, MessageCircle, GitCompare, CheckCircle, MapPin, Loader2, ShoppingCart } from 'lucide-react';
+import { StarRating } from './StarRating';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
@@ -14,8 +15,10 @@ interface ProductCardProps {
   onCompare: (id: string) => void;
   /** 12.2 更新签名：接收 listingID 和 sellerID / Updated signature: receives listingID and sellerID */
   onContact?: (listingID: string, sellerID: string) => void;
+  onBuy?: (productId: string) => void;
   isFavorited?: boolean;
   isInComparison?: boolean;
+  inTransaction?: boolean;
   /** 当前登录用户 ID，用于隐藏自己商品的"联系卖家"按钮 / Current user ID to hide "Contact Seller" on own listings */
   currentUserId?: string;
   /** 12.2 联系卖家 loading 状态 / Loading state for contacting seller */
@@ -28,8 +31,10 @@ export function ProductCard({
   onFavorite,
   onCompare,
   onContact,
+  onBuy,
   isFavorited = false,
   isInComparison = false,
+  inTransaction = false,
   currentUserId,
   isContactLoading = false,
 }: ProductCardProps) {
@@ -84,6 +89,13 @@ export function ProductCard({
             <span className="text-white px-4 py-2 bg-red-600 rounded">SOLD</span>
           </div>
         )}
+
+        {/* In Transaction Overlay */}
+        {!product.sold && inTransaction && (
+          <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
+            <span className="text-white px-3 py-1.5 rounded text-sm font-semibold" style={{ background: '#2563eb' }}>{t('inTransaction')}</span>
+          </div>
+        )}
       </div>
 
       {/* Product Info */}
@@ -129,11 +141,12 @@ export function ProductCard({
             <AvatarImage src={product.seller.avatar} />
             <AvatarFallback>{product.seller.name[0]}</AvatarFallback>
           </Avatar>
-          <div className="flex items-center gap-1 text-sm">
-            <span className="text-gray-700">{product.seller.name}</span>
+          <div className="flex items-center gap-1 text-sm flex-1 min-w-0">
+            <span className="text-gray-700 truncate">{product.seller.name}</span>
             {product.seller.verified && (
-              <CheckCircle className="w-3 h-3 text-green-600" />
+              <CheckCircle className="w-3 h-3 text-green-600 flex-shrink-0" />
             )}
+            <StarRating rating={product.seller.rating} size={12} />
           </div>
           <Badge variant="secondary" className="text-xs ml-auto">
             {t(product.seller.role)}
@@ -189,6 +202,20 @@ export function ProductCard({
             </Button>
           )}
         </div>
+        {onBuy && (
+          <Button
+            size="sm"
+            className="w-full mt-3 gap-1 text-white hover:shadow-lg hover:scale-105 transition-all duration-200"
+            style={{ background: '#16a34a' }}
+            onClick={(e) => {
+              e.stopPropagation();
+              onBuy(product.id);
+            }}
+          >
+            <ShoppingCart className="w-3 h-3" />
+            {t('buy')}
+          </Button>
+        )}
       </div>
     </div>
   );

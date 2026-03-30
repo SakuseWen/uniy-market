@@ -13,6 +13,7 @@ interface BackendProduct {
   categoryID: number;
   sellerID: string;
   status: 'active' | 'sold' | 'inactive';
+  deliveryType?: 'faceToFace' | 'campusLocker' | 'courier';
   views: number;
   createdAt: string;
   updatedAt: string;
@@ -26,6 +27,7 @@ interface BackendProduct {
     name: string;
     profileImage?: string;
     isVerified: boolean;
+    rating?: number;
   };
   category?: {
     categoryID: number;
@@ -105,18 +107,21 @@ function transformProduct(backendProduct: BackendProduct): Product {
       avatar: backendProduct.seller?.profileImage || '',
       role: 'student' as const,
       verified: backendProduct.seller?.isVerified || false,
-      rating: 4.5,
+      rating: backendProduct.seller?.rating || 5,
       totalTrades: 0,
       responseTime: '< 1 hour',
       joinDate: '2024-01-01',
     },
-    deliveryType: ['faceToFace'],
+    deliveryType: backendProduct.deliveryType ? [backendProduct.deliveryType] : ['faceToFace'],
     badges: [],
     views: backendProduct.views,
     publishedDate: backendProduct.createdAt,
     distance: '0 km',
     itemLanguage: 'english' as const,
     sold: backendProduct.status === 'sold',
+    latitude: (backendProduct as any).latitude,
+    longitude: (backendProduct as any).longitude,
+    address: (backendProduct as any).address,
   };
 }
 
@@ -195,14 +200,14 @@ export const productService = {
   },
 
   // 获取分类列表
-  async getCategories(): Promise<Array<{ categoryID: number; name: string }>> {
+  async getCategories(): Promise<Array<{ categoryID: number; name: string; nameEn?: string; nameZh?: string; nameTh?: string }>> {
     const response = await apiClient.get<{
       success: boolean;
-      data: { categories: Array<{ categoryID: number; name: string }> };
+      data: { categories: Array<{ categoryID: number; name: string; nameEn?: string; nameZh?: string; nameTh?: string }> };
     }>('/products/categories/all');
     
     const data = response.data.data;
-    let categoriesArray: Array<{ categoryID: number; name: string }> = [];
+    let categoriesArray: Array<any> = [];
     
     if (Array.isArray(data)) {
       categoriesArray = data;
@@ -211,16 +216,18 @@ export const productService = {
     }
     
     // Remove duplicates based on name
-    const uniqueMap = new Map<string, { categoryID: number; name: string }>();
+    const uniqueMap = new Map<string, { categoryID: number; name: string; nameEn?: string; nameZh?: string; nameTh?: string }>();
     
     categoriesArray.forEach(cat => {
       const name = cat.name || '';
       
-      // Use name as key to avoid duplicates with same name
       if (cat.categoryID > 0 && name && !uniqueMap.has(name)) {
         uniqueMap.set(name, {
           categoryID: cat.categoryID,
-          name: name
+          name: name,
+          nameEn: cat.nameEn,
+          nameZh: cat.nameZh,
+          nameTh: cat.nameTh,
         });
       }
     });
@@ -237,6 +244,7 @@ export const productService = {
     condition: 'new' | 'used' | 'like_new';
     location?: string;
     categoryID: number;
+    deliveryType?: 'faceToFace' | 'campusLocker' | 'courier';
   }): Promise<Product> {
     const response = await apiClient.post<{
       success: boolean;
@@ -256,6 +264,7 @@ export const productService = {
       condition: 'new' | 'used' | 'like_new';
       location: string;
       categoryID: number;
+      deliveryType: 'faceToFace' | 'campusLocker' | 'courier';
       status: 'active' | 'sold' | 'inactive';
     }>
   ): Promise<Product> {

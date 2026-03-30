@@ -1,10 +1,15 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router';
 import { ChevronLeft, Heart, Scale, Flag, MessageCircle, Pencil } from 'lucide-react';
 import { Product } from '../lib/mockData';
 import { Language, translate } from '../lib/i18n';
 import { Button } from './ui/button';
 import { useAuth } from '../services/authContext';
+import { favoriteService } from '../services/favoriteService';
+import { dealService } from '../services/dealService';
+import apiClient from '../services/api';
+import { LocationPicker } from './LocationPicker';
+import { toast } from 'sonner';
 import { Badge } from './ui/badge';
 import { chatService } from '../services/chatService';
 import { toast } from 'sonner';
@@ -41,6 +46,111 @@ export function ProductDetailPage({
   const navigate = useNavigate();
   const { user } = useAuth();
   const [isFavorite, setIsFavorite] = useState(false);
+  const [deal, setDeal] = useState<any>(null);
+  const [dealLoading, setDealLoading] = useState(false);
+
+  // Check if product is favorited
+  useEffect(() => {
+    if (!user || !product.id) return;
+    favoriteService.checkBatch([product.id]).then(result => {
+      setIsFavorite(!!result[product.id]);
+    }).catch(() => {});
+  }, [user, product.id]);
+
+  // Load deal status (public check for all users, detailed for logged-in)
+  useEffect(() => {
+    if (!product.id) return;
+    // Public check
+    apiClient.get(`/deals/product/${product.id}/status`).then(r => {
+      if (r.data.inTransaction) {
+        setDeal({ status: 'pending', notes: 'accepted' });
+      }
+    }).catch(() => {});
+    // Detailed check for logged-in user
+    if (user) {
+      dealService.getDealForProduct(product.id).then(d => { if (d) setDeal(d); }).catch(() => {});
+    }
+  }, [user, product.id]);
+
+  const handleBuy = async () => {
+    if (!user) { navigate('/login'); return; }
+    if (!product.seller?.id) return;
+    setDealLoading(true);
+    try {
+      const newDeal = await dealService.createDeal(product.id, user.userID, product.seller.id, product.price);
+      setDeal(newDeal);
+      toast.success(t('dealRequestSent') || 'Purchase request sent');
+    } catch (err: any) {
+      toast.error(err.response?.data?.error?.message || 'Failed to create deal');
+    } finally { setDealLoading(false); }
+  };
+
+  const handleAcceptDeal = async () => {
+    if (!deal) return;
+    setDealLoading(true);
+    try {
+      await dealService.acceptDeal(deal.dealID);
+      setDeal({ ...deal, notes: 'accepted' });
+      toast.success(t('dealAccepted') || 'Deal accepted');
+    } catch (err: any) { toast.error(err.response?.data?.error?.message || 'Failed'); }
+    finally { setDealLoading(false); }
+  };
+
+  const handleRejectDeal = async () => {
+    if (!deal) return;
+    setDealLoading(true);
+    try {
+      await dealService.rejectDeal(deal.dealID);
+      setDeal(null);
+      toast.success(t('dealRejected') || 'Deal rejected');
+    } catch (err: any) { toast.error(err.response?.data?.error?.message || 'Failed'); }
+    finally { setDealLoading(false); }
+  };
+
+  const handleConfirmDeal = async () => {
+    if (!deal) return;
+    setDealLoading(true);
+    try {
+      const res = await dealService.confirmDeal(deal.dealID);
+      if (res.completed) {
+        setDeal({ ...deal, status: 'completed' });
+        toast.success(t('dealCompleted') || 'Transaction completed');
+      } else {
+        const isBuyer = user?.userID === deal.buyerID;
+        setDeal({ ...deal, [isBuyer ? 'buyerConfirmed' : 'sellerConfirmed']: true });
+        toast.success(t('dealConfirmedWaiting') || 'Confirmed. Waiting for the other party.');
+      }
+    } catch (err: any) { toast.error(err.response?.data?.error?.message || 'Failed'); }
+    finally { setDealLoading(false); }
+  };
+
+  const handleCancelDeal = async () => {
+    if (!deal) return;
+    setDealLoading(true);
+    try {
+      await dealService.cancelDeal(deal.dealID);
+      setDeal(null);
+      toast.success(t('dealCancelled') || 'Deal cancelled');
+    } catch (err: any) { toast.error(err.response?.data?.error?.message || 'Failed'); }
+    finally { setDealLoading(false); }
+  };
+
+  const handleToggleFavorite = async () => {
+    if (!user) { navigate('/login'); return; }
+    try {
+      if (isFavorite) {
+        await favoriteService.removeFavorite(product.id);
+        setIsFavorite(false);
+        toast.success(t('removedFromFavorites'));
+      } else {
+        await favoriteService.addFavorite(product.id);
+        setIsFavorite(true);
+        toast.success(t('addedToFavorites'));
+      }
+    } catch (err) {
+      console.error('Favorite error:', err);
+    }
+  };
 
   // 判断当前用户是否为该商品的卖家 / Check if current user is the seller of this product
   const isSeller = !!user && !!product.seller.id && user.userID === product.seller.id;
@@ -172,6 +282,8 @@ export function ProductDetailPage({
                 <div>
                   {product.sold ? (
                     <Badge variant="secondary">{t('sold')}</Badge>
+                  ) : deal && deal.status === 'pending' && deal.notes === 'accepted' ? (
+                    <Badge style={{ background: '#dbeafe', color: '#2563eb' }}>{t('inTransaction')}</Badge>
                   ) : (
                     <Badge className="bg-green-500">{t('inStock')}</Badge>
                   )}
@@ -180,6 +292,10 @@ export function ProductDetailPage({
               <div>
                 <div className="text-gray-500 mb-1">{t('views')}</div>
                 <div>{product.views.toLocaleString()} {t('views')}</div>
+              </div>
+              <div>
+                <div className="text-gray-500 mb-1">{t('deliveryType')}</div>
+                <div>{product.deliveryType?.map(d => t(d)).join(', ') || t('faceToFace')}</div>
               </div>
             </div>
 
@@ -220,7 +336,7 @@ export function ProductDetailPage({
               <Button
                 variant="outline"
                 className="w-full"
-                onClick={() => setIsFavorite(!isFavorite)}
+                onClick={handleToggleFavorite}
               >
                 <Heart className={`w-4 h-4 mr-2 ${isFavorite ? 'fill-red-500 text-red-500' : ''}`} />
                 {t('addToFavorites')}
@@ -251,8 +367,24 @@ export function ProductDetailPage({
             description={getLocalizedDescription() || ''}
             specifications={product.specifications}
             language={language}
+            listingID={product.id}
+            sellerID={product.seller?.id}
           />
         </div>
+
+        {/* Map Location */}
+        {(product as any).latitude && (product as any).longitude && (
+          <div className="mb-8">
+            <h3 className="font-semibold mb-3">{t('mapLocation') || 'Location'}</h3>
+            <LocationPicker
+              latitude={(product as any).latitude}
+              longitude={(product as any).longitude}
+              address={(product as any).address}
+              readonly
+              onChange={() => {}}
+            />
+          </div>
+        )}
 
         {/* Safety Notice */}
         <div className="mb-8">
