@@ -27,6 +27,7 @@ interface BackendProduct {
     name: string;
     profileImage?: string;
     isVerified: boolean;
+    rating?: number;
   };
   category?: {
     categoryID: number;
@@ -106,7 +107,7 @@ function transformProduct(backendProduct: BackendProduct): Product {
       avatar: backendProduct.seller?.profileImage || '',
       role: 'student' as const,
       verified: backendProduct.seller?.isVerified || false,
-      rating: 4.5,
+      rating: backendProduct.seller?.rating || 5,
       totalTrades: 0,
       responseTime: '< 1 hour',
       joinDate: '2024-01-01',

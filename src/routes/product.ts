@@ -1,6 +1,7 @@
 import express from 'express';
 import { ProductModel } from '../models/ProductModel';
 import { UserModel } from '../models/UserModel';
+import { ReviewModel } from '../models/ReviewModel';
 import { authenticateToken } from '../middleware/auth';
 import { body, query, validationResult } from 'express-validator';
 import { uploadConfig } from '../config/upload';
@@ -13,6 +14,7 @@ import path from 'path';
 const router = express.Router();
 let productModel: ProductModel | null = null;
 let userModel: UserModel | null = null;
+let reviewModel: ReviewModel | null = null;
 
 function getProductModel(): ProductModel {
   if (!productModel) {
@@ -26,6 +28,13 @@ function getUserModel(): UserModel {
     userModel = new UserModel();
   }
   return userModel;
+}
+
+function getReviewModel(): ReviewModel {
+  if (!reviewModel) {
+    reviewModel = new ReviewModel();
+  }
+  return reviewModel;
 }
 
 /**
@@ -483,6 +492,15 @@ router.get('/',
             getProductModel().getCategoryById(product.categoryID)
           ]);
 
+          // Get seller rating
+          let sellerRating = 5;
+          try {
+            const ratingData = await getReviewModel().getAverageRating(product.sellerID);
+            if (ratingData && ratingData.count > 0) {
+              sellerRating = ratingData.average;
+            }
+          } catch (_e) {}
+
           return {
             ...product,
             images,
@@ -491,7 +509,8 @@ router.get('/',
               name: seller.name,
               profileImage: seller.profileImage,
               isVerified: seller.isVerified,
-              isAdmin: seller.isAdmin
+              isAdmin: seller.isAdmin,
+              rating: sellerRating
             } : null,
             category
           };
