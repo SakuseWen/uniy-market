@@ -372,6 +372,15 @@ export class DatabaseManager {
     try {
       await this.db.exec("ALTER TABLE ProductListing ADD COLUMN deliveryType TEXT DEFAULT 'faceToFace'");
     } catch (_e) { /* ignore */ }
+    try {
+      await this.db.exec('ALTER TABLE ProductListing ADD COLUMN latitude REAL');
+    } catch (_e) { /* ignore */ }
+    try {
+      await this.db.exec('ALTER TABLE ProductListing ADD COLUMN longitude REAL');
+    } catch (_e) { /* ignore */ }
+    try {
+      await this.db.exec('ALTER TABLE ProductListing ADD COLUMN address TEXT');
+    } catch (_e) { /* ignore */ }
 
     // Migration: create Comment table
     await this.db.exec(`

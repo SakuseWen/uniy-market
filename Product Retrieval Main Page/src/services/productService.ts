@@ -119,6 +119,9 @@ function transformProduct(backendProduct: BackendProduct): Product {
     distance: '0 km',
     itemLanguage: 'english' as const,
     sold: backendProduct.status === 'sold',
+    latitude: (backendProduct as any).latitude,
+    longitude: (backendProduct as any).longitude,
+    address: (backendProduct as any).address,
   };
 }
 

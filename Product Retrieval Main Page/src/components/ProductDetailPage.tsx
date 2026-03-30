@@ -8,6 +8,7 @@ import { useAuth } from '../services/authContext';
 import { favoriteService } from '../services/favoriteService';
 import { dealService } from '../services/dealService';
 import apiClient from '../services/api';
+import { LocationPicker } from './LocationPicker';
 import { toast } from 'sonner';
 import { Badge } from './ui/badge';
 import { ProductImageCarousel } from './ProductImageCarousel';
@@ -338,6 +339,20 @@ export function ProductDetailPage({
             sellerID={product.seller?.id}
           />
         </div>
+
+        {/* Map Location */}
+        {(product as any).latitude && (product as any).longitude && (
+          <div className="mb-8">
+            <h3 className="font-semibold mb-3">{t('mapLocation') || 'Location'}</h3>
+            <LocationPicker
+              latitude={(product as any).latitude}
+              longitude={(product as any).longitude}
+              address={(product as any).address}
+              readonly
+              onChange={() => {}}
+            />
+          </div>
+        )}
 
         {/* Safety Notice */}
         <div className="mb-8">
