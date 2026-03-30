@@ -149,6 +149,23 @@ function MyPage() {
   const [reviewImagePreviews, setReviewImagePreviews] = useState<string[]>([]);
   const [submittingReview, setSubmittingReview] = useState(false);
 
+  // My reviews state
+  const [myReviews, setMyReviews] = useState<any[]>([]);
+  const [loadingMyReviews, setLoadingMyReviews] = useState(false);
+  const [myAvgRating, setMyAvgRating] = useState(5);
+
+  const loadMyReviews = async () => {
+    if (!user) return;
+    setLoadingMyReviews(true);
+    try {
+      const data = await reviewService.getUserReviews(user.userID);
+      setMyReviews(data?.reviews || []);
+      const stats = data?.statistics?.overall;
+      setMyAvgRating(stats?.count > 0 ? stats.average : 5);
+    } catch (err) { console.error('Failed to load reviews:', err); }
+    finally { setLoadingMyReviews(false); }
+  };
+
   const handleSubmitReview = async () => {
     if (!reviewDeal || !user) return;
     setSubmittingReview(true);
@@ -488,7 +505,8 @@ function MyPage() {
             <TabsTrigger value="chat-history" className="flex-1">{t('chatHistory')}</TabsTrigger>
             <TabsTrigger value="my-products" className="flex-1">{t('myProducts')}</TabsTrigger>
             <TabsTrigger value="favorites" className="flex-1" onClick={loadFavorites}>{t('favorites')}</TabsTrigger>
-            <TabsTrigger value="deals" className="flex-1" onClick={loadDeals}>{t('deals') || 'Deals'}</TabsTrigger>
+            <TabsTrigger value="deals" className="flex-1" onClick={loadDeals}>{t('deals')}</TabsTrigger>
+            <TabsTrigger value="my-reviews" className="flex-1" onClick={loadMyReviews}>{t('myReviews')}</TabsTrigger>
           </TabsList>
 
           {/* Chat History Tab */}
@@ -793,10 +811,16 @@ function MyPage() {
                         </div>
                         <p className="text-sm text-gray-500 mb-2">
                           {isSeller ? (t('asSeller')) : (t('asBuyer'))} · ${deal.finalPrice?.toFixed(2) || '0.00'}
-                          {isSeller && deal.buyerName && (
-                            <span> · {t('buyer') || 'Buyer'}: <a className="text-blue-600 cursor-pointer hover:underline" onClick={(e) => { e.stopPropagation(); navigate(`/seller/${deal.buyerID}`); }}>{deal.buyerName}</a></span>
-                          )}
                         </p>
+                        {isSeller && deal.buyerName && (
+                          <div className="flex items-center gap-2 mb-2 cursor-pointer" onClick={(e) => { e.stopPropagation(); navigate(`/seller/${deal.buyerID}`); }}>
+                            <Avatar className="w-7 h-7">
+                              <AvatarImage src={deal.buyerProfileImage?.startsWith('/') ? `http://localhost:3000${deal.buyerProfileImage}` : ''} />
+                              <AvatarFallback className="text-xs bg-gradient-to-br from-blue-500 to-purple-600 text-white">{deal.buyerName?.substring(0, 2).toUpperCase()}</AvatarFallback>
+                            </Avatar>
+                            <span className="text-blue-600 hover:underline font-medium">{t('buyer')}: {deal.buyerName}</span>
+                          </div>
+                        )}
                         <div className="flex gap-2">
                           {/* Seller: accept/reject pending */}
                           {isSeller && isPending && (
@@ -854,6 +878,49 @@ function MyPage() {
                     </Card>
                   );
                 })}
+              </div>
+            )}
+          </TabsContent>
+
+          {/* My Reviews Tab */}
+          <TabsContent value="my-reviews">
+            {loadingMyReviews ? (
+              <div className="flex items-center justify-center py-16">
+                <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+              </div>
+            ) : (
+              <div>
+                <div className="flex items-center gap-3 mb-4 p-4 bg-white rounded-lg border">
+                  <StarRating rating={myAvgRating} size={20} />
+                  <span className="font-semibold">{myAvgRating.toFixed(1)} / 5</span>
+                  <span className="text-sm text-gray-500">({myReviews.length} {t('reviews')})</span>
+                </div>
+                {myReviews.length === 0 ? (
+                  <Card><CardContent className="py-8 text-center text-gray-400">{t('noReviews')}</CardContent></Card>
+                ) : (
+                  <div className="grid gap-4">
+                    {myReviews.map((review: any) => (
+                      <Card key={review.reviewID}>
+                        <CardContent className="p-4">
+                          <div className="flex items-start gap-3">
+                            <Avatar className="w-8 h-8 flex-shrink-0">
+                              <AvatarImage src={review.reviewerProfileImage?.startsWith('/') ? `http://localhost:3000${review.reviewerProfileImage}` : ''} />
+                              <AvatarFallback className="text-xs bg-gradient-to-br from-blue-500 to-purple-600 text-white">{review.reviewerName?.substring(0, 2).toUpperCase() || 'U'}</AvatarFallback>
+                            </Avatar>
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-1">
+                                <span className="font-semibold text-sm">{review.reviewerName}</span>
+                                <StarRating rating={review.rating} size={14} />
+                                <span className="text-xs text-gray-400">{new Date(review.createdAt).toLocaleDateString()}</span>
+                              </div>
+                              {review.comment && <p className="text-sm text-gray-700">{review.comment}</p>}
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
           </TabsContent>

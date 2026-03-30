@@ -165,6 +165,7 @@ export const translations = {
     inTransaction: 'In Transaction',
     asSeller: 'As Seller',
     asBuyer: 'As Buyer',
+    buyer: 'Buyer',
     notifications: 'Notifications',
     markAllRead: 'Mark all read',
     noNotifications: 'No notifications',
@@ -180,6 +181,7 @@ export const translations = {
     reviewImages: 'Images (optional)',
     reviews: 'Reviews',
     noReviews: 'No reviews yet',
+    myReviews: 'My Reviews',
     rating: 'Rating',
     logout: 'Logout',
 
@@ -544,6 +546,7 @@ export const translations = {
     inTransaction: '交易中',
     asSeller: '作为卖家',
     asBuyer: '作为买家',
+    buyer: '买家',
     notifications: '通知',
     markAllRead: '全部已读',
     noNotifications: '暂无通知',
@@ -559,6 +562,7 @@ export const translations = {
     reviewImages: '图片（可选）',
     reviews: '评价',
     noReviews: '暂无评价',
+    myReviews: '我的评价',
     rating: '评分',
     logout: '退出登录',
 
@@ -923,6 +927,7 @@ export const translations = {
     inTransaction: 'กำลังซื้อขาย',
     asSeller: 'ในฐานะผู้ขาย',
     asBuyer: 'ในฐานะผู้ซื้อ',
+    buyer: 'ผู้ซื้อ',
     notifications: 'การแจ้งเตือน',
     markAllRead: 'อ่านทั้งหมด',
     noNotifications: 'ไม่มีการแจ้งเตือน',
@@ -938,6 +943,7 @@ export const translations = {
     reviewImages: 'รูปภาพ (ไม่บังคับ)',
     reviews: 'รีวิว',
     noReviews: 'ยังไม่มีรีวิว',
+    myReviews: 'รีวิวของฉัน',
     rating: 'คะแนน',
     logout: 'ออกจากระบบ',
 
