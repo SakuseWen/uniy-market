@@ -155,9 +155,9 @@ export default function MainPage() {
   const filteredProducts = useMemo(() => {
     let results = [...apiProducts];
 
-    // Filter out sold items if availableOnly is true
+    // Filter out sold and in-transaction items if availableOnly is true
     if (filters.availableOnly) {
-      results = results.filter((p) => !p.sold);
+      results = results.filter((p) => !p.sold && !inTransactionIds.includes(p.id));
     }
 
     // Advanced filters - Brand
@@ -186,7 +186,7 @@ export default function MainPage() {
     }
 
     return results;
-  }, [apiProducts, filters.availableOnly, advancedFilters, sortBy]);
+  }, [apiProducts, filters.availableOnly, advancedFilters, sortBy, inTransactionIds]);
 
   // Show error toast
   useEffect(() => {
