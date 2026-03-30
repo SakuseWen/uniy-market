@@ -225,6 +225,13 @@ export default function SellerProfilePage() {
                         <span className="text-xs text-gray-400">{new Date(review.createdAt).toLocaleDateString()}</span>
                       </div>
                       {review.comment && <p className="text-sm text-gray-700">{review.comment}</p>}
+                      {review.images && review.images.length > 0 && (
+                        <div className="flex gap-2 mt-2">
+                          {review.images.map((img: any) => (
+                            <img key={img.imageID} src={`http://localhost:3000${img.imagePath}`} alt="" style={{ width: 80, height: 80, objectFit: 'cover', borderRadius: 6 }} />
+                          ))}
+                        </div>
+                      )}
                     </div>
                   </div>
                 </CardContent>

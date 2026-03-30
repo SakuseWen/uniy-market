@@ -171,17 +171,27 @@ function MyPage() {
     setSubmittingReview(true);
     try {
       const isSeller = reviewDeal.sellerID === user.userID;
-      await reviewService.submitReview({
+      const result = await reviewService.submitReview({
         rating: reviewRating,
         comment: reviewComment,
         targetUserID: isSeller ? reviewDeal.buyerID : reviewDeal.sellerID,
         dealID: reviewDeal.dealID,
         reviewType: isSeller ? 'seller_to_buyer' : 'buyer_to_seller',
       });
-      toast.success(t('reviewSubmitted') || 'Review submitted');
+      // Upload images if any
+      if (reviewImages.length > 0 && result.data?.reviewID) {
+        const formData = new FormData();
+        reviewImages.forEach(f => formData.append('images', f));
+        await apiClient.post(`/reviews/${result.data.reviewID}/images`, formData, {
+          headers: { 'Content-Type': 'multipart/form-data' },
+        });
+      }
+      toast.success(t('reviewSubmitted'));
       setReviewDeal(null);
       setReviewRating(5);
       setReviewComment('');
+      setReviewImages([]);
+      setReviewImagePreviews([]);
       loadDeals();
     } catch (err: any) {
       toast.error(err.response?.data?.error?.message || 'Failed to submit review');
@@ -914,6 +924,13 @@ function MyPage() {
                                 <span className="text-xs text-gray-400">{new Date(review.createdAt).toLocaleDateString()}</span>
                               </div>
                               {review.comment && <p className="text-sm text-gray-700">{review.comment}</p>}
+                              {review.images && review.images.length > 0 && (
+                                <div className="flex gap-2 mt-2">
+                                  {review.images.map((img: any) => (
+                                    <img key={img.imageID} src={`http://localhost:3000${img.imagePath}`} alt="" style={{ width: 80, height: 80, objectFit: 'cover', borderRadius: 6 }} />
+                                  ))}
+                                </div>
+                              )}
                             </div>
                           </div>
                         </CardContent>

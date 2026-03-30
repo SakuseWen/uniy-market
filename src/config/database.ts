@@ -398,6 +398,18 @@ export class DatabaseManager {
       await this.db.exec('ALTER TABLE Deal ADD COLUMN sellerConfirmed BOOLEAN DEFAULT FALSE');
     } catch (_e) { /* ignore */ }
 
+    // Migration: create ReviewImage table
+    await this.db.exec(`
+      CREATE TABLE IF NOT EXISTS ReviewImage (
+        imageID TEXT PRIMARY KEY,
+        reviewID TEXT NOT NULL,
+        imagePath TEXT NOT NULL,
+        createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (reviewID) REFERENCES Review(reviewID) ON DELETE CASCADE
+      );
+      CREATE INDEX IF NOT EXISTS idx_review_image_review ON ReviewImage(reviewID);
+    `);
+
     // Migration: create DealNotification table
     await this.db.exec(`
       CREATE TABLE IF NOT EXISTS DealNotification (
