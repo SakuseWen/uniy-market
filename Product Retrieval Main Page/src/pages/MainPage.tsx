@@ -25,6 +25,8 @@ import { Toaster } from '../components/ui/sonner';
 import { useAuth } from '../services/authContext';
 import { useLanguage } from '../lib/LanguageContext';
 import { favoriteService } from '../services/favoriteService';
+import { dealService } from '../services/dealService';
+import apiClient from '../services/api';
 
 export default function MainPage() {
   const navigate = useNavigate();
@@ -136,13 +138,26 @@ export default function MainPage() {
     }).catch(() => {});
   }, [user, apiProducts]);
 
+  // Track products in transaction (public, works for all users)
+  const [inTransactionIds, setInTransactionIds] = useState<string[]>([]);
+  useEffect(() => {
+    if (apiProducts.length === 0) return;
+    Promise.all(
+      apiProducts.map(p =>
+        apiClient.get(`/deals/product/${p.id}/status`).then(r => r.data.inTransaction ? p.id : null).catch(() => null)
+      )
+    ).then(results => {
+      setInTransactionIds(results.filter(Boolean) as string[]);
+    });
+  }, [apiProducts]);
+
   // Filter products (client-side filtering for advanced filters)
   const filteredProducts = useMemo(() => {
     let results = [...apiProducts];
 
-    // Filter out sold items if availableOnly is true
+    // Filter out sold and in-transaction items if availableOnly is true
     if (filters.availableOnly) {
-      results = results.filter((p) => !p.sold);
+      results = results.filter((p) => !p.sold && !inTransactionIds.includes(p.id));
     }
 
     // Advanced filters - Brand
@@ -171,7 +186,7 @@ export default function MainPage() {
     }
 
     return results;
-  }, [apiProducts, filters.availableOnly, advancedFilters, sortBy]);
+  }, [apiProducts, filters.availableOnly, advancedFilters, sortBy, inTransactionIds]);
 
   // Show error toast
   useEffect(() => {
@@ -228,6 +243,19 @@ export default function MainPage() {
       return;
     }
     navigate(`/chat/${sellerId}`);
+  };
+
+  const handleBuy = async (productId: string) => {
+    if (!user) { navigate('/login'); return; }
+    const product = apiProducts.find(p => p.id === productId);
+    if (!product || !product.seller?.id) return;
+    if (product.seller.id === user.userID) { toast.error(t('cannotBuyOwnProduct') || 'You cannot buy your own product'); return; }
+    try {
+      await dealService.createDeal(productId, user.userID, product.seller.id, product.price);
+      toast.success(t('dealRequestSent'));
+    } catch (err: any) {
+      toast.error(err.response?.data?.error?.message || 'Failed');
+    }
   };
 
   const handleLanguageChange = (lang: Language) => {
@@ -397,8 +425,10 @@ export default function MainPage() {
                   onFavorite={handleFavorite}
                   onCompare={handleCompare}
                   onContact={handleContact}
+                  onBuy={!product.sold ? handleBuy : undefined}
                   isFavorited={favoritedIds.includes(product.id)}
                   isInComparison={comparisonIds.includes(product.id)}
+                  inTransaction={inTransactionIds.includes(product.id)}
                 />
               </div>
             ))}
@@ -414,6 +444,7 @@ export default function MainPage() {
                   onCompare={handleCompare}
                   onContact={handleContact}
                   isFavorited={favoritedIds.includes(product.id)}
+                  inTransaction={inTransactionIds.includes(product.id)}
                 />
               </div>
             ))}

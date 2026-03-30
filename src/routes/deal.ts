@@ -4,6 +4,7 @@ import { ProductModel } from '../models/ProductModel';
 import { UserModel } from '../models/UserModel';
 import { authenticateToken } from '../middleware/auth';
 import { ApiResponse } from '../types';
+import { createDealNotification } from './dealNotification';
 
 const router = express.Router();
 const dealModel = new DealModel();
@@ -110,6 +111,9 @@ router.post('/', authenticateToken, async (req: Request, res: Response) => {
       notes
     });
 
+    // Notify seller about new purchase request
+    await createDealNotification(sellerID, deal.dealID, 'new_request', `New purchase request for "${product.title}"`);
+
     res.status(201).json({
       success: true,
       data: deal,
@@ -151,9 +155,33 @@ router.get('/', authenticateToken, async (req: Request, res: Response) => {
       deals = deals.filter((deal: any) => deal.status === status);
     }
 
+    // Enrich with product title, images, and review status
+    const db = (await import('../config/database')).DatabaseManager.getInstance().getDatabase();
+    const enriched = await Promise.all(deals.map(async (deal: any) => {
+      const product = await productModel.getProductById(deal.listingID);
+      const images = await productModel.getProductImages(deal.listingID);
+      // Check if current user already reviewed this deal
+      const existingReview = await db.get(
+        'SELECT reviewID FROM Review WHERE dealID = ? AND reviewerID = ?',
+        [deal.dealID, userID]
+      );
+      // Get buyer/seller names
+      const buyer = await userModel.getUserById(deal.buyerID);
+      const seller = await userModel.getUserById(deal.sellerID);
+      return {
+        ...deal,
+        title: product?.title || deal.listingID,
+        images,
+        reviewed: !!existingReview,
+        buyerName: buyer?.name || 'Unknown',
+        buyerProfileImage: buyer?.profileImage || null,
+        sellerName: seller?.name || 'Unknown',
+      };
+    }));
+
     res.json({
       success: true,
-      data: deals,
+      data: enriched,
       timestamp: new Date().toISOString()
     } as ApiResponse);
   } catch (error: any) {
@@ -429,12 +457,12 @@ router.delete('/:dealId', authenticateToken, async (req: Request, res: Response)
       } as ApiResponse);
     }
 
-    // Only allow deletion of pending deals
-    if (deal.status !== 'pending') {
+    // Only allow deletion of non-active deals
+    if (deal.status === 'pending' && deal.notes === 'accepted') {
       return res.status(400).json({
         success: false,
         error: {
-          message: 'Only pending deals can be deleted'
+          message: 'Cannot delete a deal that is in transaction'
         },
         timestamp: new Date().toISOString()
       } as ApiResponse);
@@ -506,6 +534,120 @@ router.get('/stats/summary', authenticateToken, async (req: Request, res: Respon
       },
       timestamp: new Date().toISOString()
     } as ApiResponse);
+  }
+});
+
+/**
+ * PUT /api/deals/:dealId/accept
+ * Seller accepts a pending deal request
+ */
+router.put('/:dealId/accept', authenticateToken, async (req: Request, res: Response) => {
+  try {
+    const { dealId } = req.params;
+    const userID = (req as any).user.userID;
+    const deal = await dealModel.getDealById(dealId);
+    if (!deal) return res.status(404).json({ success: false, error: { message: 'Deal not found' } });
+    if (deal.sellerID !== userID) return res.status(403).json({ success: false, error: { message: 'Only the seller can accept' } });
+    if (deal.status !== 'pending') return res.status(400).json({ success: false, error: { message: 'Deal is not pending' } });
+
+    const updated = await dealModel.updateDeal(dealId, { status: 'pending', notes: 'accepted' });
+    // Notify buyer that seller accepted
+    await createDealNotification(deal.buyerID, dealId, 'accepted', 'The seller has accepted your purchase request');
+    res.json({ success: true, data: updated });
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: { message: error.message } });
+  }
+});
+
+/**
+ * PUT /api/deals/:dealId/reject
+ * Seller rejects a pending deal request
+ */
+router.put('/:dealId/reject', authenticateToken, async (req: Request, res: Response) => {
+  try {
+    const { dealId } = req.params;
+    const userID = (req as any).user.userID;
+    const deal = await dealModel.getDealById(dealId);
+    if (!deal) return res.status(404).json({ success: false, error: { message: 'Deal not found' } });
+    if (deal.sellerID !== userID) return res.status(403).json({ success: false, error: { message: 'Only the seller can reject' } });
+    if (deal.status !== 'pending') return res.status(400).json({ success: false, error: { message: 'Deal is not pending' } });
+
+    const updated = await dealModel.updateDealStatus(dealId, 'cancelled');
+    // Notify buyer about rejection
+    await createDealNotification(deal.buyerID, dealId, 'rejected', 'The seller has rejected your purchase request');
+    res.json({ success: true, data: updated, rejected: true });
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: { message: error.message } });
+  }
+});
+
+/**
+ * PUT /api/deals/:dealId/confirm
+ * Buyer or seller confirms deal completion (dual confirmation)
+ */
+router.put('/:dealId/confirm', authenticateToken, async (req: Request, res: Response) => {
+  try {
+    const { dealId } = req.params;
+    const userID = (req as any).user.userID;
+    const db = (await import('../config/database')).DatabaseManager.getInstance().getDatabase();
+    const deal = await dealModel.getDealById(dealId);
+    if (!deal) return res.status(404).json({ success: false, error: { message: 'Deal not found' } });
+    if (deal.buyerID !== userID && deal.sellerID !== userID) return res.status(403).json({ success: false, error: { message: 'Unauthorized' } });
+    if (deal.status !== 'pending') return res.status(400).json({ success: false, error: { message: 'Deal is not in transaction' } });
+
+    const isBuyer = deal.buyerID === userID;
+    const field = isBuyer ? 'buyerConfirmed' : 'sellerConfirmed';
+    await db.run(`UPDATE Deal SET ${field} = 1, updatedAt = ? WHERE dealID = ?`, [new Date().toISOString(), dealId]);
+
+    // Check if both confirmed
+    const updated = await db.get('SELECT * FROM Deal WHERE dealID = ?', [dealId]);
+    if (updated.buyerConfirmed && updated.sellerConfirmed) {
+      await dealModel.updateDealStatus(dealId, 'completed');
+      await productModel.updateProduct(deal.listingID, { status: 'sold' });
+      return res.json({ success: true, data: { ...updated, status: 'completed' }, completed: true });
+    }
+
+    res.json({ success: true, data: updated, completed: false });
+  } catch (error: any) {
+    console.error('Confirm deal error:', error);
+    res.status(500).json({ success: false, error: { message: error.message } });
+  }
+});
+
+/**
+ * GET /api/deals/product/:listingID/status
+ * Public - check if product is in transaction
+ */
+router.get('/product/:listingID/status', async (req: Request, res: Response) => {
+  try {
+    const { listingID } = req.params;
+    const db = (await import('../config/database')).DatabaseManager.getInstance().getDatabase();
+    const deal = await db.get(
+      "SELECT dealID, status, notes FROM Deal WHERE listingID = ? AND status = 'pending' AND notes = 'accepted'",
+      [listingID]
+    );
+    res.json({ success: true, inTransaction: !!deal });
+  } catch (error: any) {
+    res.status(500).json({ success: false, inTransaction: false });
+  }
+});
+
+/**
+ * GET /api/deals/product/:listingID
+ * Get active deal for a product
+ */
+router.get('/product/:listingID', authenticateToken, async (req: Request, res: Response) => {
+  try {
+    const { listingID } = req.params;
+    const userID = (req as any).user.userID;
+    const db = (await import('../config/database')).DatabaseManager.getInstance().getDatabase();
+    const deal = await db.get(
+      "SELECT * FROM Deal WHERE listingID = ? AND status = 'pending' AND (buyerID = ? OR sellerID = ?)",
+      [listingID, userID, userID]
+    );
+    res.json({ success: true, data: deal || null });
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: { message: error.message } });
   }
 });
 

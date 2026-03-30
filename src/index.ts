@@ -34,6 +34,7 @@ import locationRoutes from './routes/location';
 import reportRoutes from './routes/report';
 import favoriteRoutes from './routes/favorite';
 import commentRoutes from './routes/comment';
+import dealNotificationRoutes from './routes/dealNotification';
 import adminRoutes from './routes/admin';
 
 // Load environment variables
@@ -194,6 +195,7 @@ app.use('/api/location', apiLimiter, locationRoutes);
 app.use('/api/reports', apiLimiter, reportRoutes);
 app.use('/api/favorites', apiLimiter, favoriteRoutes);
 app.use('/api/comments', apiLimiter, commentRoutes);
+app.use('/api/deal-notifications', apiLimiter, dealNotificationRoutes);
 app.use('/api/admin', adminLimiter, adminRoutes);
 
 // Error handling middleware

@@ -1,4 +1,5 @@
 import { Bell, User, LogOut } from 'lucide-react';
+import { useState, useEffect } from 'react';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
 import {
@@ -13,6 +14,7 @@ import { Language, translate } from '../lib/i18n';
 import { useNavigate } from 'react-router';
 import { useAuth } from '../services/authContext';
 import { toast } from 'sonner';
+import apiClient from '../services/api';
 
 interface HeaderProps {
   language: Language;
@@ -24,6 +26,27 @@ export function Header({ language, onLanguageChange, unreadMessages }: HeaderPro
   const t = (key: any) => translate(language, key);
   const navigate = useNavigate();
   const { user, isAuthenticated, logout } = useAuth();
+  const [notifications, setNotifications] = useState<any[]>([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  useEffect(() => {
+    if (!user) return;
+    apiClient.get('/deal-notifications').then(res => {
+      setNotifications(res.data.notifications || []);
+      setUnreadCount(res.data.unreadCount || 0);
+    }).catch(() => {});
+    const interval = setInterval(() => {
+      apiClient.get('/deal-notifications').then(res => {
+        setNotifications(res.data.notifications || []);
+        setUnreadCount(res.data.unreadCount || 0);
+      }).catch(() => {});
+    }, 30000);
+    return () => clearInterval(interval);
+  }, [user]);
+
+  const handleMarkAllRead = () => {
+    apiClient.put('/deal-notifications/read-all').then(() => setUnreadCount(0)).catch(() => {});
+  };
 
   // Mask edu email: e.g. "student@university.edu" → "stu***@university.edu"
   const getMaskedEduEmail = () => {
@@ -95,32 +118,38 @@ export function Header({ language, onLanguageChange, unreadMessages }: HeaderPro
               <PopoverTrigger asChild>
                 <div className="relative cursor-pointer">
                   <Bell className="w-5 h-5" />
-                  {unreadMessages > 0 && (
+                  {unreadCount > 0 && (
                     <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center text-white text-xs">
-                      {unreadMessages}
+                      {unreadCount}
                     </div>
                   )}
                 </div>
               </PopoverTrigger>
               <PopoverContent className="w-80 p-0" align="end">
-                <div className="px-3 pt-3 pb-2">
-                  <p className="font-semibold text-sm">{t('messages') || 'Messages'}</p>
+                <div className="px-3 pt-3 pb-2 flex items-center justify-between">
+                  <p className="font-semibold text-sm">{t('notifications') || 'Notifications'}</p>
+                  {unreadCount > 0 && (
+                    <button className="text-xs text-blue-600" onClick={handleMarkAllRead}>{t('markAllRead') || 'Mark all read'}</button>
+                  )}
                 </div>
-                <div
-                  className="flex items-center gap-3 p-3 hover:bg-gray-50 cursor-pointer rounded-md mx-1 mb-1"
-                  onClick={() => navigate('/chat/example-seller')}
-                >
-                  <Avatar className="w-10 h-10 flex-shrink-0">
-                    <AvatarImage src="" />
-                    <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white text-xs">
-                      ES
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium text-sm">Example Seller</p>
-                    <p className="text-sm text-gray-500 truncate">Hi! Is this item still available?</p>
+                {notifications.length === 0 ? (
+                  <div className="p-4 text-center text-sm text-gray-400">{t('noNotifications') || 'No notifications'}</div>
+                ) : (
+                  <div className="max-h-64 overflow-y-auto">
+                    {notifications.slice(0, 10).map((n: any) => (
+                      <div
+                        key={n.id}
+                        className={`flex items-start gap-2 p-3 hover:bg-gray-50 cursor-pointer border-b last:border-b-0 ${!n.isRead ? 'bg-blue-50' : ''}`}
+                        onClick={() => navigate('/my-page')}
+                      >
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm">{n.productTitle ? `[${n.productTitle}] ` : ''}{n.type === 'new_request' ? t('notifNewRequest') : n.type === 'rejected' ? t('notifRejected') : n.type === 'accepted' ? t('notifAccepted') : n.message}</p>
+                          <p className="text-xs text-gray-400 mt-1">{new Date(n.createdAt).toLocaleString()}</p>
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                </div>
+                )}
               </PopoverContent>
             </Popover>
 

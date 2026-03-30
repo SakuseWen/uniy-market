@@ -372,6 +372,15 @@ export class DatabaseManager {
     try {
       await this.db.exec("ALTER TABLE ProductListing ADD COLUMN deliveryType TEXT DEFAULT 'faceToFace'");
     } catch (_e) { /* ignore */ }
+    try {
+      await this.db.exec('ALTER TABLE ProductListing ADD COLUMN latitude REAL');
+    } catch (_e) { /* ignore */ }
+    try {
+      await this.db.exec('ALTER TABLE ProductListing ADD COLUMN longitude REAL');
+    } catch (_e) { /* ignore */ }
+    try {
+      await this.db.exec('ALTER TABLE ProductListing ADD COLUMN address TEXT');
+    } catch (_e) { /* ignore */ }
 
     // Migration: create Comment table
     await this.db.exec(`
@@ -388,6 +397,42 @@ export class DatabaseManager {
       );
       CREATE INDEX IF NOT EXISTS idx_comment_listing ON Comment(listingID);
       CREATE INDEX IF NOT EXISTS idx_comment_parent ON Comment(parentID);
+    `);
+
+    // Migration: add buyerConfirmed/sellerConfirmed to Deal
+    try {
+      await this.db.exec('ALTER TABLE Deal ADD COLUMN buyerConfirmed BOOLEAN DEFAULT FALSE');
+    } catch (_e) { /* ignore */ }
+    try {
+      await this.db.exec('ALTER TABLE Deal ADD COLUMN sellerConfirmed BOOLEAN DEFAULT FALSE');
+    } catch (_e) { /* ignore */ }
+
+    // Migration: create ReviewImage table
+    await this.db.exec(`
+      CREATE TABLE IF NOT EXISTS ReviewImage (
+        imageID TEXT PRIMARY KEY,
+        reviewID TEXT NOT NULL,
+        imagePath TEXT NOT NULL,
+        createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (reviewID) REFERENCES Review(reviewID) ON DELETE CASCADE
+      );
+      CREATE INDEX IF NOT EXISTS idx_review_image_review ON ReviewImage(reviewID);
+    `);
+
+    // Migration: create DealNotification table
+    await this.db.exec(`
+      CREATE TABLE IF NOT EXISTS DealNotification (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        userID TEXT NOT NULL,
+        dealID TEXT NOT NULL,
+        type TEXT NOT NULL,
+        message TEXT NOT NULL,
+        isRead BOOLEAN DEFAULT FALSE,
+        createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (userID) REFERENCES User(userID) ON DELETE CASCADE,
+        FOREIGN KEY (dealID) REFERENCES Deal(dealID) ON DELETE CASCADE
+      );
+      CREATE INDEX IF NOT EXISTS idx_deal_notif_user ON DealNotification(userID);
     `);
 
     // Insert default data

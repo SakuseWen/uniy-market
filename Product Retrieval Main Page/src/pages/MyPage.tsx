@@ -11,13 +11,16 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs'
 import { Avatar, AvatarFallback, AvatarImage } from '../components/ui/avatar';
 import { Input } from '../components/ui/input';
 import { Textarea } from '../components/ui/textarea';
-import { ArrowLeft, Edit2, Trash2, Loader2, Camera, GraduationCap, UserX, Heart } from 'lucide-react';
+import { ArrowLeft, Edit2, Trash2, Loader2, Camera, GraduationCap, UserX, Heart, Check, X as XIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import { Toaster } from '../components/ui/sonner';
 import { productService } from '../services';
 import { useAuth } from '../services/authContext';
 import apiClient from '../services/api';
 import { favoriteService } from '../services/favoriteService';
+import { dealService } from '../services/dealService';
+import { reviewService } from '../services/reviewService';
+import { StarRating } from '../components/StarRating';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -119,6 +122,81 @@ function MyPage() {
       console.error('Failed to load favorites:', err);
     } finally {
       setLoadingFavorites(false);
+    }
+  };
+
+  // Deals state
+  const [deals, setDeals] = useState<any[]>([]);
+  const [loadingDeals, setLoadingDeals] = useState(false);
+
+  const loadDeals = async () => {
+    setLoadingDeals(true);
+    try {
+      const data = await dealService.getMyDeals();
+      setDeals(data);
+    } catch (err) {
+      console.error('Failed to load deals:', err);
+    } finally {
+      setLoadingDeals(false);
+    }
+  };
+
+  // Review state
+  const [reviewDeal, setReviewDeal] = useState<any>(null);
+  const [reviewRating, setReviewRating] = useState(5);
+  const [reviewComment, setReviewComment] = useState('');
+  const [reviewImages, setReviewImages] = useState<File[]>([]);
+  const [reviewImagePreviews, setReviewImagePreviews] = useState<string[]>([]);
+  const [submittingReview, setSubmittingReview] = useState(false);
+
+  // My reviews state
+  const [myReviews, setMyReviews] = useState<any[]>([]);
+  const [loadingMyReviews, setLoadingMyReviews] = useState(false);
+  const [myAvgRating, setMyAvgRating] = useState(5);
+
+  const loadMyReviews = async () => {
+    if (!user) return;
+    setLoadingMyReviews(true);
+    try {
+      const data = await reviewService.getUserReviews(user.userID);
+      setMyReviews(data?.reviews || []);
+      const stats = data?.statistics?.overall;
+      setMyAvgRating(stats?.count > 0 ? stats.average : 5);
+    } catch (err) { console.error('Failed to load reviews:', err); }
+    finally { setLoadingMyReviews(false); }
+  };
+
+  const handleSubmitReview = async () => {
+    if (!reviewDeal || !user) return;
+    setSubmittingReview(true);
+    try {
+      const isSeller = reviewDeal.sellerID === user.userID;
+      const result = await reviewService.submitReview({
+        rating: reviewRating,
+        comment: reviewComment,
+        targetUserID: isSeller ? reviewDeal.buyerID : reviewDeal.sellerID,
+        dealID: reviewDeal.dealID,
+        reviewType: isSeller ? 'seller_to_buyer' : 'buyer_to_seller',
+      });
+      // Upload images if any
+      if (reviewImages.length > 0 && result.data?.reviewID) {
+        const formData = new FormData();
+        reviewImages.forEach(f => formData.append('images', f));
+        await apiClient.post(`/reviews/${result.data.reviewID}/images`, formData, {
+          headers: { 'Content-Type': 'multipart/form-data' },
+        });
+      }
+      toast.success(t('reviewSubmitted'));
+      setReviewDeal(null);
+      setReviewRating(5);
+      setReviewComment('');
+      setReviewImages([]);
+      setReviewImagePreviews([]);
+      loadDeals();
+    } catch (err: any) {
+      toast.error(err.response?.data?.error?.message || 'Failed to submit review');
+    } finally {
+      setSubmittingReview(false);
     }
   };
 
@@ -310,6 +388,7 @@ function MyPage() {
     switch (status.toLowerCase()) {
       case 'active': return t('active');
       case 'inactive': return t('inactive');
+      case 'sold': return t('sold');
       default: return status.charAt(0).toUpperCase() + status.slice(1);
     }
   };
@@ -435,7 +514,9 @@ function MyPage() {
           <TabsList className="w-full mb-4">
             <TabsTrigger value="chat-history" className="flex-1">{t('chatHistory')}</TabsTrigger>
             <TabsTrigger value="my-products" className="flex-1">{t('myProducts')}</TabsTrigger>
-            <TabsTrigger value="favorites" className="flex-1" onClick={loadFavorites}>{t('favorites') || 'Favorites'}</TabsTrigger>
+            <TabsTrigger value="favorites" className="flex-1" onClick={loadFavorites}>{t('favorites')}</TabsTrigger>
+            <TabsTrigger value="deals" className="flex-1" onClick={loadDeals}>{t('deals')}</TabsTrigger>
+            <TabsTrigger value="my-reviews" className="flex-1" onClick={loadMyReviews}>{t('myReviews')}</TabsTrigger>
           </TabsList>
 
           {/* Chat History Tab */}
@@ -687,8 +768,256 @@ function MyPage() {
               </div>
             )}
           </TabsContent>
+
+          {/* Deals Tab */}
+          <TabsContent value="deals">
+            {loadingDeals ? (
+              <div className="flex items-center justify-center py-16">
+                <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+              </div>
+            ) : deals.length === 0 ? (
+              <Card>
+                <CardContent className="py-8 text-center text-gray-400">
+                  {t('noDeals') || 'No deals yet'}
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="grid gap-4">
+                {deals.map((deal: any) => {
+                  const isSeller = deal.sellerID === user?.userID;
+                  const isPending = deal.status === 'pending' && !deal.notes;
+                  const isAccepted = deal.status === 'pending' && deal.notes === 'accepted';
+                  const isCompleted = deal.status === 'completed';
+                  const isCancelled = deal.status === 'cancelled';
+                  return (
+                    <Card key={deal.dealID}>
+                      <CardContent className="p-4">
+                        <div className="flex gap-4">
+                          <div className="flex-shrink-0">
+                            {deal.images && deal.images.length > 0 ? (
+                              <img
+                                src={`http://localhost:3000${deal.images[0].imagePath}`}
+                                alt={deal.title}
+                                className="w-32 h-32 object-cover rounded-lg"
+                                onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
+                                  (e.target as HTMLImageElement).src = '/placeholder-product.jpg';
+                                }}
+                              />
+                            ) : (
+                              <div className="w-32 h-32 bg-gray-200 rounded-lg flex items-center justify-center">
+                                <span className="text-gray-400">{t('noImage')}</span>
+                              </div>
+                            )}
+                          </div>
+                          <div className="flex-1">
+                            <div className="flex items-center justify-between mb-2">
+                              <h3 className="font-semibold">{deal.title || deal.listingID}</h3>
+                              <Badge variant="secondary" style={{
+                            background: isCompleted ? '#dcfce7' : isCancelled ? '#fee2e2' : isAccepted ? '#dbeafe' : '#fef3c7',
+                            color: isCompleted ? '#16a34a' : isCancelled ? '#dc2626' : isAccepted ? '#2563eb' : '#d97706'
+                          }}>
+                            {isCompleted ? t('dealCompleted') : isCancelled ? (t('dealCancelled') || 'Cancelled') : isAccepted ? (t('inTransaction') || 'In Transaction') : (t('waitingSellerAccept') || 'Pending')}
+                          </Badge>
+                        </div>
+                        <p className="text-sm text-gray-500 mb-2">
+                          {isSeller ? (t('asSeller')) : (t('asBuyer'))} · ${deal.finalPrice?.toFixed(2) || '0.00'}
+                        </p>
+                        {isSeller && deal.buyerName && (
+                          <div className="flex items-center gap-2 mb-2 cursor-pointer" onClick={(e) => { e.stopPropagation(); navigate(`/seller/${deal.buyerID}`); }}>
+                            <Avatar className="w-7 h-7">
+                              <AvatarImage src={deal.buyerProfileImage?.startsWith('/') ? `http://localhost:3000${deal.buyerProfileImage}` : ''} />
+                              <AvatarFallback className="text-xs bg-gradient-to-br from-blue-500 to-purple-600 text-white">{deal.buyerName?.substring(0, 2).toUpperCase()}</AvatarFallback>
+                            </Avatar>
+                            <span className="text-blue-600 hover:underline font-medium">{t('buyer')}: {deal.buyerName}</span>
+                          </div>
+                        )}
+                        <div className="flex gap-2">
+                          {/* Seller: accept/reject pending */}
+                          {isSeller && isPending && (
+                            <>
+                              <Button size="sm" className="text-white" style={{ background: '#16a34a' }} onClick={async () => {
+                                await dealService.acceptDeal(deal.dealID);
+                                toast.success(t('dealAccepted'));
+                                loadDeals();
+                              }}><Check className="w-3 h-3 mr-1" />{t('acceptDeal')}</Button>
+                              <Button size="sm" className="text-white" style={{ background: '#dc2626' }} onClick={async () => {
+                                await dealService.rejectDeal(deal.dealID);
+                                toast.success(t('dealRejected'));
+                                loadDeals();
+                              }}><XIcon className="w-3 h-3 mr-1" />{t('rejectDeal')}</Button>
+                            </>
+                          )}
+                          {/* Both: confirm/cancel in-transaction */}
+                          {isAccepted && (
+                            <>
+                              <Button size="sm" className="text-white" style={{ background: '#16a34a' }} disabled={isSeller ? deal.sellerConfirmed : deal.buyerConfirmed} onClick={async () => {
+                                const res = await dealService.confirmDeal(deal.dealID);
+                                toast.success(res.completed ? t('dealCompleted') : t('dealConfirmedWaiting'));
+                                loadDeals();
+                              }}><Check className="w-3 h-3 mr-1" />{(isSeller ? deal.sellerConfirmed : deal.buyerConfirmed) ? t('confirmed') : t('confirmDeal')}</Button>
+                              <Button size="sm" variant="outline" style={{ color: '#dc2626' }} onClick={async () => {
+                                await dealService.cancelDeal(deal.dealID);
+                                toast.success(t('dealCancelled'));
+                                loadDeals();
+                              }}><XIcon className="w-3 h-3 mr-1" />{t('cancelDeal')}</Button>
+                            </>
+                          )}
+                          {/* Buyer waiting */}
+                          {!isSeller && isPending && (
+                            <span className="text-sm" style={{ color: '#d97706' }}>{t('waitingSellerAccept')}</span>
+                          )}
+                          {/* Delete completed/cancelled deals */}
+                          {isCompleted && !deal.reviewed && (
+                            <Button size="sm" className="text-white" style={{ background: '#f59e0b' }} onClick={() => { setReviewDeal(deal); setReviewRating(5); setReviewComment(''); setReviewImages([]); setReviewImagePreviews([]); }}>
+                              ⭐ {t('leaveReview')}
+                            </Button>
+                          )}
+                          {isCompleted && deal.reviewed && (
+                            <span className="text-sm font-semibold" style={{ color: '#16a34a' }}>✓ {t('reviewed') || 'Reviewed'}</span>
+                          )}
+                          {(isCompleted || isCancelled) && (
+                            <Button size="sm" variant="outline" style={{ color: '#dc2626' }} onClick={async () => {
+                              await dealService.deleteDeal(deal.dealID);
+                              loadDeals();
+                            }}><Trash2 className="w-3 h-3 mr-1" />{t('delete')}</Button>
+                          )}
+                        </div>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
+            )}
+          </TabsContent>
+
+          {/* My Reviews Tab */}
+          <TabsContent value="my-reviews">
+            {loadingMyReviews ? (
+              <div className="flex items-center justify-center py-16">
+                <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+              </div>
+            ) : (
+              <div>
+                <div className="flex items-center gap-3 mb-4 p-4 bg-white rounded-lg border">
+                  <StarRating rating={myAvgRating} size={20} />
+                  <span className="font-semibold">{myAvgRating.toFixed(1)} / 5</span>
+                  <span className="text-sm text-gray-500">({myReviews.length} {t('reviews')})</span>
+                </div>
+                {myReviews.length === 0 ? (
+                  <Card><CardContent className="py-8 text-center text-gray-400">{t('noReviews')}</CardContent></Card>
+                ) : (
+                  <div className="grid gap-4">
+                    {myReviews.map((review: any) => (
+                      <Card key={review.reviewID}>
+                        <CardContent className="p-4">
+                          <div className="flex items-start gap-3">
+                            <Avatar className="w-8 h-8 flex-shrink-0">
+                              <AvatarImage src={review.reviewerProfileImage?.startsWith('/') ? `http://localhost:3000${review.reviewerProfileImage}` : ''} />
+                              <AvatarFallback className="text-xs bg-gradient-to-br from-blue-500 to-purple-600 text-white">{review.reviewerName?.substring(0, 2).toUpperCase() || 'U'}</AvatarFallback>
+                            </Avatar>
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-1">
+                                <span className="font-semibold text-sm">{review.reviewerName}</span>
+                                <StarRating rating={review.rating} size={14} />
+                                <span className="text-xs text-gray-400">{new Date(review.createdAt).toLocaleDateString()}</span>
+                              </div>
+                              {review.comment && <p className="text-sm text-gray-700">{review.comment}</p>}
+                              {review.images && review.images.length > 0 && (
+                                <div className="flex gap-2 mt-2">
+                                  {review.images.map((img: any) => (
+                                    <img key={img.imageID} src={`http://localhost:3000${img.imagePath}`} alt="" style={{ width: 80, height: 80, objectFit: 'cover', borderRadius: 6 }} />
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </TabsContent>
         </Tabs>
       </div>
+
+      {/* Review Dialog */}
+      <Dialog open={!!reviewDeal} onOpenChange={(v) => { if (!v) setReviewDeal(null); }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>{t('leaveReview') || 'Leave a Review'}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <p className="text-sm text-gray-500 mb-2">{t('rating') || 'Rating'}</p>
+              <StarRating rating={reviewRating} size={28} interactive onChange={setReviewRating} />
+              <p className="text-sm text-gray-400 mt-1">{reviewRating} / 5</p>
+            </div>
+            <div>
+              <p className="text-sm text-gray-500 mb-2">{t('reviewComment') || 'Comment'}</p>
+              <Textarea value={reviewComment} onChange={e => setReviewComment(e.target.value)} placeholder={t('writeReview')} rows={4} />
+            </div>
+            <div>
+              <p className="text-sm text-gray-500 mb-2">{t('reviewImages')}</p>
+              <div
+                className="flex gap-2 flex-wrap p-3 rounded-lg transition-colors"
+                style={{ border: '2px dashed #d1d5db', minHeight: 80 }}
+                onDragOver={e => { e.preventDefault(); e.currentTarget.style.borderColor = '#3b82f6'; e.currentTarget.style.background = '#eff6ff'; }}
+                onDragLeave={e => { e.currentTarget.style.borderColor = '#d1d5db'; e.currentTarget.style.background = ''; }}
+                onDrop={e => {
+                  e.preventDefault();
+                  e.currentTarget.style.borderColor = '#d1d5db';
+                  e.currentTarget.style.background = '';
+                  const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'));
+                  files.slice(0, 3 - reviewImages.length).forEach(file => {
+                    setReviewImages(prev => [...prev, file]);
+                    const reader = new FileReader();
+                    reader.onloadend = () => setReviewImagePreviews(prev => [...prev, reader.result as string]);
+                    reader.readAsDataURL(file);
+                  });
+                }}
+              >
+                {reviewImagePreviews.map((p, i) => (
+                  <div key={i} className="relative" style={{ width: 60, height: 60 }}>
+                    <img src={p} alt="" style={{ width: 60, height: 60, objectFit: 'cover', borderRadius: 6 }} />
+                    <button style={{ position: 'absolute', top: -6, right: -6, background: '#ef4444', color: 'white', borderRadius: '50%', width: 18, height: 18, fontSize: 12, border: 'none', cursor: 'pointer' }} onClick={() => {
+                      setReviewImages(prev => prev.filter((_, idx) => idx !== i));
+                      setReviewImagePreviews(prev => prev.filter((_, idx) => idx !== i));
+                    }}>×</button>
+                  </div>
+                ))}
+                {reviewImages.length < 3 && (
+                  <label style={{ width: 60, height: 60, border: '2px dashed #d1d5db', borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', fontSize: 20, color: '#9ca3af' }}>
+                    +
+                    <input type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={e => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      setReviewImages(prev => [...prev, file]);
+                      const reader = new FileReader();
+                      reader.onloadend = () => setReviewImagePreviews(prev => [...prev, reader.result as string]);
+                      reader.readAsDataURL(file);
+                      e.target.value = '';
+                    }} />
+                  </label>
+                )}
+                {reviewImages.length === 0 && (
+                  <p className="text-xs text-gray-400 self-center ml-2">{t('dragDropImages')}</p>
+                )}
+              </div>
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setReviewDeal(null)}>{t('cancel')}</Button>
+              <Button className="text-white" style={{ background: '#f59e0b' }} onClick={handleSubmitReview} disabled={submittingReview}>
+                {submittingReview ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : null}
+                {t('submitReview') || 'Submit'}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Avatar Cropper Dialog */}
       {cropperImage && (

@@ -13,6 +13,7 @@ interface ProductListViewProps {
   onCompare: (id: string) => void;
   onContact: (sellerId: string) => void;
   isFavorited?: boolean;
+  inTransaction?: boolean;
 }
 
 export function ProductListView({
@@ -22,6 +23,7 @@ export function ProductListView({
   onCompare,
   onContact,
   isFavorited = false,
+  inTransaction = false,
 }: ProductListViewProps) {
   const t = (key: any) => translate(language, key);
 
@@ -47,6 +49,11 @@ export function ProductListView({
         {product.sold && (
           <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
             <span className="text-white text-xs px-2 py-1 bg-red-600 rounded">SOLD</span>
+          </div>
+        )}
+        {!product.sold && inTransaction && (
+          <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
+            <span className="text-white text-xs px-2 py-1 rounded font-semibold" style={{ background: '#2563eb' }}>{t('inTransaction')}</span>
           </div>
         )}
       </div>

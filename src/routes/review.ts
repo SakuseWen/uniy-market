@@ -4,6 +4,10 @@ import { UserModel } from '../models/UserModel';
 import { authenticateToken } from '../middleware/auth';
 import { ApiResponse } from '../types';
 import { moderateReviewContent, logFlaggedContent } from '../middleware/contentModeration';
+import { uploadConfig } from '../config/upload';
+import { DatabaseManager } from '../config/database';
+import { v4 as uuidv4 } from 'uuid';
+import path from 'path';
 
 const router = express.Router();
 const reviewModel = new ReviewModel();
@@ -139,10 +143,17 @@ router.get('/user/:userId', async (req: Request, res: Response) => {
     // Get rating distribution
     const distribution = await reviewModel.getRatingDistribution(userId);
 
+    // Enrich reviews with images
+    const db = DatabaseManager.getInstance().getDatabase();
+    const reviewsWithImages = await Promise.all(filteredReviews.map(async (r: any) => {
+      const images = await db.all('SELECT imageID, imagePath FROM ReviewImage WHERE reviewID = ?', [r.reviewID]);
+      return { ...r, images };
+    }));
+
     res.json({
       success: true,
       data: {
-        reviews: filteredReviews,
+        reviews: reviewsWithImages,
         statistics: {
           overall: overallRating,
           asBuyer: buyerRating,
@@ -358,6 +369,31 @@ router.get('/can-review/:dealId', authenticateToken, async (req: Request, res: R
       },
       timestamp: new Date().toISOString()
     } as ApiResponse);
+  }
+});
+
+/**
+ * POST /api/reviews/:reviewId/images
+ * Upload images for a review
+ */
+router.post('/:reviewId/images', authenticateToken, uploadConfig.array('images', 3), async (req: Request, res: Response) => {
+  try {
+    const { reviewId } = req.params;
+    const db = DatabaseManager.getInstance().getDatabase();
+    if (!req.files || !Array.isArray(req.files) || req.files.length === 0) {
+      return res.status(400).json({ success: false, error: { message: 'No files uploaded' } });
+    }
+    const uploaded = [];
+    for (const file of req.files) {
+      const imageID = `rimg_${uuidv4().replace(/-/g, '').slice(0, 12)}`;
+      const relativePath = `/uploads/products/${path.basename(file.path)}`;
+      await db.run('INSERT INTO ReviewImage (imageID, reviewID, imagePath) VALUES (?, ?, ?)', [imageID, reviewId, relativePath]);
+      uploaded.push({ imageID, imagePath: relativePath });
+    }
+    res.status(201).json({ success: true, images: uploaded });
+  } catch (error) {
+    console.error('Upload review images error:', error);
+    res.status(500).json({ success: false, error: { message: 'Failed to upload images' } });
   }
 });
 

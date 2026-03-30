@@ -102,7 +102,7 @@ export function useProduct(id: string | null) {
 
 // Hook for categories
 export function useCategories() {
-  const [categories, setCategories] = useState<Array<{ categoryID: number; name: string }>>([]);
+  const [categories, setCategories] = useState<Array<{ categoryID: number; name: string; nameEn?: string; nameZh?: string; nameTh?: string }>>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -115,12 +115,15 @@ export function useCategories() {
         console.log('Fetched categories:', data);
         
         // Remove duplicates based on name
-        const uniqueMap = new Map<string, { categoryID: number; name: string }>();
+        const uniqueMap = new Map<string, { categoryID: number; name: string; nameEn?: string; nameZh?: string; nameTh?: string }>();
         data.forEach((cat: any) => {
           if (cat.name && !uniqueMap.has(cat.name)) {
             uniqueMap.set(cat.name, {
               categoryID: cat.categoryID,
-              name: cat.name
+              name: cat.name,
+              nameEn: cat.nameEn,
+              nameZh: cat.nameZh,
+              nameTh: cat.nameTh,
             });
           }
         });
