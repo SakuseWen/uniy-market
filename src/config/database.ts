@@ -435,6 +435,11 @@ export class DatabaseManager {
       CREATE INDEX IF NOT EXISTS idx_deal_notif_user ON DealNotification(userID);
     `);
 
+    // Migration: add hiddenFor column to Chat for single-party soft delete
+    try {
+      await this.db.exec('ALTER TABLE Chat ADD COLUMN hiddenFor TEXT');
+    } catch (_e) { /* Column already exists, ignore */ }
+
     // Insert default data
     await this.insertDefaultData();
 

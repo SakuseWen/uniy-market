@@ -27,10 +27,10 @@ import testAuthRoutes from './routes/testAuth';
 // import universityRoutes from './routes/university'; // Temporarily disabled due to TS errors
 import productRoutes from './routes/product';
 import languageRoutes from './routes/language';
-import chatRoutes from './routes/chat';
+import chatRoutes, { setWebSocketService } from './routes/chat';
 import reviewRoutes from './routes/review';
 import reputationRoutes from './routes/reputation';
-import dealRoutes from './routes/deal';
+import dealRoutes, { setDealWebSocketService } from './routes/deal';
 import locationRoutes from './routes/location';
 import reportRoutes from './routes/report';
 import favoriteRoutes from './routes/favorite';
@@ -215,6 +215,9 @@ async function startServer(): Promise<void> {
 
     // Initialize WebSocket service
     webSocketService = new WebSocketService(httpServer);
+    // 将 WebSocket 注入到需要实时推送的路由 / Inject WebSocket into routes that need real-time push
+    setWebSocketService(webSocketService);
+    setDealWebSocketService(webSocketService);
     console.log('WebSocket service initialized successfully');
 
     // Start server

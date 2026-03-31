@@ -97,17 +97,21 @@ export class ChatModel extends BaseModel {
       LEFT JOIN User buyer ON c.buyerID = buyer.userID
       LEFT JOIN User seller ON c.sellerID = seller.userID
       WHERE (c.buyerID = ? OR c.sellerID = ?) AND c.status != 'deleted'
+      AND (c.hiddenFor IS NULL OR c.hiddenFor NOT LIKE '%' || ? || '%')
+      AND EXISTS (SELECT 1 FROM Message m WHERE m.chatID = c.chatID AND m.senderID = c.buyerID LIMIT 1)
       ORDER BY c.lastMessageAt DESC
       LIMIT ? OFFSET ?
     `;
 
-    const chats = await this.query(query, [userID, userID, userID, limit, offset]);
+    const chats = await this.query(query, [userID, userID, userID, userID, limit, offset]);
 
     const countQuery = `
       SELECT COUNT(*) as count FROM Chat 
       WHERE (buyerID = ? OR sellerID = ?) AND status != 'deleted'
+      AND (hiddenFor IS NULL OR hiddenFor NOT LIKE '%' || ? || '%')
+      AND EXISTS (SELECT 1 FROM Message m WHERE m.chatID = Chat.chatID AND m.senderID = Chat.buyerID LIMIT 1)
     `;
-    const totalResult = await this.queryOne(countQuery, [userID, userID]);
+    const totalResult = await this.queryOne(countQuery, [userID, userID, userID]);
     const total = totalResult?.count || 0;
 
     return {
@@ -169,13 +173,36 @@ export class ChatModel extends BaseModel {
 
   /**
    * Delete chat (soft delete by setting status to 'deleted')
+   * For single-party hide: set hiddenFor field so only one side sees it removed
+   * 软删除：单方隐藏时设置 hiddenFor 字段，不影响对方
    */
   async deleteChat(chatID: string): Promise<boolean> {
     const result = await this.execute(
       'UPDATE Chat SET status = ? WHERE chatID = ?',
       ['deleted', chatID]
     );
+    return result.changes > 0;
+  }
 
+  /**
+   * Hide chat for a specific user only (single-party soft delete)
+   * 单方软删除：仅对指定用户隐藏，不影响对方
+   */
+  async hideChatForUser(chatID: string, userID: string): Promise<boolean> {
+    // Store hidden user IDs as comma-separated in hiddenFor column
+    // 将隐藏用户 ID 以逗号分隔存储在 hiddenFor 列中
+    const chat = await this.getChatById(chatID);
+    if (!chat) return false;
+
+    const existing = chat.hiddenFor ? chat.hiddenFor.split(',').filter(Boolean) : [];
+    if (!existing.includes(userID)) {
+      existing.push(userID);
+    }
+
+    const result = await this.execute(
+      'UPDATE Chat SET hiddenFor = ? WHERE chatID = ?',
+      [existing.join(','), chatID]
+    );
     return result.changes > 0;
   }
 

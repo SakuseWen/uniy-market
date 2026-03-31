@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router';
+import { useNavigate, useLocation } from 'react-router';
 import { ChevronLeft, Heart, Scale, Flag, MessageCircle, Pencil } from 'lucide-react';
 import { Product } from '../lib/mockData';
 import { Language, translate } from '../lib/i18n';
@@ -12,7 +12,6 @@ import { LocationPicker } from './LocationPicker';
 import { toast } from 'sonner';
 import { Badge } from './ui/badge';
 import { chatService } from '../services/chatService';
-import { toast } from 'sonner';
 import { ProductImageCarousel } from './ProductImageCarousel';
 import { SellerInfoCard } from './SellerInfoCard';
 import { ProductTabs } from './ProductTabs';
@@ -44,6 +43,7 @@ export function ProductDetailPage({
 }: ProductDetailPageProps) {
   const t = (key: any) => translate(language, key);
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
   const [isFavorite, setIsFavorite] = useState(false);
   const [deal, setDeal] = useState<any>(null);
@@ -167,7 +167,8 @@ export function ProductDetailPage({
     try {
       const res = await chatService.createOrGetChat(product.id, product.seller.id!);
       const chatID = res.data.data.chatID;
-      navigate(`/chat/${chatID}`);
+      // 传递来源路径，供 ChatPage 智能返回使用 / Pass source path for ChatPage smart back navigation
+      navigate(`/chat/${chatID}`, { state: { from: location.pathname + location.search } });
     } catch (err: any) {
       // 后端返回 403 表示自聊天被拒绝 / Backend 403 means self-chat rejected
       const status = err?.response?.status;

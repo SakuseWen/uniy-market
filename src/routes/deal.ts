@@ -11,6 +11,13 @@ const dealModel = new DealModel();
 const productModel = new ProductModel();
 const userModel = new UserModel();
 
+// WebSocket 服务注入（与 chat.ts 保持一致）/ WebSocket service injection (same pattern as chat.ts)
+let webSocketService: any = null;
+
+export function setDealWebSocketService(wsService: any): void {
+  webSocketService = wsService;
+}
+
 /**
  * POST /api/deals
  * Create a new deal/transaction
@@ -113,6 +120,19 @@ router.post('/', authenticateToken, async (req: Request, res: Response) => {
 
     // Notify seller about new purchase request
     await createDealNotification(sellerID, deal.dealID, 'new_request', `New purchase request for "${product.title}"`);
+
+    // 通过 WebSocket 实时推送给卖家 / Push to seller via WebSocket in real-time
+    if (webSocketService) {
+      webSocketService.sendNotificationToUser(sellerID, {
+        type: 'new_deal_notification',
+        dealID: deal.dealID,
+        buyerName: buyer.name,
+        userName: buyer.name,
+        productTitle: product.title,
+        message: `New purchase request for "${product.title}"`,
+        timestamp: new Date().toISOString(),
+      });
+    }
 
     res.status(201).json({
       success: true,

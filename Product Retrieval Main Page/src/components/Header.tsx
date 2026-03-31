@@ -1,12 +1,12 @@
 /**
- * Header — 全局导航栏（聚合通知中心）
- * Header — Global navigation bar (Aggregated Notification Hub)
+ * Header — 全局导航栏（聚合通知中心，WebSocket 驱动）
+ * Header — Global navigation bar (Aggregated Notification Hub, WebSocket-driven)
  *
  * 铃铛徽章 = 未读聊天对话数 + 未读购买申请数
  * Bell badge = unread chat conversations + unread purchase requests
  *
- * Popover 统一展示两类通知，最多 6 条可见，超出可滚动
- * Popover shows both notification types, max 6 visible with scroll
+ * 彻底移除轮询，改为 WebSocket notification 事件实时驱动
+ * Polling removed entirely; driven by WebSocket notification events in real-time
  */
 import { Bell, User, LogOut, MessageCircle, ShoppingBag } from 'lucide-react';
 import { useState, useEffect, useRef, useCallback } from 'react';
@@ -27,29 +27,18 @@ import { toast } from 'sonner';
 import apiClient from '../services/api';
 import { chatService, ChatSummary } from '../services/chatService';
 import { useChatNotification } from '../services/ChatNotificationContext';
+import { io, Socket } from 'socket.io-client';
+
+const SOCKET_URL =
+  (import.meta as any).env?.VITE_SOCKET_URL ||
+  (import.meta as any).env?.VITE_WS_URL ||
+  'http://localhost:3000';
 
 interface HeaderProps {
   language: Language;
   onLanguageChange: (lang: Language) => void;
   /** @deprecated 内部动态获取，保留兼容旧调用方 / Kept for backward compatibility */
   unreadMessages?: number;
-}
-
-// ─── 统一通知条目类型 / Unified notification item type ────────────────────────
-interface NotificationItem {
-  id: string;
-  type: 'chat' | 'purchase';
-  // 聊天通知字段 / Chat notification fields
-  chat?: ChatSummary;
-  // 购买申请通知字段 / Purchase request notification fields
-  dealNotif?: {
-    id: string;
-    message: string;
-    productTitle?: string;
-    createdAt: string;
-    isRead: boolean;
-    dealID?: string;
-  };
 }
 
 export function Header({ language, onLanguageChange }: HeaderProps) {
@@ -59,7 +48,7 @@ export function Header({ language, onLanguageChange }: HeaderProps) {
 
   // ─── 聊天通知状态（来自全局 Context）/ Chat notification state (from global Context) ──
   const { unreadCount: chatUnreadCount, setUnreadCount: setChatUnreadCount,
-          previewChats, setPreviewChats, refreshUnread: refreshChatUnread } = useChatNotification();
+          previewChats, setPreviewChats } = useChatNotification();
 
   // ─── 购买申请通知状态 / Purchase request notification state ──────────────
   const [dealNotifs, setDealNotifs] = useState<any[]>([]);
@@ -68,24 +57,23 @@ export function Header({ language, onLanguageChange }: HeaderProps) {
   // ─── Popover 状态 / Popover state ─────────────────────────────────────────
   const [popoverOpen, setPopoverOpen] = useState(false);
 
+  // ─── WebSocket ref / WebSocket 连接引用 ───────────────────────────────────
+  const socketRef = useRef<Socket | null>(null);
+
   // ─── 聚合总未读数 = 聊天未读对话数 + 购买申请未读数 ──────────────────────
   // Aggregated total = unread chat conversations + unread purchase requests
   const totalUnreadCount = chatUnreadCount + dealUnreadCount;
 
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-
-  // ─── 拉取聊天未读数 / Fetch chat unread count ─────────────────────────────
+  // ─── 初始拉取数据 / Initial data fetch ───────────────────────────────────
   const fetchChatUnread = useCallback(async () => {
     if (!isAuthenticated) return;
     try {
       const res = await chatService.getChats(1, 100);
       const chats = res.data.data?.data ?? [];
-      const count = chats.filter((c: ChatSummary) => c.unreadCount > 0).length;
-      setChatUnreadCount(count);
+      setChatUnreadCount(chats.filter((c: ChatSummary) => c.unreadCount > 0).length);
     } catch { /* 静默失败 / Fail silently */ }
   }, [isAuthenticated, setChatUnreadCount]);
 
-  // ─── 拉取购买申请通知 / Fetch deal notifications ──────────────────────────
   const fetchDealNotifs = useCallback(async () => {
     if (!isAuthenticated) return;
     try {
@@ -95,20 +83,63 @@ export function Header({ language, onLanguageChange }: HeaderProps) {
     } catch { /* 静默失败 / Fail silently */ }
   }, [isAuthenticated]);
 
-  // ─── 初始化 + 30 秒轮询 / Init + 30s polling ─────────────────────────────
+  // ─── 初始化：拉取数据 + 建立 WebSocket 监听 ──────────────────────────────
+  // Init: fetch data + establish WebSocket listener
   useEffect(() => {
     if (!isAuthenticated) {
       setChatUnreadCount(0);
       setDealUnreadCount(0);
       return;
     }
+
+    // 初始拉取 / Initial fetch
     fetchChatUnread();
     fetchDealNotifs();
-    intervalRef.current = setInterval(() => {
-      fetchChatUnread();
-      fetchDealNotifs();
-    }, 30_000);
-    return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
+
+    // 建立 WebSocket 连接，监听 notification 事件
+    // Establish WebSocket connection, listen for notification events
+    const token = sessionStorage.getItem('authToken');
+    if (!token) return;
+
+    const socket = io(SOCKET_URL, {
+      auth: { token },
+      transports: ['websocket', 'polling'],
+    });
+    socketRef.current = socket;
+
+    // 监听通知事件，实时更新铃铛 / Listen for notification events, update bell in real-time
+    socket.on('notification', (notif: any) => {
+      if (notif.type === 'new_message') {
+        // 新聊天消息：立即 +1，不调用异步 fetchChatUnread 避免竞态覆盖
+        // New chat message: immediately +1, skip async fetchChatUnread to avoid race condition
+        setChatUnreadCount(prev => prev + 1);
+      } else if (
+        notif.type === 'new_deal_notification' ||
+        notif.type === 'new_request' ||
+        notif.type === 'new_purchase_request'
+      ) {
+        // 新购买申请：立即 +1 并将通知插入列表顶部，不等待 API 响应
+        // New purchase request: immediately +1 and prepend to list without waiting for API
+        setDealUnreadCount(prev => prev + 1);
+        setDealNotifs(prev => [{
+          id: notif.id || `ws-${Date.now()}`,
+          type: notif.type,
+          message: notif.message || '',
+          buyerName: notif.buyerName || notif.senderName || '',
+          userName: notif.userName || notif.senderName || '',
+          productTitle: notif.productTitle || '',
+          isRead: false,
+          createdAt: notif.timestamp || new Date().toISOString(),
+        }, ...prev]);
+        // 异步全量刷新，确保数据与后端一致 / Async full refresh to sync with backend
+        fetchDealNotifs();
+      }
+    });
+
+    return () => {
+      socket.disconnect();
+      socketRef.current = null;
+    };
   }, [isAuthenticated, fetchChatUnread, fetchDealNotifs, setChatUnreadCount]);
 
   // ─── hover 时加载预览列表 / Load preview list on hover ───────────────────
@@ -131,47 +162,53 @@ export function Header({ language, onLanguageChange }: HeaderProps) {
     chatService.markAsRead(chat.chatID).catch(() => {});
   };
 
-  // ─── 点击购买申请通知：标记已读 + 导航 / Click deal notif: mark read + navigate ──
-  const handleDealNotifClick = async (notif: any) => {
+  // ─── 点击购买申请通知 / Click deal notification ───────────────────────────
+  const handleDealNotifClick = (notif: any) => {
     setPopoverOpen(false);
     setDealNotifs(prev => prev.filter(n => n.id !== notif.id));
     if (!notif.isRead) setDealUnreadCount(prev => Math.max(0, prev - 1));
-    navigate('/my-page');
-    try {
-      await apiClient.put('/deal-notifications/read-all');
-    } catch { /* 静默失败 */ }
+    navigate('/my-page?tab=deals');
+    apiClient.put('/deal-notifications/read-all').catch(() => {});
   };
 
-  // ─── 全部标记已读 / Mark all as read ─────────────────────────────────────
+  // ─── 全部标记已读（聚合：聊天 + 交易通知）/ Mark all as read (aggregated: chat + deal) ──
   const handleMarkAllRead = async () => {
+    // 立即同步清零所有红点，不等待 API 响应 / Immediately zero all badges without waiting for API
+    setChatUnreadCount(0);
+    setDealUnreadCount(0);
+    setPreviewChats([]);
+    setDealNotifs(prev => prev.map(n => ({ ...n, isRead: true })));
     try {
-      await apiClient.put('/deal-notifications/read-all');
-      setDealUnreadCount(0);
-      setDealNotifs(prev => prev.map(n => ({ ...n, isRead: true })));
-    } catch { /* 静默失败 */ }
+      // 并行调用两个批量已读接口 / Call both batch-read endpoints in parallel
+      await Promise.all([
+        apiClient.put('/chats/read-all'),
+        apiClient.put('/deal-notifications/read-all'),
+      ]);
+    } catch { /* 静默失败，状态已在前端清零 / Fail silently, state already zeroed on frontend */ }
   };
 
   // ─── 构建聚合通知列表 / Build aggregated notification list ───────────────
-  // 聊天通知在前，购买申请在后，按时间排序
-  // Chat notifications first, then deal notifications, sorted by time
-  const allNotifications: NotificationItem[] = [
-    ...previewChats.map(chat => ({
-      id: `chat-${chat.chatID}`,
-      type: 'chat' as const,
-      chat,
-    })),
-    ...dealNotifs.filter(n => !n.isRead).map(n => ({
-      id: `deal-${n.id}`,
-      type: 'purchase' as const,
-      dealNotif: n,
-    })),
+  const allNotifications = [
+    ...previewChats.map(chat => ({ id: `chat-${chat.chatID}`, type: 'chat' as const, chat })),
+    ...dealNotifs.filter(n => !n.isRead).map(n => ({ id: `deal-${n.id}`, type: 'purchase' as const, dealNotif: n })),
   ];
+
+  // ─── 通知文案 i18n（替换 {user} 占位符）/ Notification text i18n (replace {user} placeholder) ──
+  const formatNotifText = (notif: any): string => {
+    const userName = notif.userName || notif.buyerName || '';
+    const productTitle = notif.productTitle ? `[${notif.productTitle.slice(0, 20)}] ` : '';
+    if (notif.type === 'new_request' || notif.type === 'new_deal_notification') {
+      return productTitle + t('notifNewPurchaseRequest').replace('{user}', userName);
+    }
+    if (notif.type === 'rejected') return t('notifPurchaseRejected');
+    if (notif.type === 'accepted') return t('notifPurchaseAccepted');
+    if (notif.type === 'completed') return t('notifDealCompleted');
+    return notif.message || '';
+  };
 
   // ─── 工具函数 / Utility functions ─────────────────────────────────────────
   const getOtherParty = (chat: ChatSummary) => {
-    if (user?.userID === chat.buyerID) {
-      return { name: chat.sellerName, image: chat.sellerImage };
-    }
+    if (user?.userID === chat.buyerID) return { name: chat.sellerName, image: chat.sellerImage };
     return { name: chat.buyerName, image: chat.buyerImage };
   };
 
@@ -182,8 +219,7 @@ export function Header({ language, onLanguageChange }: HeaderProps) {
     if (!iso) return '';
     const date = new Date(iso);
     const now = new Date();
-    const diffMs = now.getTime() - date.getTime();
-    const diffMins = Math.floor(diffMs / 60_000);
+    const diffMins = Math.floor((now.getTime() - date.getTime()) / 60_000);
     if (diffMins < 1) return t('justNow') || 'Just now';
     if (diffMins < 60) return `${diffMins}m`;
     const diffHours = Math.floor(diffMins / 60);
@@ -238,7 +274,7 @@ export function Header({ language, onLanguageChange }: HeaderProps) {
               ) : null}
             </div>
 
-            {/* ── 聚合通知铃铛 / Aggregated Notification Bell ─────────────── */}
+            {/* ── 聚合通知铃铛（WebSocket 驱动）/ Aggregated Bell (WebSocket-driven) ── */}
             <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
               <PopoverTrigger asChild>
                 <div
@@ -247,7 +283,7 @@ export function Header({ language, onLanguageChange }: HeaderProps) {
                   onMouseLeave={() => setPopoverOpen(false)}
                 >
                   <Bell className="w-5 h-5" />
-                  {/* 聚合徽章：聊天未读 + 购买申请未读 / Aggregated badge: chat + purchase */}
+                  {/* 聚合徽章 / Aggregated badge */}
                   {totalUnreadCount > 0 && (
                     <span className="absolute top-0 right-0 translate-x-1/2 -translate-y-1/2 min-w-[1rem] h-4 bg-red-500 rounded-full flex items-center justify-center text-white text-[10px] font-bold px-1 leading-none pointer-events-none">
                       {totalUnreadCount}
@@ -264,35 +300,32 @@ export function Header({ language, onLanguageChange }: HeaderProps) {
               >
                 {/* 标题栏 / Header bar */}
                 <div className="px-3 pt-3 pb-2 flex items-center justify-between border-b">
-                  <p className="font-semibold text-sm">{t('notifications') || 'Notifications'}</p>
-                  {dealUnreadCount > 0 && (
+                  <p className="font-semibold text-sm">{t('notifications')}</p>
+                  {totalUnreadCount > 0 && (
                     <button className="text-xs text-blue-600 hover:underline" onClick={handleMarkAllRead}>
-                      {t('markAllRead') || 'Mark all read'}
+                      {t('markAllRead')}
                     </button>
                   )}
                 </div>
 
-                {/* 通知列表：固定 6 条高度，超出可滚动 / List: fixed 6-item height, scrollable overflow */}
+                {/* 通知列表：固定高度可滚动 / List: fixed height, scrollable */}
                 {allNotifications.length === 0 ? (
                   <div className="px-3 py-4 text-center text-sm text-gray-400">
-                    {t('noNotifications') || 'No notifications'}
+                    {t('noNotifications')}
                   </div>
                 ) : (
-                  <div
-                    className="overflow-y-auto"
-                    style={{ maxHeight: '24rem' }} /* 约 6 条 × 4rem / ~6 items × 4rem */
-                  >
+                  <div className="overflow-y-auto" style={{ maxHeight: '24rem' }}>
                     {allNotifications.map((item) => {
+                      // ── 聊天通知（统一蓝色背景）/ Chat notification (unified blue bg) ──
                       if (item.type === 'chat' && item.chat) {
                         const chat = item.chat;
                         const other = getOtherParty(chat);
                         return (
                           <div
                             key={item.id}
-                            className="flex items-center gap-3 p-3 hover:bg-gray-50 cursor-pointer border-b last:border-b-0"
+                            className="flex items-center gap-3 p-3 hover:bg-blue-50 cursor-pointer border-b last:border-b-0 bg-blue-50/40"
                             onClick={() => handleChatClick(chat)}
                           >
-                            {/* 聊天图标标识 / Chat type indicator */}
                             <div className="relative flex-shrink-0">
                               <Avatar className="w-10 h-10">
                                 <AvatarImage src={other.image ? `http://localhost:3000${other.image}` : ''} />
@@ -300,6 +333,7 @@ export function Header({ language, onLanguageChange }: HeaderProps) {
                                   {other.name ? other.name.slice(0, 2).toUpperCase() : '??'}
                                 </AvatarFallback>
                               </Avatar>
+                              {/* 聊天类型标识 / Chat type indicator */}
                               <span className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center">
                                 <MessageCircle className="w-2.5 h-2.5 text-white" />
                               </span>
@@ -312,10 +346,15 @@ export function Header({ language, onLanguageChange }: HeaderProps) {
                                 </span>
                               </div>
                               <p className="text-xs text-blue-500 truncate">{truncate(chat.productTitle, 28)}</p>
-                              <p className="text-xs text-gray-500 truncate">{chat.lastMessageText ?? ''}</p>
+                              {/* 最新消息预览（i18n）/ Latest message preview (i18n) */}
+                              <p className="text-xs text-gray-500 truncate">
+                                {chat.lastMessageText
+                                  ? chat.lastMessageText
+                                  : t('notifChatMessage').replace('{user}', other.name || '')}
+                              </p>
                             </div>
                             {chat.unreadCount > 0 && (
-                              <span className="min-w-[1rem] h-4 bg-red-500 rounded-full flex items-center justify-center text-white text-[10px] px-1 flex-shrink-0">
+                              <span className="min-w-[1rem] h-4 bg-blue-500 rounded-full flex items-center justify-center text-white text-[10px] px-1 flex-shrink-0">
                                 {chat.unreadCount}
                               </span>
                             )}
@@ -323,22 +362,21 @@ export function Header({ language, onLanguageChange }: HeaderProps) {
                         );
                       }
 
+                      // ── 购买申请通知（统一橙色背景）/ Purchase notification (unified orange bg) ──
                       if (item.type === 'purchase' && item.dealNotif) {
                         const n = item.dealNotif;
                         return (
                           <div
                             key={item.id}
-                            className={`flex items-start gap-3 p-3 hover:bg-gray-50 cursor-pointer border-b last:border-b-0 ${!n.isRead ? 'bg-orange-50' : ''}`}
+                            className="flex items-start gap-3 p-3 hover:bg-orange-50 cursor-pointer border-b last:border-b-0 bg-orange-50/40"
                             onClick={() => handleDealNotifClick(n)}
                           >
-                            {/* 购买申请图标 / Purchase request icon */}
                             <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center flex-shrink-0">
                               <ShoppingBag className="w-5 h-5 text-orange-500" />
                             </div>
                             <div className="flex-1 min-w-0">
-                              <p className="text-sm text-gray-800 line-clamp-2">
-                                {n.productTitle ? `[${truncate(n.productTitle, 20)}] ` : ''}{n.message}
-                              </p>
+                              {/* 通知文案走 i18n / Notification text via i18n */}
+                              <p className="text-sm text-gray-800 line-clamp-2">{formatNotifText(n)}</p>
                               <p className="text-xs text-gray-400 mt-0.5">{formatTime(n.createdAt)}</p>
                             </div>
                             {!n.isRead && (

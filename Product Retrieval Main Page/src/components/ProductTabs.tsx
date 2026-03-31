@@ -10,6 +10,7 @@ import { Language, translate } from '../lib/i18n';
 import { useAuth } from '../services/authContext';
 import apiClient from '../services/api';
 import { Loader2, MessageCircle, Reply } from 'lucide-react';
+import { TranslateButton } from './TranslateButton';
 
 interface Comment {
   commentID: string;
@@ -101,6 +102,10 @@ export function ProductTabs({ description, specifications, language, listingID, 
           <span className="text-xs text-gray-400">{formatTime(comment.createdAt)}</span>
         </div>
         <p className="text-sm text-gray-700">{comment.content}</p>
+        {/* 评论翻译按钮 / Comment translate button */}
+        {comment.content && (
+          <TranslateButton text={comment.content} language={language} className="mb-1" />
+        )}
         {!isReply && user && user.userID === sellerID && (
           <button className="text-xs text-blue-600 mt-1 flex items-center gap-1" onClick={() => setReplyTo(replyTo === comment.commentID ? null : comment.commentID)}>
             <Reply className="w-3 h-3" /> {t('reply') || 'Reply'}
@@ -139,6 +144,10 @@ export function ProductTabs({ description, specifications, language, listingID, 
 
           <TabsContent value="description" className="p-6">
             <div className="whitespace-pre-wrap">{description}</div>
+            {/* 商品描述翻译按钮 / Product description translate button */}
+            {description && (
+              <TranslateButton text={description} language={language} />
+            )}
           </TabsContent>
 
           {specifications && (

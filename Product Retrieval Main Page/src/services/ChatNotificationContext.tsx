@@ -8,14 +8,14 @@
  * Lifts unread count and chat preview list to a global Context,
  * allowing Header and ChatPage to share and synchronize notification state.
  */
-import { createContext, useContext, useState, useCallback, ReactNode } from 'react';
+import { createContext, useContext, useState, useCallback, ReactNode, Dispatch, SetStateAction } from 'react';
 import { chatService } from './chatService';
 
 interface ChatNotificationContextType {
   unreadCount: number;
-  setUnreadCount: (count: number) => void;
+  setUnreadCount: Dispatch<SetStateAction<number>>;
   previewChats: any[];
-  setPreviewChats: (chats: any[]) => void;
+  setPreviewChats: Dispatch<SetStateAction<any[]>>;
   /** 重新拉取未读数和预览列表 / Re-fetch unread count and preview list */
   refreshUnread: () => Promise<void>;
 }

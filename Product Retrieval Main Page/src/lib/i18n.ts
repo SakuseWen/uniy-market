@@ -383,6 +383,23 @@ export const translations = {
     eduVerifyFailed: 'Verification failed. Please check the code and try again.',
     eduEmailAlreadyUsed: 'This education email is already verified by another account.',
     eduRequiredToPost: 'You are not verified as an education user and cannot use this feature. Please verify first.',
+    // Translation feature / 翻译功能
+    translate: 'Translate',
+    translating: 'Translating...',
+    translateFailed: 'Translation failed, please try again',
+    showOriginal: 'Show original',
+    // Notification i18n / 通知国际化
+    notifNewPurchaseRequest: 'New purchase request from {user}',
+    notifChatMessage: 'New message from {user}',
+    notifPurchaseAccepted: 'Your purchase request was accepted',
+    notifPurchaseRejected: 'Your purchase request was rejected',
+    notifDealCompleted: 'Transaction completed',
+    chatNotification: 'Chat',
+    purchaseNotification: 'Purchase Request',
+    // Contact links / 联系链接
+    contactBuyer: 'Contact Buyer',
+    cannotBuyOwnProduct: 'You cannot buy your own product',
+    reviewFailed: 'Failed to submit review',
   },
   zh: {
     // Header
@@ -766,6 +783,23 @@ export const translations = {
     eduVerifyFailed: '验证失败，请检查验证码后重试。',
     eduEmailAlreadyUsed: '该教育邮箱已被其他账户认证。',
     eduRequiredToPost: '您还未认证为教育用户不可使用此功能，请先进行认证。',
+    // Translation feature / 翻译功能
+    translate: '翻译',
+    translating: '翻译中...',
+    translateFailed: '翻译失败，请稍后重试',
+    showOriginal: '查看原文',
+    // Notification i18n / 通知国际化
+    notifNewPurchaseRequest: '来自 {user} 的新购买请求',
+    notifChatMessage: '来自 {user} 的新消息',
+    notifPurchaseAccepted: '您的购买请求已被接受',
+    notifPurchaseRejected: '您的购买请求被拒绝',
+    notifDealCompleted: '交易已完成',
+    chatNotification: '聊天',
+    purchaseNotification: '购买请求',
+    // Contact links / 联系链接
+    contactBuyer: '联系买家',
+    cannotBuyOwnProduct: '您不能购买自己的商品',
+    reviewFailed: '评价提交失败',
   },
   th: {
     // Header
@@ -1149,6 +1183,23 @@ export const translations = {
     eduVerifyFailed: 'การยืนยันล้มเหลว กรุณาตรวจสอบรหัสแล้วลองอีกครั้ง',
     eduEmailAlreadyUsed: 'อีเมลการศึกษานี้ถูกยืนยันโดยบัญชีอื่นแล้ว',
     eduRequiredToPost: 'คุณยังไม่ได้ยืนยันตัวตนเป็นผู้ใช้การศึกษา ไม่สามารถใช้ฟีเจอร์นี้ได้ กรุณายืนยันตัวตนก่อน',
+    // Translation feature / 翻译功能
+    translate: 'แปล',
+    translating: 'กำลังแปล...',
+    translateFailed: 'การแปลล้มเหลว กรุณาลองอีกครั้ง',
+    showOriginal: 'ดูต้นฉบับ',
+    // Notification i18n / 通知国际化
+    notifNewPurchaseRequest: 'คำขอซื้อใหม่จาก {user}',
+    notifChatMessage: 'ข้อความใหม่จาก {user}',
+    notifPurchaseAccepted: 'คำขอซื้อของคุณได้รับการยอมรับ',
+    notifPurchaseRejected: 'คำขอซื้อของคุณถูกปฏิเสธ',
+    notifDealCompleted: 'การซื้อขายเสร็จสมบูรณ์',
+    chatNotification: 'แชท',
+    purchaseNotification: 'คำขอซื้อ',
+    // Contact links / 联系链接
+    contactBuyer: 'ติดต่อผู้ซื้อ',
+    cannotBuyOwnProduct: 'คุณไม่สามารถซื้อสินค้าของตัวเองได้',
+    reviewFailed: 'ส่งรีวิวล้มเหลว',
   },
 };
 

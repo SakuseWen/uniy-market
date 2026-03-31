@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router';
+import { useNavigate, useParams, useSearchParams, useLocation } from 'react-router';
 import { Header } from '../components/Header';
 import { translate } from '../lib/i18n';
 import { useLanguage } from '../lib/LanguageContext';
@@ -12,6 +12,9 @@ import { productService } from '../services';
 import apiClient from '../services/api';
 import { reviewService } from '../services/reviewService';
 import { StarRating } from '../components/StarRating';
+import { TranslateButton } from '../components/TranslateButton';
+import { chatService } from '../services/chatService';
+import { toast } from 'sonner';
 
 interface SellerInfo {
   userID: string;
@@ -35,6 +38,12 @@ interface SellerProduct {
 export default function SellerProfilePage() {
   const navigate = useNavigate();
   const { sellerId } = useParams<{ sellerId: string }>();
+  const location = useLocation();
+  // 从 URL query 读取 listingID（从商品详情页跳转时携带）
+  // Read listingID from URL query (passed when navigating from product detail page)
+  const [searchParams] = useSearchParams();
+  const listingIdFromQuery = searchParams.get('listingID');
+
   const { language, setLanguage } = useLanguage();
   const t = (key: any) => translate(language, key);
 
@@ -44,6 +53,67 @@ export default function SellerProfilePage() {
   const [reviews, setReviews] = useState<any[]>([]);
   const [avgRating, setAvgRating] = useState(5);
   const [reviewCount, setReviewCount] = useState(0);
+  const [contactingProductId, setContactingProductId] = useState<string | null>(null);
+  // 顶部"发送消息"按钮的 loading 状态 / Loading state for top "Send Message" button
+  const [sendingMessage, setSendingMessage] = useState(false);
+
+  // 点击商品的"联系卖家"按钮 / Click product's "Contact Seller" button
+  const handleContactForProduct = async (listingID: string) => {
+    if (!sellerId) return;
+    setContactingProductId(listingID);
+    try {
+      const res = await chatService.createOrGetChat(listingID, sellerId);
+      const chatID = res.data.data?.chatID;
+      if (chatID) navigate(`/chat/${chatID}`, { state: { from: location.pathname + location.search } });
+    } catch {
+      toast.error(language === 'zh' ? '发起对话失败，请稍后重试' : 'Failed to start chat');
+    } finally {
+      setContactingProductId(null);
+    }
+  };
+
+  /**
+   * 顶部"发送消息"按钮逻辑：
+   * 1. 若 URL 携带 listingID → 直接 createOrGetChat 跳转
+   * 2. 若无 listingID → 使用卖家第一个在售商品，或提示用户从商品页发起
+   *
+   * Top "Send Message" button logic:
+   * 1. If URL has listingID → createOrGetChat and navigate
+   * 2. If no listingID → use seller's first active product, or show hint
+   */
+  const handleSendMessage = async () => {
+    if (!sellerId) return;
+    setSendingMessage(true);
+    try {
+      // 优先使用 URL 携带的 listingID，其次用卖家第一个在售商品
+      // Prefer listingID from URL, fallback to seller's first active product
+      const targetListingID = listingIdFromQuery || products[0]?.listingID;
+      if (!targetListingID) {
+        toast.error(
+          language === 'zh'
+            ? '请先从商品页发起对话'
+            : language === 'th'
+            ? 'กรุณาเริ่มการสนทนาจากหน้าสินค้า'
+            : 'Please start a conversation from a product page'
+        );
+        return;
+      }
+      const res = await chatService.createOrGetChat(targetListingID, sellerId);
+      const chatID = res.data.data?.chatID;
+      if (chatID) navigate(`/chat/${chatID}`, { state: { from: location.pathname + location.search } });
+    } catch (err: any) {
+      const status = err?.response?.status;
+      if (status === 403) {
+        toast.error(
+          language === 'zh' ? '不能与自己发起对话' : 'Cannot start a chat with yourself'
+        );
+      } else {
+        toast.error(language === 'zh' ? '发起对话失败，请稍后重试' : 'Failed to start chat');
+      }
+    } finally {
+      setSendingMessage(false);
+    }
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -139,9 +209,14 @@ export default function SellerProfilePage() {
             </div>
             <Button
               className="bg-gradient-to-r from-blue-500 to-purple-600 hover:shadow-lg hover:scale-105 transition-all duration-200"
-              onClick={() => navigate(`/chat/${sellerId}`)}
+              disabled={sendingMessage}
+              onClick={handleSendMessage}
             >
-              <MessageCircle className="w-4 h-4 mr-2" />
+              {sendingMessage ? (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              ) : (
+                <MessageCircle className="w-4 h-4 mr-2" />
+              )}
               {t('message')}
             </Button>
           </div>
@@ -225,6 +300,10 @@ export default function SellerProfilePage() {
                         <span className="text-xs text-gray-400">{new Date(review.createdAt).toLocaleDateString()}</span>
                       </div>
                       {review.comment && <p className="text-sm text-gray-700">{review.comment}</p>}
+                      {/* 评价翻译按钮 / Review translate button */}
+                      {review.comment && (
+                        <TranslateButton text={review.comment} language={language} />
+                      )}
                       {review.images && review.images.length > 0 && (
                         <div className="flex gap-2 mt-2">
                           {review.images.map((img: any) => (

@@ -12,6 +12,10 @@ import {
   DialogTitle,
 } from './ui/dialog';
 import { useState } from 'react';
+import { useNavigate, useLocation } from 'react-router';
+import { useAuth } from '../services/authContext';
+import { chatService } from '../services/chatService';
+import { toast } from 'sonner';
 
 interface ComparisonBarProps {
   language: Language;
@@ -28,6 +32,29 @@ export function ComparisonBar({
 }: ComparisonBarProps) {
   const t = (key: any) => translate(language, key);
   const [showComparison, setShowComparison] = useState(false);
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { user } = useAuth();
+  const [contactingId, setContactingId] = useState<string | null>(null);
+
+  // 联系卖家：获取真实 chatID 后跳转，携带来源路径 / Contact seller: get real chatID then navigate with source path
+  const handleContact = async (product: Product) => {
+    if (!user) { navigate('/login'); return; }
+    if (!product.seller?.id) return;
+    setContactingId(product.id);
+    try {
+      const res = await chatService.createOrGetChat(product.id, product.seller.id);
+      const chatID = res.data.data?.chatID;
+      if (chatID) {
+        setShowComparison(false);
+        navigate(`/chat/${chatID}`, { state: { from: location.pathname + location.search } });
+      }
+    } catch {
+      toast.error('无法发起对话，请稍后重试');
+    } finally {
+      setContactingId(null);
+    }
+  };
 
   if (selectedProducts.length === 0) return null;
 
@@ -213,7 +240,11 @@ export function ComparisonBar({
                   <td className="p-3 sticky left-0 bg-white">Action</td>
                   {selectedProducts.map((product) => (
                     <td key={product.id} className="p-3">
-                      <Button className="w-full bg-gradient-to-r from-blue-500 to-purple-600">
+                      <Button
+                        className="w-full bg-gradient-to-r from-blue-500 to-purple-600"
+                        disabled={contactingId === product.id}
+                        onClick={() => handleContact(product)}
+                      >
                         {t('contactSeller')}
                       </Button>
                     </td>

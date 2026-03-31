@@ -287,8 +287,9 @@ router.delete('/:chatId', authenticateToken, async (req: Request, res: Response)
     // Get chat details before deletion for notification
     const chatDetails = await chatModel.getChatWithDetails(chatId);
     
-    // Perform soft delete
-    const success = await chatModel.deleteChat(chatId);
+    // Perform single-party soft delete (hide for current user only)
+    // 执行单方软删除（仅对当前用户隐藏，不影响对方）
+    const success = await chatModel.hideChatForUser(chatId, user.userID);
     if (!success) {
       const response: ApiResponse = {
         success: false,
@@ -1209,6 +1210,92 @@ router.get('/location/guidelines', authenticateToken, async (_req: Request, res:
       timestamp: new Date().toISOString()
     };
     return res.status(500).json(response);
+  }
+});
+
+/**
+ * PUT /api/chats/read-all
+ * Mark all unread messages across all chats as read for the current user
+ * 将当前用户所有聊天中的未读消息批量标记为已读
+ */
+router.put('/read-all', authenticateToken, async (req: Request, res: Response) => {
+  try {
+    const user = (req as any).user;
+
+    // 一次性将该用户收到的所有未读消息标记为已读
+    // Batch-mark all unread messages received by this user as read in one query
+    const result = await messageModel['execute'](
+      `UPDATE Message SET isRead = 1
+       WHERE isRead = 0
+         AND senderID != ?
+         AND chatID IN (
+           SELECT chatID FROM Chat
+           WHERE (buyerID = ? OR sellerID = ?) AND status != 'deleted'
+         )`,
+      [user.userID, user.userID, user.userID]
+    );
+
+    const response: ApiResponse = {
+      success: true,
+      data: { updatedCount: result.changes ?? 0 },
+      timestamp: new Date().toISOString()
+    };
+    return res.json(response);
+  } catch (error) {
+    console.error('Error marking all chats as read:', error);
+    const response: ApiResponse = {
+      success: false,
+      error: { message: error instanceof Error ? error.message : 'Failed to mark all as read' },
+      timestamp: new Date().toISOString()
+    };
+    return res.status(500).json(response);
+  }
+});
+
+/**
+ * POST /api/chats/translate-text
+ * General-purpose text translation endpoint (no chatId/messageId required)
+ * 通用文本翻译端点（不需要 chatId/messageId，供全站翻译功能使用）
+ */
+router.post('/translate-text', authenticateToken, async (req: Request, res: Response) => {
+  try {
+    const { text, targetLanguage } = req.body;
+
+    if (!text || !targetLanguage) {
+      return res.status(400).json({
+        success: false,
+        error: { message: 'text and targetLanguage are required' },
+        timestamp: new Date().toISOString()
+      });
+    }
+
+    // 只翻译非空文本 / Only translate non-empty text
+    if (!text.trim()) {
+      return res.status(400).json({
+        success: false,
+        error: { message: 'text cannot be empty' },
+        timestamp: new Date().toISOString()
+      });
+    }
+
+    const result = await translationService.translateText(text, targetLanguage as any);
+
+    return res.json({
+      success: true,
+      data: {
+        originalText: text,
+        translatedText: result.translatedText,
+        targetLanguage: result.targetLanguage,
+      },
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('General translation error:', error);
+    return res.status(500).json({
+      success: false,
+      error: { message: error instanceof Error ? error.message : 'Translation failed' },
+      timestamp: new Date().toISOString()
+    });
   }
 });
 

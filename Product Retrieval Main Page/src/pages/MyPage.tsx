@@ -22,6 +22,7 @@ import { favoriteService } from '../services/favoriteService';
 import { dealService } from '../services/dealService';
 import { reviewService } from '../services/reviewService';
 import { StarRating } from '../components/StarRating';
+import { TranslateButton } from '../components/TranslateButton';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -157,6 +158,19 @@ function MyPage() {
       }
     };
     fetchChats();
+  }, [activeTab, isAuthenticated]);
+
+  // 交易列表持久化：Tab 激活时自动拉取，防止路由回退后数据丢失
+  // Deal list persistence: auto-fetch when tab is active to prevent data loss on route back
+  useEffect(() => {
+    if (activeTab !== 'deals' || !isAuthenticated) return;
+    loadDeals();
+  }, [activeTab, isAuthenticated]);
+
+  // 我的评价持久化：Tab 激活时自动拉取 / My reviews persistence: auto-fetch when tab is active
+  useEffect(() => {
+    if (activeTab !== 'my-reviews' || !isAuthenticated) return;
+    loadMyReviews();
   }, [activeTab, isAuthenticated]);
 
   // Handle delete product
@@ -973,6 +987,10 @@ function MyPage() {
                                 <span className="text-xs text-gray-400">{new Date(review.createdAt).toLocaleDateString()}</span>
                               </div>
                               {review.comment && <p className="text-sm text-gray-700">{review.comment}</p>}
+                              {/* 评价翻译按钮 / Review translate button */}
+                              {review.comment && (
+                                <TranslateButton text={review.comment} language={language} />
+                              )}
                               {review.images && review.images.length > 0 && (
                                 <div className="flex gap-2 mt-2">
                                   {review.images.map((img: any) => (

@@ -315,11 +315,19 @@ export default function ChatPage() {
         <div className="container mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              {/* 返回按钮 → 聊天历史 / Back button → chat history */}
+              {/* 智能返回：优先浏览器历史，无历史则回首页 / Smart back: browser history first, fallback to home */}
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={() => navigate('/my-page?tab=chat-history')}
+                onClick={() => {
+                  // window.history.length <= 1 表示没有历史记录（直接链接进入）
+                  // window.history.length <= 1 means no history (direct link entry)
+                  if (window.history.length > 1) {
+                    navigate(-1);
+                  } else {
+                    navigate('/');
+                  }
+                }}
               >
                 <ArrowLeft className="w-5 h-5" />
               </Button>
