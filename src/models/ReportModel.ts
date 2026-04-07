@@ -55,7 +55,7 @@ export class ReportModel extends BaseModel {
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')
     `;
 
-    const result = await this.db.run(query, [
+    const result = await this.getDb().run(query, [
       data.reporter_id,
       data.reported_user_id || null,
       data.product_id || null,
@@ -87,7 +87,7 @@ export class ReportModel extends BaseModel {
       SELECT * FROM reports WHERE report_id = ?
     `;
 
-    const report = await this.db.get<Report>(query, [reportId]);
+    const report = await this.getDb().get<Report>(query, [reportId]);
     return report || null;
   }
 
@@ -143,7 +143,7 @@ export class ReportModel extends BaseModel {
       params.push(filters.offset);
     }
 
-    const results = await this.db.all<Report>(query, params);
+    const results = await this.getDb().all<Report>(query, params);
     return Array.isArray(results) ? results : [];
   }
 
@@ -191,7 +191,7 @@ export class ReportModel extends BaseModel {
       WHERE report_id = ?
     `;
 
-    await this.db.run(query, params);
+    await this.getDb().run(query, params);
 
     const report = await this.findById(reportId);
     if (!report) {
@@ -206,7 +206,7 @@ export class ReportModel extends BaseModel {
    */
   async delete(reportId: number): Promise<boolean> {
     const query = `DELETE FROM reports WHERE report_id = ?`;
-    const result = await this.db.run(query, [reportId]);
+    const result = await this.getDb().run(query, [reportId]);
     return (result.changes || 0) > 0;
   }
 
@@ -220,7 +220,7 @@ export class ReportModel extends BaseModel {
       ORDER BY created_at DESC
     `;
 
-    const results = await this.db.all<Report>(query, [userId]);
+    const results = await this.getDb().all<Report>(query, [userId]);
     return Array.isArray(results) ? results : [];
   }
 
@@ -234,7 +234,7 @@ export class ReportModel extends BaseModel {
       ORDER BY created_at DESC
     `;
 
-    const results = await this.db.all<Report>(query, [userId]);
+    const results = await this.getDb().all<Report>(query, [userId]);
     return Array.isArray(results) ? results : [];
   }
 
@@ -248,7 +248,7 @@ export class ReportModel extends BaseModel {
       ORDER BY created_at DESC
     `;
 
-    const results = await this.db.all<Report>(query, [productId]);
+    const results = await this.getDb().all<Report>(query, [productId]);
     return Array.isArray(results) ? results : [];
   }
 
@@ -262,28 +262,28 @@ export class ReportModel extends BaseModel {
     by_type: Record<string, number>;
   }> {
     const totalQuery = `SELECT COUNT(*) as count FROM reports`;
-    const totalResult = await this.db.get<{ count: number }>(totalQuery);
+    const totalResult = await this.getDb().get<{ count: number }>(totalQuery);
 
     const statusQuery = `
       SELECT status, COUNT(*) as count
       FROM reports
       GROUP BY status
     `;
-    const statusResults = await this.db.all<{ status: string; count: number }>(statusQuery);
+    const statusResults = await this.getDb().all<{ status: string; count: number }>(statusQuery);
 
     const categoryQuery = `
       SELECT category, COUNT(*) as count
       FROM reports
       GROUP BY category
     `;
-    const categoryResults = await this.db.all<{ category: string; count: number }>(categoryQuery);
+    const categoryResults = await this.getDb().all<{ category: string; count: number }>(categoryQuery);
 
     const typeQuery = `
       SELECT report_type, COUNT(*) as count
       FROM reports
       GROUP BY report_type
     `;
-    const typeResults = await this.db.all<{ report_type: string; count: number }>(typeQuery);
+    const typeResults = await this.getDb().all<{ report_type: string; count: number }>(typeQuery);
 
     const by_status: Record<string, number> = {};
     const statusArray = Array.isArray(statusResults) ? statusResults : [];
@@ -343,7 +343,7 @@ export class ReportModel extends BaseModel {
       params.push(filters.message_id);
     }
 
-    const result = await this.db.get<{ count: number }>(query, params);
+    const result = await this.getDb().get<{ count: number }>(query, params);
     return (result?.count || 0) > 0;
   }
 }
