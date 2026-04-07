@@ -21,6 +21,7 @@ import { chatService, ChatSummary } from '../services/chatService';
 import { favoriteService } from '../services/favoriteService';
 import { dealService } from '../services/dealService';
 import { reviewService } from '../services/reviewService';
+import { reportService } from '../services/reportService';
 import { StarRating } from '../components/StarRating';
 import { TranslateButton } from '../components/TranslateButton';
 import {
@@ -98,6 +99,10 @@ function MyPage() {
 
   // Delete account state
   const [deleteStep, setDeleteStep] = useState<'closed' | 'notice' | 'verify'>('closed');
+
+  // My reports state
+  const [myReports, setMyReports] = useState<any[]>([]);
+  const [loadingReports, setLoadingReports] = useState(false);
   const [deleteCode, setDeleteCode] = useState('');
   const [sendingDeleteCode, setSendingDeleteCode] = useState(false);
   const [deletingAccount, setDeletingAccount] = useState(false);
@@ -231,6 +236,17 @@ function MyPage() {
       }
     } catch { /* 静默失败 / Fail silently */ }
     finally { setLoadingMyReviews(false); }
+  };
+
+  // 加载我的举报 / Load my reports
+  const loadMyReports = async () => {
+    if (!isAuthenticated) return;
+    setLoadingReports(true);
+    try {
+      const res = await reportService.getMyReports();
+      setMyReports(res.data?.reports || []);
+    } catch { /* silent */ }
+    finally { setLoadingReports(false); }
   };
 
   // 提交评价 / Submit review
@@ -547,6 +563,7 @@ function MyPage() {
             <TabsTrigger value="favorites" className="flex-1" onClick={loadFavorites}>{t('favorites')}</TabsTrigger>
             <TabsTrigger value="deals" className="flex-1" onClick={loadDeals}>{t('deals')}</TabsTrigger>
             <TabsTrigger value="my-reviews" className="flex-1" onClick={loadMyReviews}>{t('myReviews')}</TabsTrigger>
+            <TabsTrigger value="my-reports" className="flex-1" onClick={loadMyReports}>{t('myReports') || 'My Reports'}</TabsTrigger>
           </TabsList>
 
           {/* 8.3: Chat History Tab — 真实数据 / Real chat data */}
@@ -1005,6 +1022,58 @@ function MyPage() {
                     ))}
                   </div>
                 )}
+              </div>
+            )}
+          </TabsContent>
+
+          {/* My Reports Tab */}
+          <TabsContent value="my-reports">
+            {loadingReports ? (
+              <div className="flex items-center justify-center py-16">
+                <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+              </div>
+            ) : myReports.length === 0 ? (
+              <div className="text-center py-8 text-gray-400 text-sm bg-white rounded-lg border">
+                {t('noReports') || 'No reports submitted yet'}
+              </div>
+            ) : (
+              <div className="flex flex-col gap-3">
+                {myReports.map((report: any) => {
+                  const statusColors: Record<string, string> = {
+                    pending: 'bg-yellow-100 text-yellow-800',
+                    under_review: 'bg-blue-100 text-blue-800',
+                    resolved: 'bg-green-100 text-green-800',
+                    dismissed: 'bg-gray-100 text-gray-600',
+                  };
+                  const images = report.evidence_images ? JSON.parse(report.evidence_images) : [];
+                  return (
+                    <Card key={report.report_id}>
+                      <CardContent className="p-4">
+                        <div className="flex items-start justify-between mb-2">
+                          <div>
+                            <Badge variant="outline" className="mr-2">{t(report.report_type) || report.report_type}</Badge>
+                            <Badge variant="outline">{t(report.category) || report.category.replace(/_/g, ' ')}</Badge>
+                          </div>
+                          <Badge className={statusColors[report.status] || 'bg-gray-100'}>
+                            {t(report.status) || report.status}
+                          </Badge>
+                        </div>
+                        <p className="text-sm text-gray-700 mb-2">{report.reason}</p>
+                        {images.length > 0 && (
+                          <div className="flex gap-2 mb-2">
+                            {images.map((img: string, i: number) => (
+                              <img key={i} src={`http://localhost:3000${img}`} alt="" className="w-16 h-16 object-cover rounded border" />
+                            ))}
+                          </div>
+                        )}
+                        <p className="text-xs text-gray-400">{new Date(report.created_at).toLocaleString()}</p>
+                        {report.admin_notes && (
+                          <p className="text-xs text-blue-600 mt-1">{t('adminNotes') || 'Admin notes'}: {report.admin_notes}</p>
+                        )}
+                      </CardContent>
+                    </Card>
+                  );
+                })}
               </div>
             )}
           </TabsContent>
