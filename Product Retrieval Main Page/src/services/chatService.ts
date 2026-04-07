@@ -114,6 +114,13 @@ export const chatService = {
     apiClient.put(`/chats/${chatId}/read`),
 
   /**
+   * Check if a user is online
+   * 检查用户是否在线
+   */
+  checkUserOnline: (userId: string) =>
+    apiClient.get<{ success: boolean; data: { userId: string; online: boolean } }>(`/chats/user/${userId}/online`),
+
+  /**
    * Get total unread message count for the current user
    * 获取当前用户的未读消息总数
    */

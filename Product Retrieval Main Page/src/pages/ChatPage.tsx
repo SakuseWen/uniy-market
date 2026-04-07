@@ -26,7 +26,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '../components/ui/dropdown-menu';
-import { ArrowLeft, Send, Image as ImageIcon, CheckCircle, Languages, Loader2 } from 'lucide-react';
+import { ArrowLeft, Send, Image as ImageIcon, Languages, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { translate } from '../lib/i18n';
 import type { Language } from '../lib/i18n';
@@ -66,6 +66,7 @@ export default function ChatPage() {
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
   const [wsError, setWsError] = useState(false);
+  const [isOtherOnline, setIsOtherOnline] = useState(false);
 
   // ── 输入状态 / Input state ─────────────────────────────────────────────────
   const [message, setMessage] = useState('');
@@ -285,6 +286,21 @@ export default function ChatPage() {
       : chatInfo.buyerID
     : undefined;
 
+  // ── 查询对方在线状态 / Check other user's online status ────────────────
+  useEffect(() => {
+    if (!otherId) return;
+    chatService.checkUserOnline(otherId)
+      .then((res) => setIsOtherOnline(!!res.data.data?.online))
+      .catch(() => {});
+    // Poll every 30s
+    const interval = setInterval(() => {
+      chatService.checkUserOnline(otherId)
+        .then((res) => setIsOtherOnline(!!res.data.data?.online))
+        .catch(() => {});
+    }, 30000);
+    return () => clearInterval(interval);
+  }, [otherId]);
+
   const langLabel = language === 'en' ? 'English' : language === 'zh' ? '中文' : 'ไทย';
 
   // ─────────────────────────────────────────────────────────────────────────
@@ -350,10 +366,13 @@ export default function ChatPage() {
                 <div>
                   <div className="flex items-center gap-2">
                     <span className="font-semibold">{otherName}</span>
-                    <CheckCircle className="w-4 h-4 text-green-600" />
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="text-xs text-green-600">● {t('online')}</span>
+                    {isOtherOnline ? (
+                      <span className="text-xs text-green-600">● {t('online')}</span>
+                    ) : (
+                      <span className="text-xs text-gray-400">● {t('offline') || 'Offline'}</span>
+                    )}
                   </div>
                 </div>
               </div>

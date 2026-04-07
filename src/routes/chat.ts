@@ -803,6 +803,20 @@ router.get('/unread/count', authenticateToken, async (req: Request, res: Respons
 });
 
 /**
+ * GET /api/chats/user/:userId/online
+ * Check if a user is currently online (via WebSocket)
+ */
+router.get('/user/:userId/online', authenticateToken, async (req: Request, res: Response) => {
+  try {
+    const { userId } = req.params;
+    const online = webSocketService ? webSocketService.isUserOnline(userId) : false;
+    return res.json({ success: true, data: { userId, online } });
+  } catch (error) {
+    return res.status(500).json({ success: false, error: { message: 'Failed to check online status' } });
+  }
+});
+
+/**
  * POST /api/chats/:chatId/messages/:messageId/translate
  * Translate a specific message to target language
  */
