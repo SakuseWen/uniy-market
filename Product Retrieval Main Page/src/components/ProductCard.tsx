@@ -128,11 +128,10 @@ export function ProductCard({
           )}
         </div>
 
-        {/* Location & Distance */}
+        {/* Location */}
         <div className="flex items-center gap-1 text-gray-600 text-sm mb-3">
           <MapPin className="w-3 h-3" />
-          <span>{t(product.campus as any)}</span>
-          {product.distance && <span>• {product.distance}</span>}
+          <span className="truncate">{(product as any).address || t(product.campus as any)}</span>
         </div>
 
         {/* Seller Info */}
