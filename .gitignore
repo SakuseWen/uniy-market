@@ -17,6 +17,7 @@ build/
 data/*.db
 data/*.sqlite
 data/*.sqlite3
+*.sqlite
 
 # Uploaded files
 public/uploads/*
