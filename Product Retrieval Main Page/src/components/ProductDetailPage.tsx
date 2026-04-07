@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router';
 import { ChevronLeft, Heart, Scale, Flag, MessageCircle, Pencil } from 'lucide-react';
 import { Product } from '../lib/mockData';
 import { Language, translate } from '../lib/i18n';
+import { ReportDialog } from './ReportDialog';
 import { Button } from './ui/button';
 import { useAuth } from '../services/authContext';
 import { favoriteService } from '../services/favoriteService';
@@ -32,6 +33,8 @@ interface ProductDetailPageProps {
   language: Language;
   onBack: () => void;
   onProductClick: (product: Product) => void;
+  onCompare?: (id: string) => void;
+  isInComparison?: boolean;
 }
 
 export function ProductDetailPage({
@@ -40,6 +43,8 @@ export function ProductDetailPage({
   language,
   onBack,
   onProductClick,
+  onCompare,
+  isInComparison = false,
 }: ProductDetailPageProps) {
   const t = (key: any) => translate(language, key);
   const navigate = useNavigate();
@@ -48,6 +53,7 @@ export function ProductDetailPage({
   const [isFavorite, setIsFavorite] = useState(false);
   const [deal, setDeal] = useState<any>(null);
   const [dealLoading, setDealLoading] = useState(false);
+  const [reportOpen, setReportOpen] = useState(false);
 
   // Check if product is favorited
   useEffect(() => {
@@ -319,7 +325,8 @@ export function ProductDetailPage({
               {/* 卖家看到"编辑商品"，买家看到"联系卖家" / Seller sees "Edit Product", buyer sees "Contact Seller" */}
               {isSeller ? (
                 <Button
-                  className="w-full bg-gradient-to-r from-green-500 to-teal-600 hover:shadow-lg hover:scale-105 transition-all duration-200"
+                  className="w-full text-white hover:text-white hover:shadow-lg hover:scale-105 transition-all duration-200"
+                  style={{ background: 'linear-gradient(to right, #22c55e, #0d9488)' }}
                   onClick={() => navigate(`/edit-product/${product.id}`)}
                 >
                   <Pencil className="w-4 h-4 mr-2" />
@@ -345,11 +352,15 @@ export function ProductDetailPage({
             </div>
 
             <div className="grid grid-cols-2 gap-3">
-              <Button variant="outline" className="w-full">
+              <Button
+                variant="outline"
+                className={`w-full ${isInComparison ? 'border-blue-500 text-blue-600 bg-blue-50' : ''}`}
+                onClick={() => onCompare?.(product.id)}
+              >
                 <Scale className="w-4 h-4 mr-2" />
                 {t('addToCompare')}
               </Button>
-              <Button variant="outline" className="w-full">
+              <Button variant="outline" className="w-full" onClick={() => setReportOpen(true)}>
                 <Flag className="w-4 h-4 mr-2" />
                 {t('reportListing')}
               </Button>
@@ -399,6 +410,16 @@ export function ProductDetailPage({
           onProductClick={onProductClick}
         />
       </div>
+
+      {/* Report Dialog */}
+      <ReportDialog
+        open={reportOpen}
+        onOpenChange={setReportOpen}
+        language={language}
+        reportType="product"
+        targetId={product.id}
+        targetName={getLocalizedTitle()}
+      />
     </div>
   );
 }

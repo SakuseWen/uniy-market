@@ -75,7 +75,7 @@ export function ComparisonBar({
                   {t('selectedItems')}: {selectedProducts.length}/4
                 </span>
                 <Button variant="ghost" size="sm" onClick={onClear}>
-                  Clear All
+                  {t('clearAll')}
                 </Button>
               </div>
               <div className="flex gap-3 overflow-x-auto pb-2">
@@ -118,13 +118,22 @@ export function ComparisonBar({
                 })}
               </div>
             </div>
-            <Button
-              className="bg-gradient-to-r from-blue-500 to-purple-600 flex-shrink-0"
-              onClick={() => setShowComparison(true)}
-              disabled={selectedProducts.length < 2}
-            >
-              {t('compareNow')}
-            </Button>
+            <div className="flex flex-col gap-2 flex-shrink-0">
+              <Button
+                className="bg-gradient-to-r from-blue-500 to-purple-600"
+                onClick={() => setShowComparison(true)}
+                disabled={selectedProducts.length < 2}
+              >
+                {t('compareNow')}
+              </Button>
+              <Button
+                variant="outline"
+                className="border-red-300 text-red-600 hover:bg-red-50"
+                onClick={onClear}
+              >
+                {t('cancelComparison')}
+              </Button>
+            </div>
           </div>
         </div>
       </div>

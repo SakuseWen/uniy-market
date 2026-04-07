@@ -7,7 +7,7 @@ import { Button } from '../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '../components/ui/avatar';
-import { ArrowLeft, GraduationCap, Loader2, MessageCircle } from 'lucide-react';
+import { ArrowLeft, GraduationCap, Loader2, MessageCircle, Flag } from 'lucide-react';
 import { productService } from '../services';
 import apiClient from '../services/api';
 import { reviewService } from '../services/reviewService';
@@ -15,6 +15,8 @@ import { StarRating } from '../components/StarRating';
 import { TranslateButton } from '../components/TranslateButton';
 import { chatService } from '../services/chatService';
 import { toast } from 'sonner';
+import { useAuth } from '../services/authContext';
+import { ReportDialog } from '../components/ReportDialog';
 
 interface SellerInfo {
   userID: string;
@@ -56,6 +58,9 @@ export default function SellerProfilePage() {
   const [contactingProductId, setContactingProductId] = useState<string | null>(null);
   // 顶部"发送消息"按钮的 loading 状态 / Loading state for top "Send Message" button
   const [sendingMessage, setSendingMessage] = useState(false);
+  const [reportOpen, setReportOpen] = useState(false);
+  const { user } = useAuth();
+  const isOwnProfile = !!user && user.userID === sellerId;
 
   // 点击商品的"联系卖家"按钮 / Click product's "Contact Seller" button
   const handleContactForProduct = async (listingID: string) => {
@@ -207,18 +212,30 @@ export default function SellerProfilePage() {
                 )}
               </div>
             </div>
-            <Button
-              className="bg-gradient-to-r from-blue-500 to-purple-600 hover:shadow-lg hover:scale-105 transition-all duration-200"
-              disabled={sendingMessage}
-              onClick={handleSendMessage}
-            >
-              {sendingMessage ? (
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              ) : (
-                <MessageCircle className="w-4 h-4 mr-2" />
+            <div className="flex flex-col gap-2">
+              <Button
+                className="bg-gradient-to-r from-blue-500 to-purple-600 hover:shadow-lg hover:scale-105 transition-all duration-200"
+                disabled={sendingMessage}
+                onClick={handleSendMessage}
+              >
+                {sendingMessage ? (
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                ) : (
+                  <MessageCircle className="w-4 h-4 mr-2" />
+                )}
+                {t('message')}
+              </Button>
+              {!isOwnProfile && (
+                <Button
+                  variant="outline"
+                  className="border-red-300 text-red-600 hover:bg-red-50"
+                  onClick={() => setReportOpen(true)}
+                >
+                  <Flag className="w-4 h-4 mr-2" />
+                  {t('reportListing')}
+                </Button>
               )}
-              {t('message')}
-            </Button>
+            </div>
           </div>
         </div>
 
@@ -319,6 +336,18 @@ export default function SellerProfilePage() {
           </div>
         )}
       </div>
+
+      {/* Report Dialog */}
+      {!isOwnProfile && seller && (
+        <ReportDialog
+          open={reportOpen}
+          onOpenChange={setReportOpen}
+          language={language}
+          reportType="user"
+          targetId={seller.userID}
+          targetName={seller.name}
+        />
+      )}
     </div>
   );
 }

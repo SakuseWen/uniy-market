@@ -58,12 +58,14 @@ export class ChatModel extends BaseModel {
         p.title as productTitle,
         p.price as productPrice,
         p.status as productStatus,
+        pi.imagePath as productImage,
         buyer.name as buyerName,
         buyer.profileImage as buyerImage,
         seller.name as sellerName,
         seller.profileImage as sellerImage
       FROM Chat c
       LEFT JOIN ProductListing p ON c.listingID = p.listingID
+      LEFT JOIN (SELECT listingID, imagePath FROM ProductImage WHERE isPrimary = 1) pi ON p.listingID = pi.listingID
       LEFT JOIN User buyer ON c.buyerID = buyer.userID
       LEFT JOIN User seller ON c.sellerID = seller.userID
       WHERE c.chatID = ?

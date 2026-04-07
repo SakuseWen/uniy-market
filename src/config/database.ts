@@ -305,6 +305,7 @@ export class DatabaseManager {
         report_type TEXT NOT NULL CHECK (report_type IN ('user', 'product', 'chat', 'message')),
         category TEXT NOT NULL CHECK (category IN ('inappropriate_content', 'spam', 'fraud', 'harassment', 'fake_product', 'other')),
         reason TEXT NOT NULL,
+        evidence_images TEXT,
         status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'under_review', 'resolved', 'dismissed')),
         admin_notes TEXT,
         reviewed_by INTEGER,

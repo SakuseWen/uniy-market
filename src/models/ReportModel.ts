@@ -17,6 +17,7 @@ export interface Report {
   reason: string;
   status: 'pending' | 'under_review' | 'resolved' | 'dismissed';
   admin_notes?: string;
+  evidence_images?: string;
   reviewed_by?: number;
   reviewed_at?: string;
   created_at: string;
@@ -24,14 +25,15 @@ export interface Report {
 }
 
 export interface CreateReportData {
-  reporter_id: number;
-  reported_user_id?: number;
-  product_id?: number;
-  chat_id?: number;
-  message_id?: number;
+  reporter_id: number | string;
+  reported_user_id?: number | string;
+  product_id?: number | string;
+  chat_id?: number | string;
+  message_id?: number | string;
   report_type: 'user' | 'product' | 'chat' | 'message';
   category: 'inappropriate_content' | 'spam' | 'fraud' | 'harassment' | 'fake_product' | 'other';
   reason: string;
+  evidence_images?: string;
 }
 
 export interface UpdateReportData {
@@ -49,8 +51,8 @@ export class ReportModel extends BaseModel {
     const query = `
       INSERT INTO reports (
         reporter_id, reported_user_id, product_id, chat_id, message_id,
-        report_type, category, reason, status
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pending')
+        report_type, category, reason, evidence_images, status
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')
     `;
 
     const result = await this.db.run(query, [
@@ -61,7 +63,8 @@ export class ReportModel extends BaseModel {
       data.message_id || null,
       data.report_type,
       data.category,
-      data.reason
+      data.reason,
+      data.evidence_images || null
     ]);
 
     if (!result.lastID) {

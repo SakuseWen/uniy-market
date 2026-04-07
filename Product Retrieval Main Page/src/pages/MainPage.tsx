@@ -4,13 +4,13 @@ import { Header } from '../components/Header';
 import { SearchFilterBar } from '../components/SearchFilterBar';
 import { ProductCard } from '../components/ProductCard';
 import { ProductListView } from '../components/ProductListView';
-import { SideFilterPanel } from '../components/SideFilterPanel';
 import { ComparisonBar } from '../components/ComparisonBar';
+import { useComparison } from '../lib/ComparisonContext';
 import { translate } from '../lib/i18n';
 import type { Language } from '../lib/i18n';
 import { Product } from '../lib/mockData';
 import { useProducts, useCategories } from '../hooks';
-import { Grid, List, TrendingUp, Loader2 } from 'lucide-react';
+import { Grid, List, Loader2 } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import {
   Select,
@@ -49,33 +49,30 @@ export default function MainPage() {
   
   // Search and filter state
   const [searchQuery, setSearchQuery] = useState('');
-  const [filters, setFilters] = useState({
-    campus: 'all',
-    category: 'all',
-    priceMin: 0,
-    priceMax: 0,
-    condition: 'all',
-    deliveryType: 'all',
-    itemLanguage: 'all',
-    availableOnly: true,
+  const [filters, setFilters] = useState(() => {
+    const savedAvailableOnly = sessionStorage.getItem('availableOnly');
+    return {
+      campus: 'all',
+      category: 'all',
+      priceMin: 0,
+      priceMax: 0,
+      condition: 'all',
+      deliveryType: 'all',
+      itemLanguage: 'all',
+      availableOnly: savedAvailableOnly !== null ? savedAvailableOnly === 'true' : true,
+    };
   });
 
-  // Advanced filters
-  const [advancedFilters, setAdvancedFilters] = useState({
-    brand: '',
-    courseCode: '',
-    tryBeforeBuy: false,
-    showPriceTrend: false,
-  });
-
-  // Side panel state
-  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
+  // Persist availableOnly to sessionStorage
+  useEffect(() => {
+    sessionStorage.setItem('availableOnly', String(filters.availableOnly));
+  }, [filters.availableOnly]);
 
   // Sorting
   const [sortBy, setSortBy] = useState('relevance');
 
-  // Comparison state
-  const [comparisonIds, setComparisonIds] = useState<string[]>([]);
+  // Comparison state (global context)
+  const { comparisonIds, comparisonProducts, toggleProduct, removeProduct, clearAll, isInComparison } = useComparison();
   const [favoritedIds, setFavoritedIds] = useState<string[]>([]);
 
   // Fetch products from API
@@ -164,22 +161,6 @@ export default function MainPage() {
       results = results.filter((p) => !p.sold && !inTransactionIds.includes(p.id));
     }
 
-    // Advanced filters - Brand
-    if (advancedFilters.brand.trim()) {
-      results = results.filter((p) =>
-        p.brand?.toLowerCase().includes(advancedFilters.brand.toLowerCase())
-      );
-    }
-
-    // Advanced filters - Course Code
-    if (advancedFilters.courseCode.trim()) {
-      results = results.filter((p) =>
-        p.courseCode
-          ?.toLowerCase()
-          .includes(advancedFilters.courseCode.toLowerCase())
-      );
-    }
-
     // Client-side sorting for 'nearest' (API doesn't support this)
     if (sortBy === 'nearest') {
       results.sort((a, b) => {
@@ -190,7 +171,7 @@ export default function MainPage() {
     }
 
     return results;
-  }, [apiProducts, filters.availableOnly, advancedFilters, sortBy, inTransactionIds]);
+  }, [apiProducts, filters.availableOnly, sortBy, inTransactionIds]);
 
   // Show error toast
   useEffect(() => {
@@ -198,11 +179,6 @@ export default function MainPage() {
       toast.error(error);
     }
   }, [error]);
-
-  // Comparison products
-  const comparisonProducts = useMemo(() => {
-    return apiProducts.filter((p) => comparisonIds.includes(p.id));
-  }, [comparisonIds, apiProducts]);
 
   // Handlers
   const handleFavorite = async (id: string) => {
@@ -227,18 +203,12 @@ export default function MainPage() {
   };
 
   const handleCompare = (id: string) => {
-    setComparisonIds((prev) => {
-      if (prev.includes(id)) {
-        toast.success(t('removedFromComparison'));
-        return prev.filter((cId) => cId !== id);
-      } else if (prev.length >= 4) {
-        toast.error(t('maxCompareItems'));
-        return prev;
-      } else {
-        toast.success(t('addedToComparison'));
-        return [...prev, id];
-      }
-    });
+    const product = apiProducts.find((p) => p.id === id);
+    if (!product) return;
+    const result = toggleProduct(product);
+    if (result === 'added') toast.success(t('addedToComparison'));
+    else if (result === 'removed') toast.success(t('removedFromComparison'));
+    else toast.error(t('maxCompareItems'));
   };
 
   // 12.1 修复 handleContact：调用 createOrGetChat 获取真实 chatID
@@ -298,7 +268,6 @@ export default function MainPage() {
           onSearchChange={setSearchQuery}
           filters={filters}
           onFilterChange={setFilters}
-          onShowAdvancedFilters={() => setShowAdvancedFilters(true)}
         />
       </div>
 
@@ -311,13 +280,6 @@ export default function MainPage() {
               {t('showing')} <strong>{filteredProducts.length}</strong> {t('results')}
             </span>
 
-            {/* Price Trend Indicator */}
-            {advancedFilters.showPriceTrend && (
-              <div className="flex items-center gap-2 text-sm text-gray-600">
-                <TrendingUp className="w-4 h-4" />
-                <span>Price trends enabled</span>
-              </div>
-            )}
           </div>
 
           <div className="flex items-center gap-4">
@@ -419,12 +381,6 @@ export default function MainPage() {
                   itemLanguage: 'all',
                   availableOnly: true,
                 });
-                setAdvancedFilters({
-                  brand: '',
-                  courseCode: '',
-                  tryBeforeBuy: false,
-                  showPriceTrend: false,
-                });
               }}
             >
               Clear All Filters
@@ -442,7 +398,8 @@ export default function MainPage() {
                   onContact={handleContact}
                   onBuy={!product.sold ? handleBuy : undefined}
                   isFavorited={favoritedIds.includes(product.id)}
-                  isInComparison={comparisonIds.includes(product.id)}
+                  isInComparison={isInComparison(product.id)}
+                  inTransaction={inTransactionIds.includes(product.id)}
                   currentUserId={user?.userID}
                   isContactLoading={contactingId === product.id}
                 />
@@ -469,20 +426,12 @@ export default function MainPage() {
       </div>
 
       {/* Side Filter Panel */}
-      <SideFilterPanel
-        language={language}
-        isOpen={showAdvancedFilters}
-        onClose={() => setShowAdvancedFilters(false)}
-        advancedFilters={advancedFilters}
-        onAdvancedFilterChange={setAdvancedFilters}
-      />
-
       {/* Comparison Bar */}
       <ComparisonBar
         language={language}
         selectedProducts={comparisonProducts}
-        onRemove={(id) => setComparisonIds((prev) => prev.filter((cId) => cId !== id))}
-        onClear={() => setComparisonIds([])}
+        onRemove={(id) => removeProduct(id)}
+        onClear={() => clearAll()}
       />
     </div>
   );

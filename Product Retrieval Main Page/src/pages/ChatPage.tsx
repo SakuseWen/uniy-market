@@ -279,6 +279,12 @@ export default function ChatPage() {
       : chatInfo.buyerImage
     : undefined;
 
+  const otherId = chatInfo
+    ? user?.userID === chatInfo.buyerID
+      ? chatInfo.sellerID
+      : chatInfo.buyerID
+    : undefined;
+
   const langLabel = language === 'en' ? 'English' : language === 'zh' ? '中文' : 'ไทย';
 
   // ─────────────────────────────────────────────────────────────────────────
@@ -333,7 +339,10 @@ export default function ChatPage() {
               </Button>
 
               {/* 对方用户信息 / Other user info */}
-              <div className="flex items-center gap-3">
+              <div
+                className="flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity"
+                onClick={() => otherId && navigate(`/seller/${otherId}`)}
+              >
                 <Avatar className="w-10 h-10">
                   <AvatarImage src={otherImage} />
                   <AvatarFallback>{otherName?.[0] ?? '?'}</AvatarFallback>
@@ -372,12 +381,16 @@ export default function ChatPage() {
         <div className="bg-blue-50 border-b">
           <div className="container mx-auto px-4 py-3">
             <div className="flex items-center gap-3">
-              {chatInfo.productImage && (
+              {chatInfo.productImage ? (
                 <img
-                  src={chatInfo.productImage}
+                  src={chatInfo.productImage.startsWith('http') ? chatInfo.productImage : `http://localhost:3000${chatInfo.productImage}`}
                   alt={chatInfo.productTitle}
-                  className="w-12 h-12 object-cover rounded"
+                  className="w-12 h-12 object-cover rounded flex-shrink-0"
                 />
+              ) : (
+                <div className="w-12 h-12 rounded bg-gray-200 flex items-center justify-center flex-shrink-0">
+                  <span className="text-gray-400 text-xs">No img</span>
+                </div>
               )}
               <div className="flex-1">
                 <p className="font-semibold text-sm">{chatInfo.productTitle}</p>

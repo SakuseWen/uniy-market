@@ -31,13 +31,13 @@ apiClient.interceptors.request.use(
 apiClient.interceptors.response.use(
   (response) => response,
   (error: AxiosError) => {
-    // 不在这里自动重定向，让应用层处理 401 错误
-    // 这样可以显示错误提示而不是直接跳转
     if (error.response?.status === 401) {
-      // Token 过期或无效，清除本地存储
       sessionStorage.removeItem('authToken');
       sessionStorage.removeItem('authUser');
-      // 让应用层决定是否重定向
+    }
+    // Add user-friendly message for rate limiting
+    if (error.response?.status === 429) {
+      (error as any).rateLimited = true;
     }
     return Promise.reject(error);
   }
