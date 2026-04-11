@@ -48,6 +48,9 @@ router.post('/', authenticateToken, upload.array('images', 5), async (req: Reque
 
     const { reported_user_id, product_id, chat_id, message_id, report_type, category, reason } = req.body;
 
+    console.log('[Report] Body:', { reported_user_id, product_id, report_type, category, reason: reason?.substring(0, 20) });
+    console.log('[Report] Files:', req.files ? (req.files as any[]).length : 0);
+
     if (!report_type || !category || !reason) {
       return res.status(400).json({ error: 'Missing required fields: report_type, category, reason' });
     }
@@ -69,7 +72,12 @@ router.post('/', authenticateToken, upload.array('images', 5), async (req: Reque
     if (report_type === 'chat' && !chat_id) return res.status(400).json({ error: 'chat_id is required' });
     if (report_type === 'message' && !message_id) return res.status(400).json({ error: 'message_id is required' });
 
-    const hasReported = await reportModel.hasUserReported(userId, { reported_user_id, product_id, chat_id, message_id });
+    const hasReported = await reportModel.hasUserReported(userId, {
+      reported_user_id: reported_user_id || undefined,
+      product_id: product_id || undefined,
+      chat_id: chat_id || undefined,
+      message_id: message_id || undefined,
+    });
     if (hasReported) return res.status(400).json({ error: 'You have already reported this item' });
 
     // Build image paths

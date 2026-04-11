@@ -320,6 +320,10 @@ export class ReportModel extends BaseModel {
     chat_id?: number;
     message_id?: number;
   }): Promise<boolean> {
+    // Must have at least one target filter
+    const hasFilter = filters.reported_user_id || filters.product_id || filters.chat_id || filters.message_id;
+    if (!hasFilter) return false;
+
     let query = `SELECT COUNT(*) as count FROM reports WHERE reporter_id = ?`;
     const params: any[] = [reporterId];
 
