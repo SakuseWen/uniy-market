@@ -106,7 +106,12 @@ export function ReportDialog({ open, onOpenChange, language, reportType, targetI
       resetForm();
       onOpenChange(false);
     } catch (err: any) {
-      toast.error(err.response?.data?.error || 'Failed to submit report');
+      const serverError = err.response?.data?.error || '';
+      if (serverError.includes('already reported')) {
+        toast.error(t('alreadyReported'));
+      } else {
+        toast.error(t('reportFailed'));
+      }
     } finally {
       setSubmitting(false);
     }

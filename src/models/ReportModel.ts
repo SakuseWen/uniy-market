@@ -324,7 +324,7 @@ export class ReportModel extends BaseModel {
     const hasFilter = filters.reported_user_id || filters.product_id || filters.chat_id || filters.message_id;
     if (!hasFilter) return false;
 
-    let query = `SELECT COUNT(*) as count FROM reports WHERE reporter_id = ?`;
+    let query = `SELECT COUNT(*) as count FROM reports WHERE reporter_id = ? AND status IN ('pending', 'under_review')`;
     const params: any[] = [reporterId];
 
     if (filters.reported_user_id) {
