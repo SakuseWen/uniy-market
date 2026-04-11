@@ -335,16 +335,12 @@ router.get('/products', async (req: Request, res: Response) => {
       p.images = await productModel.getProductImages(p.listingID);
     }
 
-    // Pagination
-    const limitNum = parseInt(limit as string);
-    const offsetNum = parseInt(offset as string);
     const total = products.length;
-    const paginatedProducts = products.slice(offsetNum, offsetNum + limitNum);
 
     res.json({
       success: true,
       data: {
-        products: paginatedProducts,
+        products,
         total,
         limit: limitNum,
         offset: offsetNum,
