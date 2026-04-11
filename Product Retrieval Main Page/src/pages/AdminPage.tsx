@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router';
+import { useNavigate, useSearchParams } from 'react-router';
 import { Button } from '../components/ui/button';
 import { Card, CardContent } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
@@ -18,8 +18,14 @@ import { adminService } from '../services/adminService';
 
 export default function AdminPage() {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState('users');
+  const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'users');
+
+  const handleTabChange = (tab: string) => {
+    setActiveTab(tab);
+    setSearchParams({ tab });
+  };
 
   // Users state
   const [users, setUsers] = useState<any[]>([]);
@@ -176,7 +182,7 @@ export default function AdminPage() {
       </div>
 
       <div className="container mx-auto px-4 py-6 max-w-6xl">
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <Tabs value={activeTab} onValueChange={handleTabChange}>
           <TabsList className="w-full mb-6">
             <TabsTrigger value="users" className="flex-1 gap-2"><Users className="w-4 h-4" />Users ({users.length})</TabsTrigger>
             <TabsTrigger value="products" className="flex-1 gap-2"><Package className="w-4 h-4" />Products ({products.length})</TabsTrigger>
