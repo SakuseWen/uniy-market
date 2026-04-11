@@ -237,7 +237,7 @@ export class AdminService {
     // Update report status
     await this.reportModel.update(reportId, {
       status: 'resolved',
-      reviewed_by: parseInt(adminId),
+      reviewed_by: adminId as any,
       ...(notes && { admin_notes: notes }),
     });
 
@@ -268,7 +268,7 @@ export class AdminService {
     // Update report status
     await this.reportModel.update(reportId, {
       status: 'dismissed',
-      reviewed_by: parseInt(adminId),
+      reviewed_by: adminId as any,
       ...(notes && { admin_notes: notes }),
     });
 

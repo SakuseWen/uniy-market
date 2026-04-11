@@ -443,9 +443,21 @@ router.get('/reports', async (req: Request, res: Response) => {
       offset: offsetNum,
     });
 
+    // Enrich reports with user names
+    const userModel = new UserModel();
+    const enriched = await Promise.all(result.map(async (r: any) => {
+      const reporter = r.reporter_id ? await userModel.getUserById(r.reporter_id) : null;
+      const reportedUser = r.reported_user_id ? await userModel.getUserById(r.reported_user_id) : null;
+      return {
+        ...r,
+        reporter_name: reporter?.name || r.reporter_id,
+        reported_user_name: reportedUser?.name || r.reported_user_id,
+      };
+    }));
+
     res.json({
       success: true,
-      data: { reports: result },
+      data: { reports: enriched },
     });
   } catch (error) {
     console.error('Get reports error:', error);

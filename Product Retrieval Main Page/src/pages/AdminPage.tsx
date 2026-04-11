@@ -205,7 +205,7 @@ export default function AdminPage() {
                         <div className="flex items-center gap-2">
                           <span className="font-semibold truncate">{u.name}</span>
                           {u.isAdmin ? <Badge className="bg-purple-100 text-purple-700">Admin</Badge> : null}
-                          {u.isVerified ? <Badge className="bg-green-100 text-green-700"><GraduationCap className="w-3 h-3 mr-1" />Edu</Badge> : null}
+                          {Number(u.isVerified) === 1 ? <Badge className="bg-green-100 text-green-700"><GraduationCap className="w-3 h-3 mr-1" />Edu</Badge> : null}
                         </div>
                         <p className="text-sm text-gray-500 truncate">{u.email}</p>
                       </div>
@@ -213,8 +213,8 @@ export default function AdminPage() {
                         {u.status}
                       </Badge>
                       <div className="flex gap-1">
-                        <Button size="sm" variant="outline" onClick={() => handleToggleVerify(u.userID, !!u.isVerified)} title={u.isVerified ? 'Revoke Edu' : 'Grant Edu'}>
-                          <GraduationCap className={`w-4 h-4 ${u.isVerified ? 'text-green-600' : 'text-gray-400'}`} />
+                        <Button size="sm" variant="outline" onClick={() => handleToggleVerify(u.userID, Number(u.isVerified) === 1)} title={Number(u.isVerified) === 1 ? 'Revoke Edu' : 'Grant Edu'}>
+                          <GraduationCap className={`w-4 h-4 ${Number(u.isVerified) === 1 ? 'text-green-600' : 'text-gray-400'}`} />
                         </Button>
                         {u.status === 'active' ? (
                           <Button size="sm" variant="outline" className="text-orange-600" onClick={() => setActionDialog({ type: 'suspend', target: u })}>Suspend</Button>
@@ -243,7 +243,7 @@ export default function AdminPage() {
             ) : (
               <div className="space-y-3">
                 {products.map((p: any) => (
-                  <Card key={p.listingID}>
+                  <Card key={p.listingID} className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => navigate(`/product/${p.listingID}`)}>
                     <CardContent className="p-4 flex items-center gap-4">
                       <div className="w-12 h-12 rounded bg-gray-200 flex-shrink-0 overflow-hidden">
                         {p.images?.[0]?.imagePath ? (
@@ -259,7 +259,7 @@ export default function AdminPage() {
                       <Badge className={p.status === 'active' ? 'bg-green-100 text-green-700' : p.status === 'sold' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-600'}>
                         {p.status}
                       </Badge>
-                      <Button size="sm" variant="outline" className="text-red-600" onClick={() => setActionDialog({ type: 'removeProduct', target: p })}>
+                      <Button size="sm" variant="outline" className="text-red-600" onClick={(e: any) => { e.stopPropagation(); setActionDialog({ type: 'removeProduct', target: p }); }}>
                         <Trash2 className="w-4 h-4" />
                       </Button>
                     </CardContent>
@@ -312,9 +312,9 @@ export default function AdminPage() {
                           </div>
                         )}
                         <div className="text-xs text-gray-400 mb-3">
-                          Reporter: {r.reporter_id} · {new Date(r.created_at).toLocaleString()}
-                          {r.product_id && ` · Product: ${r.product_id}`}
-                          {r.reported_user_id && ` · User: ${r.reported_user_id}`}
+                          Reporter: {r.reporter_name || r.reporter_id} · {new Date(r.created_at).toLocaleString()}
+                          {r.product_id ? ` · Product: ${r.product_id}` : null}
+                          {r.reported_user_id ? ` · Reported user: ${r.reported_user_name || r.reported_user_id}` : null}
                         </div>
                         {(r.status === 'pending' || r.status === 'under_review') ? (
                           <div className="flex gap-2">
