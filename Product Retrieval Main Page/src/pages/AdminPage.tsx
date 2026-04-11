@@ -40,6 +40,7 @@ export default function AdminPage() {
   const [actionDialog, setActionDialog] = useState<{ type: string; target: any } | null>(null);
   const [actionReason, setActionReason] = useState('');
   const [actionLoading, setActionLoading] = useState(false);
+  const [expandedProduct, setExpandedProduct] = useState<string | null>(null);
 
   // Load users
   const loadUsers = async () => {
@@ -243,25 +244,50 @@ export default function AdminPage() {
             ) : (
               <div className="space-y-3">
                 {products.map((p: any) => (
-                  <Card key={p.listingID} className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => navigate(`/product/${p.listingID}`)}>
-                    <CardContent className="p-4 flex items-center gap-4">
-                      <div className="w-12 h-12 rounded bg-gray-200 flex-shrink-0 overflow-hidden">
-                        {p.images?.[0]?.imagePath ? (
-                          <img src={`http://localhost:3000${p.images[0].imagePath}`} alt="" className="w-full h-full object-cover" />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">No img</div>
-                        )}
+                  <Card key={p.listingID}>
+                    <CardContent className="p-4">
+                      <div className="flex items-center gap-4 cursor-pointer" onClick={() => setExpandedProduct(expandedProduct === p.listingID ? null : p.listingID)}>
+                        <div className="w-12 h-12 rounded bg-gray-200 flex-shrink-0 overflow-hidden">
+                          {p.images?.[0]?.imagePath ? (
+                            <img src={`http://localhost:3000${p.images[0].imagePath}`} alt="" className="w-full h-full object-cover" />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">No img</div>
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-semibold truncate">{p.title}</p>
+                          <p className="text-sm text-gray-500">${p.price} · {p.condition} · Seller: {p.sellerID}</p>
+                        </div>
+                        <Badge className={p.status === 'active' ? 'bg-green-100 text-green-700' : p.status === 'sold' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-600'}>
+                          {p.status}
+                        </Badge>
+                        <Button size="sm" variant="outline" className="text-red-600" onClick={(e: any) => { e.stopPropagation(); setActionDialog({ type: 'removeProduct', target: p }); }}>
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-semibold truncate">{p.title}</p>
-                        <p className="text-sm text-gray-500">${p.price} · {p.condition} · Seller: {p.seller?.name || p.sellerID}</p>
-                      </div>
-                      <Badge className={p.status === 'active' ? 'bg-green-100 text-green-700' : p.status === 'sold' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-600'}>
-                        {p.status}
-                      </Badge>
-                      <Button size="sm" variant="outline" className="text-red-600" onClick={(e: any) => { e.stopPropagation(); setActionDialog({ type: 'removeProduct', target: p }); }}>
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
+                      {expandedProduct === p.listingID ? (
+                        <div className="mt-3 pt-3 border-t text-sm space-y-1 text-gray-600">
+                          <p>ID: {p.listingID}</p>
+                          <p>Title: {p.title}</p>
+                          <p>Description: {p.description || 'N/A'}</p>
+                          <p>Price: ${p.price}</p>
+                          <p>Condition: {p.condition}</p>
+                          <p>Status: {p.status}</p>
+                          <p>Location: {p.location || 'N/A'}</p>
+                          <p>Seller ID: {p.sellerID}</p>
+                          <p>Category ID: {p.categoryID}</p>
+                          <p>Views: {p.views}</p>
+                          <p>Stock: {p.stock}</p>
+                          <p>Created: {new Date(p.createdAt).toLocaleString()}</p>
+                          {p.images && p.images.length > 0 ? (
+                            <div className="flex gap-2 mt-2">
+                              {p.images.map((img: any, i: number) => (
+                                <img key={i} src={`http://localhost:3000${img.imagePath}`} alt="" className="w-20 h-20 object-cover rounded border" />
+                              ))}
+                            </div>
+                          ) : null}
+                        </div>
+                      ) : null}
                     </CardContent>
                   </Card>
                 ))}

@@ -18,7 +18,7 @@ export const reportService = {
     if (data.product_id) form.append('product_id', data.product_id);
     if (data.reported_user_id) form.append('reported_user_id', data.reported_user_id);
     data.images.forEach((img) => form.append('images', img));
-    return apiClient.post('/reports', form, { headers: { 'Content-Type': 'multipart/form-data' } });
+    return apiClient.post('/reports', form);
   },
 
   getMyReports: () => apiClient.get('/reports/my/submitted'),
