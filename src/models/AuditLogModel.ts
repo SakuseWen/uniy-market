@@ -44,7 +44,7 @@ export class AuditLogModel extends BaseModel {
       VALUES (?, ?, ?, ?, ?, ?, ?)
     `;
 
-    await this.db.run(query, [
+    await this.getDb().run(query, [
       logID,
       input.adminID,
       input.action,
@@ -67,7 +67,7 @@ export class AuditLogModel extends BaseModel {
    */
   async findById(logID: string): Promise<AuditLog | null> {
     const query = `SELECT * FROM AuditLog WHERE logID = ?`;
-    const log = await this.db.get<AuditLog>(query, [logID]);
+    const log = await this.getDb().get<AuditLog>(query, [logID]);
     return log || null;
   }
 
@@ -116,7 +116,7 @@ export class AuditLogModel extends BaseModel {
 
     // Get total count
     const countQuery = `SELECT COUNT(*) as count FROM AuditLog ${whereClause}`;
-    const countResult = await this.db.get<{ count: number }>(countQuery, params);
+    const countResult = await this.getDb().get<{ count: number }>(countQuery, params);
     const total = countResult?.count || 0;
 
     // Get logs
@@ -127,7 +127,7 @@ export class AuditLogModel extends BaseModel {
       LIMIT ? OFFSET ?
     `;
 
-    const logs = await this.db.all<AuditLog[]>(query, [...params, limit, offset]);
+    const logs = await this.getDb().all<AuditLog[]>(query, [...params, limit, offset]);
 
     return { logs, total };
   }
@@ -143,7 +143,7 @@ export class AuditLogModel extends BaseModel {
       LIMIT ?
     `;
 
-    return await this.db.all<AuditLog[]>(query, [adminID, limit]);
+    return await this.getDb().all<AuditLog[]>(query, [adminID, limit]);
   }
 
   /**
@@ -161,7 +161,7 @@ export class AuditLogModel extends BaseModel {
       LIMIT ?
     `;
 
-    return await this.db.all<AuditLog[]>(query, [targetType, targetID, limit]);
+    return await this.getDb().all<AuditLog[]>(query, [targetType, targetID, limit]);
   }
 
   /**
@@ -174,7 +174,7 @@ export class AuditLogModel extends BaseModel {
       LIMIT ?
     `;
 
-    return await this.db.all<AuditLog[]>(query, [limit]);
+    return await this.getDb().all<AuditLog[]>(query, [limit]);
   }
 
   /**
@@ -203,7 +203,7 @@ export class AuditLogModel extends BaseModel {
 
     // Total logs
     const totalQuery = `SELECT COUNT(*) as count FROM AuditLog ${whereClause}`;
-    const totalResult = await this.db.get<{ count: number }>(totalQuery, params);
+    const totalResult = await this.getDb().get<{ count: number }>(totalQuery, params);
     const totalLogs = totalResult?.count || 0;
 
     // Logs by admin
@@ -214,7 +214,7 @@ export class AuditLogModel extends BaseModel {
       GROUP BY adminID
       ORDER BY count DESC
     `;
-    const logsByAdmin = await this.db.all<{ adminID: string; count: number }[]>(
+    const logsByAdmin = await this.getDb().all<{ adminID: string; count: number }[]>(
       adminQuery,
       params
     );
@@ -227,7 +227,7 @@ export class AuditLogModel extends BaseModel {
       GROUP BY action
       ORDER BY count DESC
     `;
-    const logsByAction = await this.db.all<{ action: string; count: number }[]>(
+    const logsByAction = await this.getDb().all<{ action: string; count: number }[]>(
       actionQuery,
       params
     );
@@ -240,7 +240,7 @@ export class AuditLogModel extends BaseModel {
       GROUP BY targetType
       ORDER BY count DESC
     `;
-    const logsByTargetType = await this.db.all<{ targetType: string; count: number }[]>(
+    const logsByTargetType = await this.getDb().all<{ targetType: string; count: number }[]>(
       targetTypeQuery,
       params
     );
@@ -261,7 +261,7 @@ export class AuditLogModel extends BaseModel {
     cutoffDate.setDate(cutoffDate.getDate() - daysToKeep);
 
     const query = `DELETE FROM AuditLog WHERE timestamp < ?`;
-    const result = await this.db.run(query, [cutoffDate.toISOString()]);
+    const result = await this.getDb().run(query, [cutoffDate.toISOString()]);
 
     return result.changes || 0;
   }

@@ -47,24 +47,25 @@ router.get('/users', async (req: Request, res: Response) => {
     const { status, isAdmin, search, limit = '50', offset = '0' } = req.query;
 
     const userModel = new UserModel();
-    let users = await userModel.findAll();
+    const result = await userModel.getUsers(1, 1000);
+    let users = result.users || [];
 
     // Apply filters
     if (status) {
-      users = users.filter((u) => u.status === status);
+      users = users.filter((u: any) => u.status === status);
     }
 
     if (isAdmin !== undefined) {
       const adminFilter = isAdmin === 'true';
-      users = users.filter((u) => u.isAdmin === adminFilter);
+      users = users.filter((u: any) => u.isAdmin === adminFilter);
     }
 
     if (search) {
       const searchLower = (search as string).toLowerCase();
       users = users.filter(
-        (u) =>
-          u.name.toLowerCase().includes(searchLower) ||
-          u.email.toLowerCase().includes(searchLower)
+        (u: any) =>
+          u.name?.toLowerCase().includes(searchLower) ||
+          u.email?.toLowerCase().includes(searchLower)
       );
     }
 
@@ -105,7 +106,7 @@ router.get('/users/:userId', async (req: Request, res: Response) => {
     const { userId } = req.params;
 
     const userModel = new UserModel();
-    const user = await userModel.findById(userId);
+    const user = await userModel.getUserById(userId);
 
     if (!user) {
       res.status(404).json({
@@ -312,20 +313,17 @@ router.get('/products', async (req: Request, res: Response) => {
     const { status, search, limit = '50', offset = '0' } = req.query;
 
     const productModel = new ProductModel();
-    let products = await productModel.findAll();
+    const searchResult = await productModel.searchProducts(
+      (search as string) || undefined,
+      {},
+      1,
+      1000
+    );
+    let products = searchResult.products || [];
 
-    // Apply filters
+    // Apply status filter
     if (status) {
-      products = products.filter((p) => p.status === status);
-    }
-
-    if (search) {
-      const searchLower = (search as string).toLowerCase();
-      products = products.filter(
-        (p) =>
-          p.title.toLowerCase().includes(searchLower) ||
-          (p.description && p.description.toLowerCase().includes(searchLower))
-      );
+      products = products.filter((p: any) => p.status === status);
     }
 
     // Pagination
@@ -432,11 +430,17 @@ router.get('/reports', async (req: Request, res: Response) => {
     const limitNum = parseInt(limit as string);
     const offsetNum = parseInt(offset as string);
 
-    const result = await reportModel.findWithFilters(filters, limitNum, offsetNum);
+    const result = await reportModel.findAll({
+      status: filters.status,
+      report_type: filters.report_type,
+      category: filters.category,
+      limit: limitNum,
+      offset: offsetNum,
+    });
 
     res.json({
       success: true,
-      data: result,
+      data: { reports: result },
     });
   } catch (error) {
     console.error('Get reports error:', error);
