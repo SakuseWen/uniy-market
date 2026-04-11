@@ -8,7 +8,7 @@
  * 彻底移除轮询，改为 WebSocket notification 事件实时驱动
  * Polling removed entirely; driven by WebSocket notification events in real-time
  */
-import { Bell, User, LogOut, MessageCircle, ShoppingBag } from 'lucide-react';
+import { Bell, User, LogOut, MessageCircle, ShoppingBag, Shield } from 'lucide-react';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
@@ -421,6 +421,11 @@ export function Header({ language, onLanguageChange }: HeaderProps) {
                   <DropdownMenuItem onClick={() => navigate('/my-page')}>
                     <User className="w-4 h-4 mr-2" />{t('myPage')}
                   </DropdownMenuItem>
+                  {user?.isAdmin && (
+                    <DropdownMenuItem onClick={() => navigate('/admin')}>
+                      <Shield className="w-4 h-4 mr-2" />Admin
+                    </DropdownMenuItem>
+                  )}
                   <DropdownMenuItem onClick={handleLogout}>
                     <LogOut className="w-4 h-4 mr-2" />{t('logout') || 'Logout'}
                   </DropdownMenuItem>

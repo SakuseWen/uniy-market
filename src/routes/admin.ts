@@ -281,6 +281,29 @@ router.post('/users/:userId/remove-admin', async (req: Request, res: Response) =
 });
 
 /**
+ * PATCH /api/admin/users/:userId/verify
+ * Toggle education verification status
+ */
+router.patch('/users/:userId/verify', async (req: Request, res: Response) => {
+  try {
+    const { userId } = req.params;
+    const { isVerified } = req.body;
+
+    const userModel = new UserModel();
+    const user = await userModel.getUserById(userId);
+    if (!user) {
+      return res.status(404).json({ success: false, error: { message: 'User not found' } });
+    }
+
+    await userModel.updateUser(userId, { isVerified: !!isVerified });
+    res.json({ success: true, message: `User verification ${isVerified ? 'granted' : 'revoked'}` });
+  } catch (error) {
+    console.error('Verify user error:', error);
+    res.status(500).json({ success: false, error: { message: 'Failed to update verification' } });
+  }
+});
+
+/**
  * GET /api/admin/products
  * Get all products with filters
  */
