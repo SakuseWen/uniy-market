@@ -315,7 +315,7 @@ router.get('/products', async (req: Request, res: Response) => {
     const productModel = new ProductModel();
     // Admin needs all products regardless of status
     const searchTerm = search ? `%${(search as string).trim()}%` : null;
-    let query = 'SELECT * FROM ProductListing';
+    let query = 'SELECT p.*, u.name as sellerName FROM ProductListing p LEFT JOIN User u ON p.sellerID = u.userID';
     const params: any[] = [];
 
     const conditions: string[] = [];
