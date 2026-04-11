@@ -313,17 +313,26 @@ router.get('/products', async (req: Request, res: Response) => {
     const { status, search, limit = '50', offset = '0' } = req.query;
 
     const productModel = new ProductModel();
-    const searchResult = await productModel.searchProducts(
-      (search as string) || undefined,
-      {},
-      1,
-      1000
-    );
-    let products = searchResult.products || [];
+    // Admin needs all products regardless of status
+    const searchTerm = search ? `%${(search as string).trim()}%` : null;
+    let query = 'SELECT * FROM ProductListing';
+    const params: any[] = [];
 
-    // Apply status filter
-    if (status) {
-      products = products.filter((p: any) => p.status === status);
+    const conditions: string[] = [];
+    if (status) { conditions.push('status = ?'); params.push(status); }
+    if (searchTerm) { conditions.push('(title LIKE ? OR description LIKE ?)'); params.push(searchTerm, searchTerm); }
+    if (conditions.length > 0) query += ' WHERE ' + conditions.join(' AND ');
+    query += ' ORDER BY createdAt DESC LIMIT ? OFFSET ?';
+
+    const limitNum = parseInt(limit as string);
+    const offsetNum = parseInt(offset as string);
+    params.push(limitNum, offsetNum);
+
+    const products = await (productModel as any).query(query, params);
+
+    // Enrich with images and seller info
+    for (const p of products) {
+      p.images = await productModel.getProductImages(p.listingID);
     }
 
     // Pagination

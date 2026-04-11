@@ -204,8 +204,8 @@ export default function AdminPage() {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">
                           <span className="font-semibold truncate">{u.name}</span>
-                          {u.isAdmin && <Badge className="bg-purple-100 text-purple-700">Admin</Badge>}
-                          {u.isVerified && <Badge className="bg-green-100 text-green-700"><GraduationCap className="w-3 h-3 mr-1" />Edu</Badge>}
+                          {u.isAdmin ? <Badge className="bg-purple-100 text-purple-700">Admin</Badge> : null}
+                          {u.isVerified ? <Badge className="bg-green-100 text-green-700"><GraduationCap className="w-3 h-3 mr-1" />Edu</Badge> : null}
                         </div>
                         <p className="text-sm text-gray-500 truncate">{u.email}</p>
                       </div>
@@ -316,16 +316,16 @@ export default function AdminPage() {
                           {r.product_id && ` · Product: ${r.product_id}`}
                           {r.reported_user_id && ` · User: ${r.reported_user_id}`}
                         </div>
-                        {(r.status === 'pending' || r.status === 'under_review') && (
+                        {(r.status === 'pending' || r.status === 'under_review') ? (
                           <div className="flex gap-2">
-                            <Button size="sm" className="bg-green-600 hover:bg-green-700" onClick={() => setActionDialog({ type: 'resolveReport', target: r })}>
+                            <Button size="sm" style={{ background: '#16a34a', color: 'white' }} onClick={() => setActionDialog({ type: 'resolveReport', target: r })}>
                               <CheckCircle className="w-4 h-4 mr-1" />Resolve
                             </Button>
                             <Button size="sm" variant="outline" onClick={() => setActionDialog({ type: 'dismissReport', target: r })}>
                               <XCircle className="w-4 h-4 mr-1" />Dismiss
                             </Button>
                           </div>
-                        )}
+                        ) : null}
                       </CardContent>
                     </Card>
                   );
