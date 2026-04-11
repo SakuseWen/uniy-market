@@ -421,11 +421,11 @@ export function Header({ language, onLanguageChange }: HeaderProps) {
                   <DropdownMenuItem onClick={() => navigate('/my-page')}>
                     <User className="w-4 h-4 mr-2" />{t('myPage')}
                   </DropdownMenuItem>
-                  {user?.isAdmin && (
+                  {user?.isAdmin ? (
                     <DropdownMenuItem onClick={() => navigate('/admin')}>
                       <Shield className="w-4 h-4 mr-2" />Admin
                     </DropdownMenuItem>
-                  )}
+                  ) : null}
                   <DropdownMenuItem onClick={handleLogout}>
                     <LogOut className="w-4 h-4 mr-2" />{t('logout') || 'Logout'}
                   </DropdownMenuItem>
