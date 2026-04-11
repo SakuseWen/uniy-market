@@ -15,6 +15,7 @@ import { StarRating } from '../components/StarRating';
 import { TranslateButton } from '../components/TranslateButton';
 import { chatService } from '../services/chatService';
 import { toast } from 'sonner';
+import { Toaster } from '../components/ui/sonner';
 import { useAuth } from '../services/authContext';
 import { ReportDialog } from '../components/ReportDialog';
 
@@ -182,6 +183,7 @@ export default function SellerProfilePage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <Toaster position="top-right" />
       <Header language={language} onLanguageChange={setLanguage} unreadMessages={0} />
       <div className="container mx-auto px-4 py-8 max-w-3xl">
         <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-blue-600 hover:text-blue-700 mb-6">
