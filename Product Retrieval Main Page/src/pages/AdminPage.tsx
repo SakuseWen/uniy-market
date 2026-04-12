@@ -46,6 +46,7 @@ export default function AdminPage() {
   const [actionDialog, setActionDialog] = useState<{ type: string; target: any } | null>(null);
   const [actionReason, setActionReason] = useState('');
   const [actionLoading, setActionLoading] = useState(false);
+  const [deleteConfirmed, setDeleteConfirmed] = useState(false);
   const [expandedProduct, setExpandedProduct] = useState<string | null>(null);
 
   // Load users
@@ -371,7 +372,7 @@ export default function AdminPage() {
       </div>
 
       {/* Action Confirmation Dialog */}
-      <Dialog open={!!actionDialog} onOpenChange={(v: boolean) => { if (!v) { setActionDialog(null); setActionReason(''); } }}>
+      <Dialog open={!!actionDialog} onOpenChange={(v: boolean) => { if (!v) { setActionDialog(null); setActionReason(''); setDeleteConfirmed(false); } }}>
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>
@@ -383,14 +384,25 @@ export default function AdminPage() {
               {actionDialog?.type === 'dismissReport' && 'Dismiss Report'}
             </DialogTitle>
             <DialogDescription>
-              {actionDialog?.type === 'deleteUser' ? 'This action cannot be undone.' : 'Please provide a reason (optional).'}
+              {actionDialog?.type === 'deleteUser' ? 'This action cannot be undone. The user and all associated data will be permanently removed.' : 'Please provide a reason (optional).'}
             </DialogDescription>
           </DialogHeader>
+          {actionDialog?.type === 'deleteUser' && (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-sm text-red-700">
+              ⚠️ This will permanently delete the user account, all their products, chat history, reviews, and transaction records. This operation is irreversible.
+            </div>
+          )}
           <Textarea placeholder="Reason / Notes..." value={actionReason} onChange={(e) => setActionReason(e.target.value)} rows={3} />
+          {actionDialog?.type === 'deleteUser' && (
+            <label className="flex items-center gap-2 text-sm cursor-pointer">
+              <input type="checkbox" checked={deleteConfirmed} onChange={(e) => setDeleteConfirmed(e.target.checked)} className="rounded" />
+              <span className="text-red-600 font-medium">I confirm this action is irreversible and I want to proceed.</span>
+            </label>
+          )}
           <div className="flex gap-2 justify-end">
-            <Button variant="outline" onClick={() => { setActionDialog(null); setActionReason(''); }}>Cancel</Button>
+            <Button variant="outline" onClick={() => { setActionDialog(null); setActionReason(''); setDeleteConfirmed(false); }}>Cancel</Button>
             <Button
-              disabled={actionLoading}
+              disabled={actionLoading || (actionDialog?.type === 'deleteUser' && !deleteConfirmed)}
               className={actionDialog?.type === 'deleteUser' || actionDialog?.type === 'removeProduct' ? 'bg-red-600 hover:bg-red-700' : ''}
               onClick={() => {
                 if (!actionDialog) return;
