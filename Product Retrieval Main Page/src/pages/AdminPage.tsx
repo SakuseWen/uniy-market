@@ -115,12 +115,10 @@ export default function AdminPage() {
 
   const handleToggleVerify = async (userId: string, current: boolean) => {
     try {
-      const res = await adminService.toggleVerify(userId, !current);
-      console.log('[Admin] toggleVerify response:', res.data);
+      await adminService.toggleVerify(userId, !current);
       toast.success(current ? 'Verification revoked' : 'Verification granted');
       await loadUsers();
     } catch (e: any) {
-      console.error('[Admin] toggleVerify error:', e.response?.data || e.message);
       toast.error(e.response?.data?.error?.message || e.response?.data?.error || 'Failed');
     }
   };
