@@ -298,8 +298,8 @@ router.patch('/users/:userId/verify', async (req: Request, res: Response) => {
       return res.status(404).json({ success: false, error: { message: 'User not found' } });
     }
 
-    await userModel.updateUser(userId, { isVerified: isVerified ? 1 : 0, eduVerified: isVerified ? 1 : 0 } as any);
-    res.json({ success: true, message: `User verification ${isVerified ? 'granted' : 'revoked'}` });
+    await userModel.updateUser(userId, { eduVerified: isVerified ? 1 : 0 } as any);
+    res.json({ success: true, message: `Education verification ${isVerified ? 'granted' : 'revoked'}` });
   } catch (error) {
     console.error('Verify user error:', error);
     res.status(500).json({ success: false, error: { message: 'Failed to update verification' } });

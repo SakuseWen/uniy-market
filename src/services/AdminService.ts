@@ -75,8 +75,8 @@ export class AdminService {
       throw new Error('User is already active');
     }
 
-    // Update user status
-    await this.userModel.updateUser(userId, { status: 'active' });
+    // Update user status and ensure isVerified is restored
+    await this.userModel.updateUser(userId, { status: 'active', isVerified: true } as any);
 
     // Log the action
     await this.auditLogModel.create({

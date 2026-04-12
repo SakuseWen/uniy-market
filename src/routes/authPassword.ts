@@ -93,8 +93,8 @@ router.post('/login',
         });
       }
 
-      // Check if user is verified
-      if (!user.isVerified) {
+      // Check if user is verified (but allow suspended users to login)
+      if (!user.isVerified && user.status !== 'suspended') {
         return res.status(403).json({
           success: false,
           error: {
@@ -115,6 +115,7 @@ router.post('/login',
           name: user.name,
           isVerified: user.isVerified,
           isAdmin: user.isAdmin,
+          status: user.status,
         },
         JWT_SECRET,
         { expiresIn: '7d' }
@@ -135,6 +136,7 @@ router.post('/login',
             isVerified: !!user.isVerified,
             isAdmin: !!user.isAdmin,
             preferredLanguage: user.preferredLanguage,
+            status: user.status,
           }
         },
         message: 'Login successful'
@@ -645,6 +647,7 @@ router.get('/me', authenticateToken, async (req: express.Request, res: express.R
         isVerified: !!user.isVerified,
         isAdmin: !!user.isAdmin,
         preferredLanguage: user.preferredLanguage,
+        status: (user as any).status,
       }
     });
   } catch (error) {
