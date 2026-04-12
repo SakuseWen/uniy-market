@@ -1,5 +1,5 @@
 import express, { Request, Response } from 'express';
-import { authenticateToken } from '../middleware/auth';
+import { authenticateToken, requireActiveUser } from '../middleware/auth';
 import { body, validationResult } from 'express-validator';
 import { DatabaseManager } from '../config/database';
 import { v4 as uuidv4 } from 'uuid';
@@ -45,6 +45,7 @@ router.get('/:listingID', async (req: Request, res: Response) => {
 // POST /api/comments - Add a comment (logged in users only)
 router.post('/',
   authenticateToken,
+  requireActiveUser,
   [
     body('listingID').notEmpty(),
     body('content').trim().isLength({ min: 1, max: 1000 }),

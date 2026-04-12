@@ -2,7 +2,7 @@ import express from 'express';
 import { ProductModel } from '../models/ProductModel';
 import { UserModel } from '../models/UserModel';
 import { ReviewModel } from '../models/ReviewModel';
-import { authenticateToken } from '../middleware/auth';
+import { authenticateToken, requireActiveUser } from '../middleware/auth';
 import { body, query, validationResult } from 'express-validator';
 import { uploadConfig } from '../config/upload';
 import { processUploadedImages, deleteImageFile } from '../middleware/imageProcessing';
@@ -44,6 +44,7 @@ function getReviewModel(): ReviewModel {
  */
 router.post('/',
   authenticateToken,
+  requireActiveUser,
   [
     body('title').notEmpty().trim().isLength({ min: 1, max: 200 }).withMessage('Title is required and must be between 1-200 characters'),
     body('description').optional().trim().isLength({ max: 2000 }).withMessage('Description must not exceed 2000 characters'),
@@ -237,6 +238,7 @@ router.get('/:id', async (req, res) => {
  */
 router.put('/:id',
   authenticateToken,
+  requireActiveUser,
   [
     body('title').optional().trim().isLength({ min: 1, max: 200 }).withMessage('Title must be between 1-200 characters'),
     body('description').optional().trim().isLength({ max: 2000 }).withMessage('Description must not exceed 2000 characters'),

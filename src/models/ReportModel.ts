@@ -17,6 +17,7 @@ export interface Report {
   reason: string;
   status: 'pending' | 'under_review' | 'resolved' | 'dismissed';
   admin_notes?: string;
+  evidence_images?: string;
   reviewed_by?: number;
   reviewed_at?: string;
   created_at: string;
@@ -24,14 +25,15 @@ export interface Report {
 }
 
 export interface CreateReportData {
-  reporter_id: number;
-  reported_user_id?: number;
-  product_id?: number;
-  chat_id?: number;
-  message_id?: number;
+  reporter_id: number | string;
+  reported_user_id?: number | string;
+  product_id?: number | string;
+  chat_id?: number | string;
+  message_id?: number | string;
   report_type: 'user' | 'product' | 'chat' | 'message';
   category: 'inappropriate_content' | 'spam' | 'fraud' | 'harassment' | 'fake_product' | 'other';
   reason: string;
+  evidence_images?: string;
 }
 
 export interface UpdateReportData {
@@ -49,11 +51,11 @@ export class ReportModel extends BaseModel {
     const query = `
       INSERT INTO reports (
         reporter_id, reported_user_id, product_id, chat_id, message_id,
-        report_type, category, reason, status
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pending')
+        report_type, category, reason, evidence_images, status
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')
     `;
 
-    const result = await this.db.run(query, [
+    const result = await this.getDb().run(query, [
       data.reporter_id,
       data.reported_user_id || null,
       data.product_id || null,
@@ -61,7 +63,8 @@ export class ReportModel extends BaseModel {
       data.message_id || null,
       data.report_type,
       data.category,
-      data.reason
+      data.reason,
+      data.evidence_images || null
     ]);
 
     if (!result.lastID) {
@@ -84,7 +87,7 @@ export class ReportModel extends BaseModel {
       SELECT * FROM reports WHERE report_id = ?
     `;
 
-    const report = await this.db.get<Report>(query, [reportId]);
+    const report = await this.getDb().get<Report>(query, [reportId]);
     return report || null;
   }
 
@@ -140,7 +143,7 @@ export class ReportModel extends BaseModel {
       params.push(filters.offset);
     }
 
-    const results = await this.db.all<Report>(query, params);
+    const results = await this.getDb().all<Report>(query, params);
     return Array.isArray(results) ? results : [];
   }
 
@@ -188,7 +191,7 @@ export class ReportModel extends BaseModel {
       WHERE report_id = ?
     `;
 
-    await this.db.run(query, params);
+    await this.getDb().run(query, params);
 
     const report = await this.findById(reportId);
     if (!report) {
@@ -203,7 +206,7 @@ export class ReportModel extends BaseModel {
    */
   async delete(reportId: number): Promise<boolean> {
     const query = `DELETE FROM reports WHERE report_id = ?`;
-    const result = await this.db.run(query, [reportId]);
+    const result = await this.getDb().run(query, [reportId]);
     return (result.changes || 0) > 0;
   }
 
@@ -217,7 +220,7 @@ export class ReportModel extends BaseModel {
       ORDER BY created_at DESC
     `;
 
-    const results = await this.db.all<Report>(query, [userId]);
+    const results = await this.getDb().all<Report>(query, [userId]);
     return Array.isArray(results) ? results : [];
   }
 
@@ -231,7 +234,7 @@ export class ReportModel extends BaseModel {
       ORDER BY created_at DESC
     `;
 
-    const results = await this.db.all<Report>(query, [userId]);
+    const results = await this.getDb().all<Report>(query, [userId]);
     return Array.isArray(results) ? results : [];
   }
 
@@ -245,7 +248,7 @@ export class ReportModel extends BaseModel {
       ORDER BY created_at DESC
     `;
 
-    const results = await this.db.all<Report>(query, [productId]);
+    const results = await this.getDb().all<Report>(query, [productId]);
     return Array.isArray(results) ? results : [];
   }
 
@@ -259,28 +262,28 @@ export class ReportModel extends BaseModel {
     by_type: Record<string, number>;
   }> {
     const totalQuery = `SELECT COUNT(*) as count FROM reports`;
-    const totalResult = await this.db.get<{ count: number }>(totalQuery);
+    const totalResult = await this.getDb().get<{ count: number }>(totalQuery);
 
     const statusQuery = `
       SELECT status, COUNT(*) as count
       FROM reports
       GROUP BY status
     `;
-    const statusResults = await this.db.all<{ status: string; count: number }>(statusQuery);
+    const statusResults = await this.getDb().all<{ status: string; count: number }>(statusQuery);
 
     const categoryQuery = `
       SELECT category, COUNT(*) as count
       FROM reports
       GROUP BY category
     `;
-    const categoryResults = await this.db.all<{ category: string; count: number }>(categoryQuery);
+    const categoryResults = await this.getDb().all<{ category: string; count: number }>(categoryQuery);
 
     const typeQuery = `
       SELECT report_type, COUNT(*) as count
       FROM reports
       GROUP BY report_type
     `;
-    const typeResults = await this.db.all<{ report_type: string; count: number }>(typeQuery);
+    const typeResults = await this.getDb().all<{ report_type: string; count: number }>(typeQuery);
 
     const by_status: Record<string, number> = {};
     const statusArray = Array.isArray(statusResults) ? statusResults : [];
@@ -317,7 +320,11 @@ export class ReportModel extends BaseModel {
     chat_id?: number;
     message_id?: number;
   }): Promise<boolean> {
-    let query = `SELECT COUNT(*) as count FROM reports WHERE reporter_id = ?`;
+    // Must have at least one target filter
+    const hasFilter = filters.reported_user_id || filters.product_id || filters.chat_id || filters.message_id;
+    if (!hasFilter) return false;
+
+    let query = `SELECT COUNT(*) as count FROM reports WHERE reporter_id = ? AND status IN ('pending', 'under_review')`;
     const params: any[] = [reporterId];
 
     if (filters.reported_user_id) {
@@ -340,7 +347,7 @@ export class ReportModel extends BaseModel {
       params.push(filters.message_id);
     }
 
-    const result = await this.db.get<{ count: number }>(query, params);
+    const result = await this.getDb().get<{ count: number }>(query, params);
     return (result?.count || 0) > 0;
   }
 }

@@ -1,7 +1,7 @@
 import express, { Request, Response } from 'express';
 import { ReviewModel } from '../models/ReviewModel';
 import { UserModel } from '../models/UserModel';
-import { authenticateToken } from '../middleware/auth';
+import { authenticateToken, requireActiveUser } from '../middleware/auth';
 import { ApiResponse } from '../types';
 import { moderateReviewContent, logFlaggedContent } from '../middleware/contentModeration';
 import { uploadConfig } from '../config/upload';
@@ -17,7 +17,7 @@ const userModel = new UserModel();
  * POST /api/reviews
  * Create a new review
  */
-router.post('/', authenticateToken, moderateReviewContent, logFlaggedContent, async (req: Request, res: Response) => {
+router.post('/', authenticateToken, requireActiveUser, moderateReviewContent, logFlaggedContent, async (req: Request, res: Response) => {
   try {
     const { rating, comment, targetUserID, dealID, reviewType } = req.body;
     const reviewerID = (req as any).user.userID;

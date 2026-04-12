@@ -6,7 +6,7 @@
 import express, { Request, Response } from 'express';
 import { FavoriteModel } from '../models/FavoriteModel';
 import { ProductModel } from '../models/ProductModel';
-import { authenticateToken } from '../middleware/auth';
+import { authenticateToken, requireActiveUser } from '../middleware/auth';
 
 const router = express.Router();
 const favoriteModel = new FavoriteModel();
@@ -56,7 +56,7 @@ router.get('/', authenticateToken, async (req: Request, res: Response) => {
  * Add a product to favorites
  * POST /api/favorites
  */
-router.post('/', authenticateToken, async (req: Request, res: Response) => {
+router.post('/', authenticateToken, requireActiveUser, async (req: Request, res: Response) => {
   try {
     const userID = (req as any).user?.userID;
     if (!userID) {

@@ -2,6 +2,9 @@ import { UserModel } from '../models/UserModel';
 import { ProductModel } from '../models/ProductModel';
 import { ReportModel } from '../models/ReportModel';
 import { AuditLogModel } from '../models/AuditLogModel';
+import { DatabaseManager } from '../config/database';
+import fs from 'fs';
+import path from 'path';
 
 export interface UserManagementAction {
   action: 'suspend' | 'activate' | 'delete' | 'make_admin' | 'remove_admin';
@@ -75,8 +78,8 @@ export class AdminService {
       throw new Error('User is already active');
     }
 
-    // Update user status
-    await this.userModel.updateUser(userId, { status: 'active' });
+    // Update user status and ensure isVerified is restored
+    await this.userModel.updateUser(userId, { status: 'active', isVerified: true } as any);
 
     // Log the action
     await this.auditLogModel.create({
@@ -111,8 +114,32 @@ export class AdminService {
       details: reason || 'User deleted by admin',
     });
 
-    // Delete user (cascade will handle related records)
-    await this.userModel.deleteUser(userId);
+    const db = DatabaseManager.getInstance().getDatabase();
+
+    // Delete avatar file from disk
+    if (user.profileImage && (user.profileImage as string).startsWith('/uploads/avatars/')) {
+      try { fs.unlinkSync(path.join(process.cwd(), 'public', user.profileImage as string)); } catch (_e) { /* ignore */ }
+    }
+
+    // Delete product image files from disk
+    const productImages = await db.all(
+      `SELECT pi.imagePath FROM ProductImage pi
+       JOIN ProductListing pl ON pi.listingID = pl.listingID
+       WHERE pl.sellerID = ?`, [userId]
+    );
+    for (const img of productImages) {
+      if (img.imagePath) {
+        try { fs.unlinkSync(path.join(process.cwd(), 'public', img.imagePath)); } catch (_e) { /* ignore */ }
+      }
+    }
+
+    // Hard delete user — CASCADE will handle related records
+    await db.run('DELETE FROM User WHERE userID = ?', [userId]);
+
+    // Clean up verification codes
+    if (user.email) {
+      await db.run('DELETE FROM VerificationCode WHERE email = ?', [user.email]);
+    }
   }
 
   /**
@@ -237,7 +264,7 @@ export class AdminService {
     // Update report status
     await this.reportModel.update(reportId, {
       status: 'resolved',
-      reviewed_by: parseInt(adminId),
+      reviewed_by: adminId as any,
       ...(notes && { admin_notes: notes }),
     });
 
@@ -268,7 +295,7 @@ export class AdminService {
     // Update report status
     await this.reportModel.update(reportId, {
       status: 'dismissed',
-      reviewed_by: parseInt(adminId),
+      reviewed_by: adminId as any,
       ...(notes && { admin_notes: notes }),
     });
 

@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router';
-import { ChevronLeft, Heart, Scale, Flag, MessageCircle, ShoppingCart, Check, X as XIcon, Loader2 } from 'lucide-react';
+import { useNavigate, useLocation } from 'react-router';
+import { ChevronLeft, Heart, Scale, Flag, MessageCircle, Pencil } from 'lucide-react';
 import { Product } from '../lib/mockData';
 import { Language, translate } from '../lib/i18n';
+import { ReportDialog } from './ReportDialog';
 import { Button } from './ui/button';
 import { useAuth } from '../services/authContext';
 import { favoriteService } from '../services/favoriteService';
@@ -11,11 +12,13 @@ import apiClient from '../services/api';
 import { LocationPicker } from './LocationPicker';
 import { toast } from 'sonner';
 import { Badge } from './ui/badge';
+import { chatService } from '../services/chatService';
 import { ProductImageCarousel } from './ProductImageCarousel';
 import { SellerInfoCard } from './SellerInfoCard';
 import { ProductTabs } from './ProductTabs';
 import { SafetyNotice } from './SafetyNotice';
 import { RelatedItems } from './RelatedItems';
+import { TranslateButton } from './TranslateButton';
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -31,6 +34,8 @@ interface ProductDetailPageProps {
   language: Language;
   onBack: () => void;
   onProductClick: (product: Product) => void;
+  onCompare?: (id: string) => void;
+  isInComparison?: boolean;
 }
 
 export function ProductDetailPage({
@@ -39,13 +44,17 @@ export function ProductDetailPage({
   language,
   onBack,
   onProductClick,
+  onCompare,
+  isInComparison = false,
 }: ProductDetailPageProps) {
   const t = (key: any) => translate(language, key);
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
   const [isFavorite, setIsFavorite] = useState(false);
   const [deal, setDeal] = useState<any>(null);
   const [dealLoading, setDealLoading] = useState(false);
+  const [reportOpen, setReportOpen] = useState(false);
 
   // Check if product is favorited
   useEffect(() => {
@@ -79,7 +88,7 @@ export function ProductDetailPage({
       setDeal(newDeal);
       toast.success(t('dealRequestSent') || 'Purchase request sent');
     } catch (err: any) {
-      toast.error(err.response?.data?.error?.message || 'Failed to create deal');
+      toast.error(err?.suspendedMessage || err.response?.data?.error?.message || 'Failed to create deal');
     } finally { setDealLoading(false); }
   };
 
@@ -90,7 +99,7 @@ export function ProductDetailPage({
       await dealService.acceptDeal(deal.dealID);
       setDeal({ ...deal, notes: 'accepted' });
       toast.success(t('dealAccepted') || 'Deal accepted');
-    } catch (err: any) { toast.error(err.response?.data?.error?.message || 'Failed'); }
+    } catch (err: any) { toast.error(err?.suspendedMessage || err.response?.data?.error?.message || 'Failed'); }
     finally { setDealLoading(false); }
   };
 
@@ -101,7 +110,7 @@ export function ProductDetailPage({
       await dealService.rejectDeal(deal.dealID);
       setDeal(null);
       toast.success(t('dealRejected') || 'Deal rejected');
-    } catch (err: any) { toast.error(err.response?.data?.error?.message || 'Failed'); }
+    } catch (err: any) { toast.error(err?.suspendedMessage || err.response?.data?.error?.message || 'Failed'); }
     finally { setDealLoading(false); }
   };
 
@@ -118,7 +127,7 @@ export function ProductDetailPage({
         setDeal({ ...deal, [isBuyer ? 'buyerConfirmed' : 'sellerConfirmed']: true });
         toast.success(t('dealConfirmedWaiting') || 'Confirmed. Waiting for the other party.');
       }
-    } catch (err: any) { toast.error(err.response?.data?.error?.message || 'Failed'); }
+    } catch (err: any) { toast.error(err?.suspendedMessage || err.response?.data?.error?.message || 'Failed'); }
     finally { setDealLoading(false); }
   };
 
@@ -129,7 +138,7 @@ export function ProductDetailPage({
       await dealService.cancelDeal(deal.dealID);
       setDeal(null);
       toast.success(t('dealCancelled') || 'Deal cancelled');
-    } catch (err: any) { toast.error(err.response?.data?.error?.message || 'Failed'); }
+    } catch (err: any) { toast.error(err?.suspendedMessage || err.response?.data?.error?.message || 'Failed'); }
     finally { setDealLoading(false); }
   };
 
@@ -147,6 +156,36 @@ export function ProductDetailPage({
       }
     } catch (err) {
       console.error('Favorite error:', err);
+    }
+  };
+
+  // 判断当前用户是否为该商品的卖家 / Check if current user is the seller of this product
+  const isSeller = !!user && !!product.seller.id && user.userID === product.seller.id;
+
+  /**
+   * 买家点击"联系卖家"：创建或获取聊天房间后跳转
+   * Buyer clicks "Contact Seller": create/get chat room then navigate
+   */
+  const handleContactSeller = async () => {
+    if (!user) {
+      navigate('/login');
+      return;
+    }
+    try {
+      const res = await chatService.createOrGetChat(product.id, product.seller.id!);
+      const chatID = res.data.data.chatID;
+      // 传递来源路径，供 ChatPage 智能返回使用 / Pass source path for ChatPage smart back navigation
+      navigate(`/chat/${chatID}`, { state: { from: location.pathname + location.search } });
+    } catch (err: any) {
+      // 后端返回 403 表示自聊天被拒绝或账户被暂停 / Backend 403 means self-chat rejected or account suspended
+      const status = err?.response?.status;
+      if (err?.suspendedMessage) {
+        toast.error(err.suspendedMessage);
+      } else if (status === 403) {
+        toast.error(err?.response?.data?.message || 'Cannot start a chat with yourself');
+      } else {
+        toast.error('Failed to open chat. Please try again.');
+      }
     }
   };
 
@@ -220,7 +259,8 @@ export function ProductDetailPage({
           {/* Right: Product Summary */}
           <div className="bg-white rounded-lg p-6 h-fit sticky top-20">
             {/* Title */}
-            <h1 className="mb-4">{getLocalizedTitle()}</h1>
+            <h1 className="mb-1">{getLocalizedTitle()}</h1>
+            <TranslateButton text={product.title} language={language} className="mb-4" />
 
             {/* Price */}
             <div className="flex items-baseline gap-3 mb-4">
@@ -286,21 +326,25 @@ export function ProductDetailPage({
 
             {/* Action Buttons */}
             <div className="grid grid-cols-2 gap-3 mb-3">
-              {/* Buy button - only for non-owner, non-sold, no active deal */}
-              {user && product.seller?.id !== user.userID && !product.sold && !deal && (
-                <Button className="w-full col-span-2 text-white hover:shadow-lg hover:scale-105 transition-all duration-200" style={{ background: '#16a34a' }} onClick={handleBuy} disabled={dealLoading}>
-                  {dealLoading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <ShoppingCart className="w-4 h-4 mr-2" />}
-                  {t('buy')}
+              {/* 卖家看到"编辑商品"，买家看到"联系卖家" / Seller sees "Edit Product", buyer sees "Contact Seller" */}
+              {isSeller ? (
+                <Button
+                  className="w-full text-white hover:text-white hover:shadow-lg hover:scale-105 transition-all duration-200"
+                  style={{ background: 'linear-gradient(to right, #22c55e, #0d9488)' }}
+                  onClick={() => navigate(`/edit-product/${product.id}`)}
+                >
+                  <Pencil className="w-4 h-4 mr-2" />
+                  {t('editProduct')}
+                </Button>
+              ) : (
+                <Button
+                  className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:shadow-lg hover:scale-105 transition-all duration-200"
+                  onClick={handleContactSeller}
+                >
+                  <MessageCircle className="w-4 h-4 mr-2" />
+                  {t('contactSeller')}
                 </Button>
               )}
-
-              <Button className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:shadow-lg hover:scale-105 transition-all duration-200" onClick={() => {
-                if (!user) { navigate('/login'); return; }
-                if (product.seller.id) navigate(`/chat/${product.seller.id}`);
-              }}>
-                <MessageCircle className="w-4 h-4 mr-2" />
-                {t('contactSeller')}
-              </Button>
               <Button
                 variant="outline"
                 className="w-full"
@@ -312,11 +356,15 @@ export function ProductDetailPage({
             </div>
 
             <div className="grid grid-cols-2 gap-3">
-              <Button variant="outline" className="w-full">
+              <Button
+                variant="outline"
+                className={`w-full ${isInComparison ? 'border-blue-500 text-blue-600 bg-blue-50' : ''}`}
+                onClick={() => onCompare?.(product.id)}
+              >
                 <Scale className="w-4 h-4 mr-2" />
                 {t('addToCompare')}
               </Button>
-              <Button variant="outline" className="w-full">
+              <Button variant="outline" className="w-full" onClick={() => setReportOpen(true)}>
                 <Flag className="w-4 h-4 mr-2" />
                 {t('reportListing')}
               </Button>
@@ -366,6 +414,16 @@ export function ProductDetailPage({
           onProductClick={onProductClick}
         />
       </div>
+
+      {/* Report Dialog */}
+      <ReportDialog
+        open={reportOpen}
+        onOpenChange={setReportOpen}
+        language={language}
+        reportType="product"
+        targetId={product.id}
+        targetName={getLocalizedTitle()}
+      />
     </div>
   );
 }

@@ -1,7 +1,16 @@
 import axios, { AxiosInstance, AxiosError } from 'axios';
+import { translate } from '../lib/i18n';
+import type { Language } from '../lib/i18n';
 
 // API 基础配置
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+
+/** 获取当前语言偏好 / Get current language preference */
+function getCurrentLanguage(): Language {
+  const saved = localStorage.getItem('preferredLanguage');
+  if (saved === 'zh' || saved === 'th' || saved === 'en') return saved;
+  return 'en';
+}
 
 // 创建 axios 实例
 const apiClient: AxiosInstance = axios.create({
@@ -31,13 +40,23 @@ apiClient.interceptors.request.use(
 apiClient.interceptors.response.use(
   (response) => response,
   (error: AxiosError) => {
-    // 不在这里自动重定向，让应用层处理 401 错误
-    // 这样可以显示错误提示而不是直接跳转
     if (error.response?.status === 401) {
-      // Token 过期或无效，清除本地存储
       sessionStorage.removeItem('authToken');
       sessionStorage.removeItem('authUser');
-      // 让应用层决定是否重定向
+    }
+    // 账户被暂停：统一拦截并附加三语提示 / Account suspended: intercept and attach tri-lingual message
+    if (error.response?.status === 403) {
+      const data = error.response.data as any;
+      if (data?.error?.code === 'ACCOUNT_INACTIVE') {
+        const lang = getCurrentLanguage();
+        const msg = translate(lang, 'accountSuspended');
+        // 将三语提示附加到 error 上，方便前端直接使用
+        (error as any).suspendedMessage = msg;
+      }
+    }
+    // Add user-friendly message for rate limiting
+    if (error.response?.status === 429) {
+      (error as any).rateLimited = true;
     }
     return Promise.reject(error);
   }

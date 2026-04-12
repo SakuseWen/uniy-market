@@ -7,7 +7,7 @@ import path from 'path';
 import { UserModel } from '../models/UserModel';
 import { DatabaseManager } from '../config/database';
 import { generateVerificationCode, sendVerificationEmail } from '../services/emailService';
-import { authenticateToken } from '../middleware/auth';
+import { authenticateToken, requireActiveUser } from '../middleware/auth';
 
 const router = express.Router();
 let userModel: UserModel | null = null;
@@ -94,6 +94,7 @@ router.post('/login',
       }
 
       // Check if user is verified
+      // Suspended users who were previously verified can still login (with restricted access)
       if (!user.isVerified) {
         return res.status(403).json({
           success: false,
@@ -115,6 +116,7 @@ router.post('/login',
           name: user.name,
           isVerified: user.isVerified,
           isAdmin: user.isAdmin,
+          status: user.status,
         },
         JWT_SECRET,
         { expiresIn: '7d' }
@@ -130,11 +132,12 @@ router.post('/login',
             name: user.name,
             profileImage: user.profileImage,
             bio: user.bio,
-            eduVerified: user.eduVerified || false,
+            eduVerified: !!(user.eduVerified),
             eduEmail: user.eduEmail || null,
-            isVerified: user.isVerified,
-            isAdmin: user.isAdmin,
+            isVerified: !!user.isVerified,
+            isAdmin: !!user.isAdmin,
             preferredLanguage: user.preferredLanguage,
+            status: user.status,
           }
         },
         message: 'Login successful'
@@ -487,6 +490,7 @@ router.post('/delete-account/confirm',
  */
 router.post('/edu-verify/send-code',
   authenticateToken,
+  requireActiveUser,
   [body('eduEmail').isEmail().withMessage('Valid education email is required')],
   async (req: express.Request, res: express.Response) => {
     try {
@@ -554,6 +558,7 @@ router.post('/edu-verify/send-code',
  */
 router.post('/edu-verify/confirm',
   authenticateToken,
+  requireActiveUser,
   [
     body('eduEmail').isEmail().withMessage('Valid education email is required'),
     body('code').isLength({ min: 6, max: 6 }).withMessage('6-digit code is required'),
@@ -616,6 +621,169 @@ router.post('/edu-verify/confirm',
     } catch (error) {
       console.error('Edu verify confirm error:', error);
       return res.status(500).json({ success: false, error: { code: 'VERIFICATION_FAILED', message: 'Failed to verify education email' } });
+    }
+  }
+);
+
+/**
+ * GET /api/auth/me
+ * Get current user info (refreshes from DB)
+ */
+router.get('/me', authenticateToken, async (req: express.Request, res: express.Response) => {
+  try {
+    const authUser = (req as any).user;
+    if (!authUser?.userID) return res.status(401).json({ success: false, error: { message: 'Unauthorized' } });
+
+    const user = await getUserModel().getUserById(authUser.userID);
+    if (!user) return res.status(404).json({ success: false, error: { message: 'User not found' } });
+
+    return res.json({
+      success: true,
+      data: {
+        userID: user.userID,
+        email: user.email,
+        name: user.name,
+        profileImage: user.profileImage,
+        bio: (user as any).bio,
+        eduVerified: !!(user as any).eduVerified,
+        eduEmail: (user as any).eduEmail || null,
+        isVerified: !!user.isVerified,
+        isAdmin: !!user.isAdmin,
+        preferredLanguage: user.preferredLanguage,
+        status: (user as any).status,
+      }
+    });
+  } catch (error) {
+    return res.status(500).json({ success: false, error: { message: 'Failed to get user info' } });
+  }
+});
+
+/**
+ * POST /api/auth/forgot-password/send-code
+ * Send password reset verification code
+ */
+router.post('/forgot-password/send-code',
+  [body('email').isEmail().withMessage('Valid email is required')],
+  async (req: express.Request, res: express.Response) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({ success: false, error: { code: 'VALIDATION_ERROR', message: 'Invalid email' } });
+      }
+
+      const { email } = req.body;
+      const user = await getUserModel().getUserByEmail(email);
+      if (!user) {
+        return res.status(404).json({ success: false, error: { code: 'USER_NOT_FOUND', message: 'No account found with this email' } });
+      }
+
+      const db = DatabaseManager.getInstance().getDatabase();
+      // Invalidate old codes
+      await db.run('UPDATE VerificationCode SET used = 1 WHERE email = ? AND used = 0', [email]);
+
+      const code = generateVerificationCode();
+      const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString();
+      const metadata = JSON.stringify({ type: 'forgot_password' });
+      await db.run('INSERT INTO VerificationCode (email, code, metadata, expiresAt) VALUES (?, ?, ?, ?)', [email, code, metadata, expiresAt]);
+
+      const sent = await sendVerificationEmail(email, code);
+      if (!sent) {
+        return res.status(500).json({ success: false, error: { code: 'EMAIL_FAILED', message: 'Failed to send verification email' } });
+      }
+
+      return res.json({ success: true, message: 'Verification code sent' });
+    } catch (error) {
+      console.error('Forgot password send code error:', error);
+      return res.status(500).json({ success: false, error: { code: 'SEND_CODE_FAILED', message: 'Failed to send code' } });
+    }
+  }
+);
+
+/**
+ * POST /api/auth/forgot-password/verify
+ * Verify code for password reset
+ */
+router.post('/forgot-password/verify',
+  [
+    body('email').isEmail().withMessage('Valid email is required'),
+    body('code').isLength({ min: 6, max: 6 }).withMessage('6-digit code is required'),
+  ],
+  async (req: express.Request, res: express.Response) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({ success: false, error: { code: 'VALIDATION_ERROR', message: 'Invalid input' } });
+      }
+
+      const { email, code } = req.body;
+      const db = DatabaseManager.getInstance().getDatabase();
+
+      const record = await db.get(
+        'SELECT * FROM VerificationCode WHERE email = ? AND code = ? AND used = 0 AND expiresAt > ? ORDER BY createdAt DESC LIMIT 1',
+        [email, code, new Date().toISOString()]
+      );
+
+      if (!record) {
+        return res.status(400).json({ success: false, error: { code: 'INVALID_CODE', message: 'Invalid or expired verification code' } });
+      }
+
+      // Mark code as used
+      await db.run('UPDATE VerificationCode SET used = 1 WHERE id = ?', [record.id]);
+
+      // Generate a short-lived reset token
+      const resetToken = jwt.sign({ email, purpose: 'password_reset' }, JWT_SECRET, { expiresIn: '10m' });
+
+      return res.json({ success: true, data: { resetToken } });
+    } catch (error) {
+      console.error('Forgot password verify error:', error);
+      return res.status(500).json({ success: false, error: { code: 'VERIFY_FAILED', message: 'Verification failed' } });
+    }
+  }
+);
+
+/**
+ * POST /api/auth/forgot-password/reset
+ * Reset password with verified token
+ */
+router.post('/forgot-password/reset',
+  [
+    body('resetToken').notEmpty().withMessage('Reset token is required'),
+    body('newPassword').isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
+  ],
+  async (req: express.Request, res: express.Response) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({ success: false, error: { code: 'VALIDATION_ERROR', message: 'Invalid input' } });
+      }
+
+      const { resetToken, newPassword } = req.body;
+
+      // Verify reset token
+      let decoded: any;
+      try {
+        decoded = jwt.verify(resetToken, JWT_SECRET);
+      } catch {
+        return res.status(400).json({ success: false, error: { code: 'INVALID_TOKEN', message: 'Invalid or expired reset token' } });
+      }
+
+      if (decoded.purpose !== 'password_reset' || !decoded.email) {
+        return res.status(400).json({ success: false, error: { code: 'INVALID_TOKEN', message: 'Invalid reset token' } });
+      }
+
+      const user = await getUserModel().getUserByEmail(decoded.email);
+      if (!user) {
+        return res.status(404).json({ success: false, error: { code: 'USER_NOT_FOUND', message: 'User not found' } });
+      }
+
+      const hashedPassword = await bcrypt.hash(newPassword, 10);
+      const db = DatabaseManager.getInstance().getDatabase();
+      await db.run('UPDATE User SET password = ?, updatedAt = ? WHERE userID = ?', [hashedPassword, new Date().toISOString(), user.userID]);
+
+      return res.json({ success: true, message: 'Password reset successfully' });
+    } catch (error) {
+      console.error('Forgot password reset error:', error);
+      return res.status(500).json({ success: false, error: { code: 'RESET_FAILED', message: 'Failed to reset password' } });
     }
   }
 );

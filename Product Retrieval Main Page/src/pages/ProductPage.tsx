@@ -2,19 +2,25 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router';
 import { Header } from '../components/Header';
 import { ProductDetailPage } from '../components/ProductDetailPage';
+import { ComparisonBar } from '../components/ComparisonBar';
 import { useLanguage } from '../lib/LanguageContext';
+import { useComparison } from '../lib/ComparisonContext';
 import { productService } from '../services';
 import { Product } from '../lib/mockData';
+import { translate } from '../lib/i18n';
 import { Loader2 } from 'lucide-react';
 import { Toaster } from '../components/ui/sonner';
+import { toast } from 'sonner';
 
 export default function ProductPage() {
   const { productId } = useParams<{ productId: string }>();
   const navigate = useNavigate();
   const { language, setLanguage } = useLanguage();
+  const t = (key: any) => translate(language, key);
   const [product, setProduct] = useState<Product | null>(null);
   const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const { comparisonProducts, toggleProduct, removeProduct, clearAll, isInComparison } = useComparison();
 
   useEffect(() => {
     if (!productId) return;
@@ -24,7 +30,6 @@ export default function ProductPage() {
         const data = await productService.getProductById(productId);
         setProduct(data);
 
-        // Fetch related products (same category)
         const allProducts = await productService.getProducts({ limit: 20 });
         const related = allProducts.products
           .filter(p => p.category === data.category && p.id !== data.id)
@@ -38,6 +43,16 @@ export default function ProductPage() {
     };
     fetchData();
   }, [productId]);
+
+  const handleCompare = (id: string) => {
+    const all = product ? [product, ...relatedProducts] : relatedProducts;
+    const target = all.find((p: Product) => p.id === id);
+    if (!target) return;
+    const result = toggleProduct(target);
+    if (result === 'added') toast.success(t('addedToComparison'));
+    else if (result === 'removed') toast.success(t('removedFromComparison'));
+    else toast.error(t('maxCompareItems'));
+  };
 
   if (loading) {
     return (
@@ -71,6 +86,14 @@ export default function ProductPage() {
         language={language}
         onBack={() => navigate(-1)}
         onProductClick={(p) => navigate(`/product/${p.id}`)}
+        onCompare={handleCompare}
+        isInComparison={isInComparison(product.id)}
+      />
+      <ComparisonBar
+        language={language}
+        selectedProducts={comparisonProducts}
+        onRemove={(id) => removeProduct(id)}
+        onClear={() => clearAll()}
       />
     </div>
   );

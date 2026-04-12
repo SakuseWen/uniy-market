@@ -47,24 +47,25 @@ router.get('/users', async (req: Request, res: Response) => {
     const { status, isAdmin, search, limit = '50', offset = '0' } = req.query;
 
     const userModel = new UserModel();
-    let users = await userModel.findAll();
+    const result = await userModel.getUsers(1, 1000);
+    let users = result.users || [];
 
     // Apply filters
     if (status) {
-      users = users.filter((u) => u.status === status);
+      users = users.filter((u: any) => u.status === status);
     }
 
     if (isAdmin !== undefined) {
       const adminFilter = isAdmin === 'true';
-      users = users.filter((u) => u.isAdmin === adminFilter);
+      users = users.filter((u: any) => u.isAdmin === adminFilter);
     }
 
     if (search) {
       const searchLower = (search as string).toLowerCase();
       users = users.filter(
-        (u) =>
-          u.name.toLowerCase().includes(searchLower) ||
-          u.email.toLowerCase().includes(searchLower)
+        (u: any) =>
+          u.name?.toLowerCase().includes(searchLower) ||
+          u.email?.toLowerCase().includes(searchLower)
       );
     }
 
@@ -105,7 +106,7 @@ router.get('/users/:userId', async (req: Request, res: Response) => {
     const { userId } = req.params;
 
     const userModel = new UserModel();
-    const user = await userModel.findById(userId);
+    const user = await userModel.getUserById(userId);
 
     if (!user) {
       res.status(404).json({
@@ -142,6 +143,7 @@ router.get('/users/:userId', async (req: Request, res: Response) => {
 router.post('/users/:userId/suspend', async (req: Request, res: Response) => {
   try {
     const { userId } = req.params;
+    console.log('[Admin] Suspend user:', userId);
     const { reason } = req.body;
     const adminId = (req as any).user.userID;
 
@@ -281,6 +283,30 @@ router.post('/users/:userId/remove-admin', async (req: Request, res: Response) =
 });
 
 /**
+ * PATCH /api/admin/users/:userId/verify
+ * Toggle education verification status
+ */
+router.patch('/users/:userId/verify', async (req: Request, res: Response) => {
+  try {
+    const { userId } = req.params;
+    const { isVerified } = req.body;
+    console.log('[Admin] Verify user:', userId, 'isVerified:', isVerified);
+
+    const userModel = new UserModel();
+    const user = await userModel.getUserById(userId);
+    if (!user) {
+      return res.status(404).json({ success: false, error: { message: 'User not found' } });
+    }
+
+    await userModel.updateUser(userId, { eduVerified: isVerified ? 1 : 0 } as any);
+    res.json({ success: true, message: `Education verification ${isVerified ? 'granted' : 'revoked'}` });
+  } catch (error) {
+    console.error('Verify user error:', error);
+    res.status(500).json({ success: false, error: { message: 'Failed to update verification' } });
+  }
+});
+
+/**
  * GET /api/admin/products
  * Get all products with filters
  */
@@ -289,32 +315,34 @@ router.get('/products', async (req: Request, res: Response) => {
     const { status, search, limit = '50', offset = '0' } = req.query;
 
     const productModel = new ProductModel();
-    let products = await productModel.findAll();
+    // Admin needs all products regardless of status
+    const searchTerm = search ? `%${(search as string).trim()}%` : null;
+    let query = 'SELECT p.*, u.name as sellerName FROM ProductListing p LEFT JOIN User u ON p.sellerID = u.userID';
+    const params: any[] = [];
 
-    // Apply filters
-    if (status) {
-      products = products.filter((p) => p.status === status);
-    }
+    const conditions: string[] = [];
+    if (status) { conditions.push('status = ?'); params.push(status); }
+    if (searchTerm) { conditions.push('(title LIKE ? OR description LIKE ?)'); params.push(searchTerm, searchTerm); }
+    if (conditions.length > 0) query += ' WHERE ' + conditions.join(' AND ');
+    query += ' ORDER BY createdAt DESC LIMIT ? OFFSET ?';
 
-    if (search) {
-      const searchLower = (search as string).toLowerCase();
-      products = products.filter(
-        (p) =>
-          p.title.toLowerCase().includes(searchLower) ||
-          (p.description && p.description.toLowerCase().includes(searchLower))
-      );
-    }
-
-    // Pagination
     const limitNum = parseInt(limit as string);
     const offsetNum = parseInt(offset as string);
+    params.push(limitNum, offsetNum);
+
+    const products = await (productModel as any).query(query, params);
+
+    // Enrich with images and seller info
+    for (const p of products) {
+      p.images = await productModel.getProductImages(p.listingID);
+    }
+
     const total = products.length;
-    const paginatedProducts = products.slice(offsetNum, offsetNum + limitNum);
 
     res.json({
       success: true,
       data: {
-        products: paginatedProducts,
+        products,
         total,
         limit: limitNum,
         offset: offsetNum,
@@ -409,11 +437,29 @@ router.get('/reports', async (req: Request, res: Response) => {
     const limitNum = parseInt(limit as string);
     const offsetNum = parseInt(offset as string);
 
-    const result = await reportModel.findWithFilters(filters, limitNum, offsetNum);
+    const result = await reportModel.findAll({
+      status: filters.status,
+      report_type: filters.report_type,
+      category: filters.category,
+      limit: limitNum,
+      offset: offsetNum,
+    });
+
+    // Enrich reports with user names
+    const userModel = new UserModel();
+    const enriched = await Promise.all(result.map(async (r: any) => {
+      const reporter = r.reporter_id ? await userModel.getUserById(r.reporter_id) : null;
+      const reportedUser = r.reported_user_id ? await userModel.getUserById(r.reported_user_id) : null;
+      return {
+        ...r,
+        reporter_name: reporter?.name || r.reporter_id,
+        reported_user_name: reportedUser?.name || r.reported_user_id,
+      };
+    }));
 
     res.json({
       success: true,
-      data: result,
+      data: { reports: enriched },
     });
   } catch (error) {
     console.error('Get reports error:', error);

@@ -1,4 +1,4 @@
-import { Search, SlidersHorizontal } from 'lucide-react';
+import { Search } from 'lucide-react';
 import { Input } from './ui/input';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
@@ -29,7 +29,6 @@ interface SearchFilterBarProps {
     availableOnly: boolean;
   };
   onFilterChange: (filters: any) => void;
-  onShowAdvancedFilters: () => void;
 }
 
 export function SearchFilterBar({
@@ -38,7 +37,6 @@ export function SearchFilterBar({
   onSearchChange,
   filters,
   onFilterChange,
-  onShowAdvancedFilters,
 }: SearchFilterBarProps) {
   const t = (key: any) => translate(language, key);
 
@@ -149,11 +147,6 @@ export function SearchFilterBar({
             </Label>
           </div>
 
-          {/* Advanced Filters Button */}
-          <Button variant="outline" onClick={onShowAdvancedFilters} className="gap-2">
-            <SlidersHorizontal className="w-4 h-4" />
-            {t('advancedFilters')}
-          </Button>
         </div>
 
         {/* Active Filters Display */}

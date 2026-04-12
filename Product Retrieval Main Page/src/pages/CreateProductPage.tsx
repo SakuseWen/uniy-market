@@ -265,6 +265,12 @@ export default function CreateProductPage() {
         navigate('/login');
         return;
       }
+
+      // Handle suspended account
+      if (error?.suspendedMessage) {
+        toast.error(error.suspendedMessage);
+        return;
+      }
       
       toast.error(t(language, 'failedCreateProduct'));
     } finally {

@@ -90,7 +90,7 @@ function transformProduct(backendProduct: BackendProduct): Product {
     price: backendProduct.price,
     negotiable: false,
     condition: conditionMap[backendProduct.condition] || 'eightyNew',
-    campus: 'mainCampus' as const,
+    campus: (backendProduct as any).location || 'mainCampus',
     category: frontendCategory,
     image: imageUrl,
     images: backendProduct.images?.map(img => {
@@ -116,8 +116,6 @@ function transformProduct(backendProduct: BackendProduct): Product {
     badges: [],
     views: backendProduct.views,
     publishedDate: backendProduct.createdAt,
-    distance: '0 km',
-    itemLanguage: 'english' as const,
     sold: backendProduct.status === 'sold',
     latitude: (backendProduct as any).latitude,
     longitude: (backendProduct as any).longitude,

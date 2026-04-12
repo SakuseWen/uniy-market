@@ -1,4 +1,4 @@
-import { Heart, MessageCircle, GitCompare, CheckCircle, MapPin, Star, ShoppingCart } from 'lucide-react';
+import { Heart, MessageCircle, GitCompare, CheckCircle, MapPin, Loader2, ShoppingCart } from 'lucide-react';
 import { StarRating } from './StarRating';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
@@ -13,11 +13,16 @@ interface ProductCardProps {
   language: Language;
   onFavorite: (id: string) => void;
   onCompare: (id: string) => void;
-  onContact: (sellerId: string) => void;
+  /** 12.2 更新签名：接收 listingID 和 sellerID / Updated signature: receives listingID and sellerID */
+  onContact?: (listingID: string, sellerID: string) => void;
   onBuy?: (productId: string) => void;
   isFavorited?: boolean;
   isInComparison?: boolean;
   inTransaction?: boolean;
+  /** 当前登录用户 ID，用于隐藏自己商品的"联系卖家"按钮 / Current user ID to hide "Contact Seller" on own listings */
+  currentUserId?: string;
+  /** 12.2 联系卖家 loading 状态 / Loading state for contacting seller */
+  isContactLoading?: boolean;
 }
 
 export function ProductCard({
@@ -30,9 +35,14 @@ export function ProductCard({
   isFavorited = false,
   isInComparison = false,
   inTransaction = false,
+  currentUserId,
+  isContactLoading = false,
 }: ProductCardProps) {
   const t = (key: any) => translate(language, key);
   const [showTranslation, setShowTranslation] = useState(false);
+
+  // 判断当前用户是否为该商品的卖家 / Check if current user is the seller of this product
+  const isSeller = !!currentUserId && !!product.seller.id && currentUserId === product.seller.id;
 
   const getTitle = () => {
     if (showTranslation || language === 'en') return product.title;
@@ -118,11 +128,10 @@ export function ProductCard({
           )}
         </div>
 
-        {/* Location & Distance */}
+        {/* Location */}
         <div className="flex items-center gap-1 text-gray-600 text-sm mb-3">
           <MapPin className="w-3 h-3" />
-          <span>{t(product.campus as any)}</span>
-          {product.distance && <span>• {product.distance}</span>}
+          <span className="truncate">{(product as any).address || t(product.campus as any)}</span>
         </div>
 
         {/* Seller Info */}
@@ -171,17 +180,26 @@ export function ProductCard({
             <GitCompare className="w-3 h-3" />
             {t('compare')}
           </Button>
-          <Button
-            size="sm"
-            className="flex-1 gap-1 bg-gradient-to-r from-blue-500 to-purple-600 hover:shadow-lg hover:scale-105 transition-all duration-200"
-            onClick={(e) => {
-              e.stopPropagation();
-              onContact(product.seller.id);
-            }}
-          >
-            <MessageCircle className="w-3 h-3" />
-            {t('contactSeller')}
-          </Button>
+          {/* 卖家不显示"联系卖家"按钮 / Hide "Contact Seller" button for the seller's own listing */}
+          {!isSeller && (
+            <Button
+              size="sm"
+              className="flex-1 gap-1 bg-gradient-to-r from-blue-500 to-purple-600 hover:shadow-lg hover:scale-105 transition-all duration-200"
+              disabled={isContactLoading}
+              onClick={(e) => {
+                e.stopPropagation();
+                // 12.2 传入 listingID 和 sellerID / Pass listingID and sellerID
+                onContact?.(product.id, product.seller.id || product.id);
+              }}
+            >
+              {isContactLoading ? (
+                <Loader2 className="w-3 h-3 animate-spin" />
+              ) : (
+                <MessageCircle className="w-3 h-3" />
+              )}
+              {t('contactSeller')}
+            </Button>
+          )}
         </div>
         {onBuy && (
           <Button

@@ -8,42 +8,21 @@ import EditProductPage from './pages/EditProductPage';
 import EmailVerificationPage from './pages/EmailVerificationPage';
 import SellerProfilePage from './pages/SellerProfilePage';
 import ProductPage from './pages/ProductPage';
+import AdminPage from './pages/AdminPage';
+import HelpCenterPage from './pages/HelpCenterPage';
+import ForgotPasswordPage from './pages/ForgotPasswordPage';
 
 export const router = createBrowserRouter([
-  {
-    path: '/',
-    Component: MainPage,
-  },
-  {
-    path: '/login',
-    Component: LoginPage,
-  },
-  {
-    path: '/chat/:sellerId',
-    Component: ChatPage,
-  },
-  {
-    path: '/create-product',
-    Component: CreateProductPage,
-  },
-  {
-    path: '/my-page',
-    Component: MyPage,
-  },
-  {
-    path: '/edit-product/:productId',
-    Component: EditProductPage,
-  },
-  {
-    path: '/verify-email',
-    Component: EmailVerificationPage,
-  },
-  {
-    path: '/seller/:sellerId',
-    Component: SellerProfilePage,
-  },
-  {
-    path: '/product/:productId',
-    Component: ProductPage,
-  },
+  { path: '/', Component: MainPage },
+  { path: '/login', Component: LoginPage },
+  { path: '/forgot-password', Component: ForgotPasswordPage },
+  { path: '/chat/:chatId', Component: ChatPage },
+  { path: '/create-product', Component: CreateProductPage },
+  { path: '/my-page', Component: MyPage },
+  { path: '/edit-product/:productId', Component: EditProductPage },
+  { path: '/verify-email', Component: EmailVerificationPage },
+  { path: '/seller/:sellerId', Component: SellerProfilePage },
+  { path: '/product/:productId', Component: ProductPage },
+  { path: '/admin', Component: AdminPage },
+  { path: '/help', Component: HelpCenterPage },
 ]);
