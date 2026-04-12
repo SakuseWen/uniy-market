@@ -2,7 +2,7 @@ import express, { Request, Response } from 'express';
 import { DealModel } from '../models/DealModel';
 import { ProductModel } from '../models/ProductModel';
 import { UserModel } from '../models/UserModel';
-import { authenticateToken } from '../middleware/auth';
+import { authenticateToken, requireActiveUser } from '../middleware/auth';
 import { ApiResponse } from '../types';
 import { createDealNotification } from './dealNotification';
 
@@ -22,7 +22,7 @@ export function setDealWebSocketService(wsService: any): void {
  * POST /api/deals
  * Create a new deal/transaction
  */
-router.post('/', authenticateToken, async (req: Request, res: Response) => {
+router.post('/', authenticateToken, requireActiveUser, async (req: Request, res: Response) => {
   try {
     const { listingID, buyerID, sellerID, finalPrice, notes } = req.body;
     const currentUserID = (req as any).user.userID;
@@ -296,7 +296,7 @@ router.get('/:dealId', authenticateToken, async (req: Request, res: Response) =>
  * PUT /api/deals/:dealId/status
  * Update deal status
  */
-router.put('/:dealId/status', authenticateToken, async (req: Request, res: Response) => {
+router.put('/:dealId/status', authenticateToken, requireActiveUser, async (req: Request, res: Response) => {
   try {
     const { dealId } = req.params;
     const { status } = req.body;
@@ -561,7 +561,7 @@ router.get('/stats/summary', authenticateToken, async (req: Request, res: Respon
  * PUT /api/deals/:dealId/accept
  * Seller accepts a pending deal request
  */
-router.put('/:dealId/accept', authenticateToken, async (req: Request, res: Response) => {
+router.put('/:dealId/accept', authenticateToken, requireActiveUser, async (req: Request, res: Response) => {
   try {
     const { dealId } = req.params;
     const userID = (req as any).user.userID;
@@ -583,7 +583,7 @@ router.put('/:dealId/accept', authenticateToken, async (req: Request, res: Respo
  * PUT /api/deals/:dealId/reject
  * Seller rejects a pending deal request
  */
-router.put('/:dealId/reject', authenticateToken, async (req: Request, res: Response) => {
+router.put('/:dealId/reject', authenticateToken, requireActiveUser, async (req: Request, res: Response) => {
   try {
     const { dealId } = req.params;
     const userID = (req as any).user.userID;
@@ -605,7 +605,7 @@ router.put('/:dealId/reject', authenticateToken, async (req: Request, res: Respo
  * PUT /api/deals/:dealId/confirm
  * Buyer or seller confirms deal completion (dual confirmation)
  */
-router.put('/:dealId/confirm', authenticateToken, async (req: Request, res: Response) => {
+router.put('/:dealId/confirm', authenticateToken, requireActiveUser, async (req: Request, res: Response) => {
   try {
     const { dealId } = req.params;
     const userID = (req as any).user.userID;

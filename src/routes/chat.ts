@@ -3,7 +3,7 @@ import { ChatModel } from '../models/ChatModel';
 import { MessageModel } from '../models/MessageModel';
 import { ProductModel } from '../models/ProductModel';
 import { UserModel } from '../models/UserModel';
-import { authenticateToken } from '../middleware/auth';
+import { authenticateToken, requireActiveUser } from '../middleware/auth';
 import { ApiResponse } from '../types';
 import { notificationService } from '../services/NotificationService';
 import translationService from '../services/TranslationService';
@@ -95,7 +95,7 @@ router.get('/', authenticateToken, async (req: Request, res: Response) => {
  * POST /api/chats
  * Create a new chat or get existing chat
  */
-router.post('/', authenticateToken, async (req: Request, res: Response) => {
+router.post('/', authenticateToken, requireActiveUser, async (req: Request, res: Response) => {
   try {
     const user = (req as any).user;
     const { listingID, sellerID } = req.body;
@@ -495,7 +495,7 @@ router.get('/:chatId/messages', authenticateToken, async (req: Request, res: Res
  * POST /api/chats/:chatId/messages
  * Send a message in a chat with real-time notifications and automatic translation
  */
-router.post('/:chatId/messages', authenticateToken, upload.single('image'), moderateChatMessage, logFlaggedContent, async (req: Request, res: Response) => {
+router.post('/:chatId/messages', authenticateToken, requireActiveUser, upload.single('image'), moderateChatMessage, logFlaggedContent, async (req: Request, res: Response) => {
   try {
     const user = (req as any).user;
     const { chatId } = req.params;

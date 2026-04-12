@@ -167,8 +167,8 @@ export default function ChatPage() {
         );
       }
       setMessage('');
-    } catch {
-      toast.error('发送失败，请稍后重试');
+    } catch (err: any) {
+      toast.error(err?.suspendedMessage || '发送失败，请稍后重试');
     } finally {
       setSending(false);
     }
@@ -202,8 +202,8 @@ export default function ChatPage() {
           prev.some((m) => m.messageID === newMsg.messageID) ? prev : [...prev, newMsg]
         );
       }
-    } catch {
-      toast.error('图片发送失败，请稍后重试');
+    } catch (err: any) {
+      toast.error(err?.suspendedMessage || '图片发送失败，请稍后重试');
     } finally {
       setUploadingImage(false);
     }

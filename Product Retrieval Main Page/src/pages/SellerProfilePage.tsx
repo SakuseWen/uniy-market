@@ -109,12 +109,14 @@ export default function SellerProfilePage() {
       if (chatID) navigate(`/chat/${chatID}`, { state: { from: location.pathname + location.search } });
     } catch (err: any) {
       const status = err?.response?.status;
-      if (status === 403) {
+      if (err?.suspendedMessage) {
+        toast.error(err.suspendedMessage);
+      } else if (status === 403) {
         toast.error(
-          language === 'zh' ? '不能与自己发起对话' : 'Cannot start a chat with yourself'
+          language === 'zh' ? '不能与自己发起对话' : language === 'th' ? 'ไม่สามารถเริ่มแชทกับตัวเองได้' : 'Cannot start a chat with yourself'
         );
       } else {
-        toast.error(language === 'zh' ? '发起对话失败，请稍后重试' : 'Failed to start chat');
+        toast.error(language === 'zh' ? '发起对话失败，请稍后重试' : language === 'th' ? 'เริ่มแชทล้มเหลว กรุณาลองอีกครั้ง' : 'Failed to start chat');
       }
     } finally {
       setSendingMessage(false);

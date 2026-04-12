@@ -4,7 +4,7 @@
 
 import express, { Request, Response } from 'express';
 import { ReportModel, CreateReportData } from '../models/ReportModel';
-import { authenticateToken } from '../middleware/auth';
+import { authenticateToken, requireActiveUser } from '../middleware/auth';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
@@ -41,7 +41,7 @@ const upload = multer({
  * Create a new report (with evidence images)
  * POST /api/reports
  */
-router.post('/', authenticateToken, upload.array('images', 5), async (req: Request, res: Response) => {
+router.post('/', authenticateToken, requireActiveUser, upload.array('images', 5), async (req: Request, res: Response) => {
   try {
     const userId = (req as any).user?.userID;
     if (!userId) return res.status(401).json({ error: 'Unauthorized' });

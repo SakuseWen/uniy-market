@@ -1,7 +1,16 @@
 import axios, { AxiosInstance, AxiosError } from 'axios';
+import { translate } from '../lib/i18n';
+import type { Language } from '../lib/i18n';
 
 // API 基础配置
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+
+/** 获取当前语言偏好 / Get current language preference */
+function getCurrentLanguage(): Language {
+  const saved = localStorage.getItem('preferredLanguage');
+  if (saved === 'zh' || saved === 'th' || saved === 'en') return saved;
+  return 'en';
+}
 
 // 创建 axios 实例
 const apiClient: AxiosInstance = axios.create({
@@ -34,6 +43,16 @@ apiClient.interceptors.response.use(
     if (error.response?.status === 401) {
       sessionStorage.removeItem('authToken');
       sessionStorage.removeItem('authUser');
+    }
+    // 账户被暂停：统一拦截并附加三语提示 / Account suspended: intercept and attach tri-lingual message
+    if (error.response?.status === 403) {
+      const data = error.response.data as any;
+      if (data?.error?.code === 'ACCOUNT_INACTIVE') {
+        const lang = getCurrentLanguage();
+        const msg = translate(lang, 'accountSuspended');
+        // 将三语提示附加到 error 上，方便前端直接使用
+        (error as any).suspendedMessage = msg;
+      }
     }
     // Add user-friendly message for rate limiting
     if (error.response?.status === 429) {

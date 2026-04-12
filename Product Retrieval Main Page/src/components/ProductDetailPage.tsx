@@ -87,7 +87,7 @@ export function ProductDetailPage({
       setDeal(newDeal);
       toast.success(t('dealRequestSent') || 'Purchase request sent');
     } catch (err: any) {
-      toast.error(err.response?.data?.error?.message || 'Failed to create deal');
+      toast.error(err?.suspendedMessage || err.response?.data?.error?.message || 'Failed to create deal');
     } finally { setDealLoading(false); }
   };
 
@@ -98,7 +98,7 @@ export function ProductDetailPage({
       await dealService.acceptDeal(deal.dealID);
       setDeal({ ...deal, notes: 'accepted' });
       toast.success(t('dealAccepted') || 'Deal accepted');
-    } catch (err: any) { toast.error(err.response?.data?.error?.message || 'Failed'); }
+    } catch (err: any) { toast.error(err?.suspendedMessage || err.response?.data?.error?.message || 'Failed'); }
     finally { setDealLoading(false); }
   };
 
@@ -109,7 +109,7 @@ export function ProductDetailPage({
       await dealService.rejectDeal(deal.dealID);
       setDeal(null);
       toast.success(t('dealRejected') || 'Deal rejected');
-    } catch (err: any) { toast.error(err.response?.data?.error?.message || 'Failed'); }
+    } catch (err: any) { toast.error(err?.suspendedMessage || err.response?.data?.error?.message || 'Failed'); }
     finally { setDealLoading(false); }
   };
 
@@ -126,7 +126,7 @@ export function ProductDetailPage({
         setDeal({ ...deal, [isBuyer ? 'buyerConfirmed' : 'sellerConfirmed']: true });
         toast.success(t('dealConfirmedWaiting') || 'Confirmed. Waiting for the other party.');
       }
-    } catch (err: any) { toast.error(err.response?.data?.error?.message || 'Failed'); }
+    } catch (err: any) { toast.error(err?.suspendedMessage || err.response?.data?.error?.message || 'Failed'); }
     finally { setDealLoading(false); }
   };
 
@@ -137,7 +137,7 @@ export function ProductDetailPage({
       await dealService.cancelDeal(deal.dealID);
       setDeal(null);
       toast.success(t('dealCancelled') || 'Deal cancelled');
-    } catch (err: any) { toast.error(err.response?.data?.error?.message || 'Failed'); }
+    } catch (err: any) { toast.error(err?.suspendedMessage || err.response?.data?.error?.message || 'Failed'); }
     finally { setDealLoading(false); }
   };
 
@@ -176,9 +176,11 @@ export function ProductDetailPage({
       // 传递来源路径，供 ChatPage 智能返回使用 / Pass source path for ChatPage smart back navigation
       navigate(`/chat/${chatID}`, { state: { from: location.pathname + location.search } });
     } catch (err: any) {
-      // 后端返回 403 表示自聊天被拒绝 / Backend 403 means self-chat rejected
+      // 后端返回 403 表示自聊天被拒绝或账户被暂停 / Backend 403 means self-chat rejected or account suspended
       const status = err?.response?.status;
-      if (status === 403) {
+      if (err?.suspendedMessage) {
+        toast.error(err.suspendedMessage);
+      } else if (status === 403) {
         toast.error(err?.response?.data?.message || 'Cannot start a chat with yourself');
       } else {
         toast.error('Failed to open chat. Please try again.');

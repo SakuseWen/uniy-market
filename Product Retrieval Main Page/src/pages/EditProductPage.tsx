@@ -271,6 +271,12 @@ export default function EditProductPage() {
         navigate('/login');
         return;
       }
+
+      // Handle suspended account
+      if (error?.suspendedMessage) {
+        toast.error(error.suspendedMessage);
+        return;
+      }
       
       toast.error(t(language, 'failedUpdateProduct'));
     } finally {
