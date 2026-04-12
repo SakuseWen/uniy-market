@@ -1,13 +1,14 @@
 import { useNavigate } from 'react-router';
-import { Button } from '../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
-import { ArrowLeft, Mail, ShieldAlert, HelpCircle, ShoppingCart, MessageCircle, AlertTriangle, BookOpen, GraduationCap } from 'lucide-react';
+import { Mail, ShieldAlert, HelpCircle, ShoppingCart, MessageCircle, AlertTriangle, BookOpen, GraduationCap } from 'lucide-react';
 import { translate } from '../lib/i18n';
 import { useLanguage } from '../lib/LanguageContext';
+import { Header } from '../components/Header';
+import { Toaster } from '../components/ui/sonner';
 
 export default function HelpCenterPage() {
   const navigate = useNavigate();
-  const { language } = useLanguage();
+  const { language, setLanguage } = useLanguage();
   const t = (key: any) => translate(language, key);
 
   const content = {
@@ -155,18 +156,16 @@ export default function HelpCenterPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="bg-white border-b shadow-sm sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-3 flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={() => navigate('/')}>
-            <ArrowLeft className="w-5 h-5" />
-          </Button>
-          <HelpCircle className="w-6 h-6 text-blue-600" />
-          <h1 className="text-lg font-semibold">{c.title}</h1>
-        </div>
+      <Toaster position="top-right" />
+      <div className="sticky top-0 z-50">
+        <Header language={language} onLanguageChange={setLanguage} />
       </div>
 
       <div className="container mx-auto px-4 py-8 max-w-3xl space-y-6">
-        <p className="text-gray-500 text-center">{c.subtitle}</p>
+        <div className="text-center mb-2">
+          <h1 className="text-2xl font-semibold flex items-center justify-center gap-2"><HelpCircle className="w-6 h-6 text-blue-600" />{c.title}</h1>
+          <p className="text-gray-500 mt-1">{c.subtitle}</p>
+        </div>
 
         {/* Contact */}
         <Card>
