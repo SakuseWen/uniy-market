@@ -66,10 +66,10 @@ export class AuthService {
         return null;
       }
 
-      // Get user from database to ensure they still exist and are active
+      // Get user from database to ensure they still exist
       const user = await this.userModel.getUserById(userId);
       
-      if (!user || user.status !== 'active') {
+      if (!user || user.status === 'deleted') {
         return null;
       }
 
