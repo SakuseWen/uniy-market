@@ -7,7 +7,7 @@ import path from 'path';
 import { UserModel } from '../models/UserModel';
 import { DatabaseManager } from '../config/database';
 import { generateVerificationCode, sendVerificationEmail } from '../services/emailService';
-import { authenticateToken } from '../middleware/auth';
+import { authenticateToken, requireActiveUser } from '../middleware/auth';
 
 const router = express.Router();
 let userModel: UserModel | null = null;
@@ -490,6 +490,7 @@ router.post('/delete-account/confirm',
  */
 router.post('/edu-verify/send-code',
   authenticateToken,
+  requireActiveUser,
   [body('eduEmail').isEmail().withMessage('Valid education email is required')],
   async (req: express.Request, res: express.Response) => {
     try {
@@ -557,6 +558,7 @@ router.post('/edu-verify/send-code',
  */
 router.post('/edu-verify/confirm',
   authenticateToken,
+  requireActiveUser,
   [
     body('eduEmail').isEmail().withMessage('Valid education email is required'),
     body('code').isLength({ min: 6, max: 6 }).withMessage('6-digit code is required'),

@@ -364,6 +364,7 @@ function MyPage() {
       toast.success(t('eduCodeSent'));
       setEduStep('code');
     } catch (error: any) {
+      if (error?.suspendedMessage) { toast.error(error.suspendedMessage); return; }
       const code = error.response?.data?.error?.code;
       if (code === 'NOT_EDU_EMAIL') toast.error(t('notEduEmail'));
       else if (code === 'ALREADY_EDU_VERIFIED') toast.error(t('alreadyEduVerified'));
@@ -386,6 +387,7 @@ function MyPage() {
       setEduEmail('');
       setEduCode('');
     } catch (error: any) {
+      if (error?.suspendedMessage) { toast.error(error.suspendedMessage); return; }
       const code = error.response?.data?.error?.code;
       if (code === 'EDU_EMAIL_ALREADY_USED') toast.error(t('eduEmailAlreadyUsed'));
       else toast.error(t('eduVerifyFailed'));
@@ -543,7 +545,19 @@ function MyPage() {
                     <span className="text-green-600">✓</span> {t('eduVerified')}
                   </Badge>
                 ) : (
-                  <Button variant="outline" size="sm" className="gap-1" onClick={() => setEduStep('email')}>
+                  <Button variant="outline" size="sm" className="gap-1" onClick={() => {
+                    if ((user as any)?.status === 'suspended') {
+                      const lang = localStorage.getItem('preferredLanguage') as any || 'en';
+                      const msgs: Record<string, string> = {
+                        en: 'Your account has been suspended. You cannot perform this action. Please contact the administrator.',
+                        zh: '您的账户已被暂停使用，无法执行此操作。请联系管理员。',
+                        th: 'บัญชีของคุณถูกระงับ ไม่สามารถดำเนินการนี้ได้ กรุณาติดต่อผู้ดูแลระบบ',
+                      };
+                      toast.error(msgs[lang] || msgs.en);
+                      return;
+                    }
+                    setEduStep('email');
+                  }}>
                     <GraduationCap className="w-4 h-4" /> {t('eduVerification')}
                   </Button>
                 )}
