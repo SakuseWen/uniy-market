@@ -130,10 +130,10 @@ router.post('/login',
             name: user.name,
             profileImage: user.profileImage,
             bio: user.bio,
-            eduVerified: user.eduVerified || false,
+            eduVerified: !!(user.eduVerified),
             eduEmail: user.eduEmail || null,
-            isVerified: user.isVerified,
-            isAdmin: user.isAdmin,
+            isVerified: !!user.isVerified,
+            isAdmin: !!user.isAdmin,
             preferredLanguage: user.preferredLanguage,
           }
         },
@@ -619,5 +619,37 @@ router.post('/edu-verify/confirm',
     }
   }
 );
+
+/**
+ * GET /api/auth/me
+ * Get current user info (refreshes from DB)
+ */
+router.get('/me', authenticateToken, async (req: express.Request, res: express.Response) => {
+  try {
+    const authUser = (req as any).user;
+    if (!authUser?.userID) return res.status(401).json({ success: false, error: { message: 'Unauthorized' } });
+
+    const user = await getUserModel().getUserById(authUser.userID);
+    if (!user) return res.status(404).json({ success: false, error: { message: 'User not found' } });
+
+    return res.json({
+      success: true,
+      data: {
+        userID: user.userID,
+        email: user.email,
+        name: user.name,
+        profileImage: user.profileImage,
+        bio: (user as any).bio,
+        eduVerified: !!(user as any).eduVerified,
+        eduEmail: (user as any).eduEmail || null,
+        isVerified: !!user.isVerified,
+        isAdmin: !!user.isAdmin,
+        preferredLanguage: user.preferredLanguage,
+      }
+    });
+  } catch (error) {
+    return res.status(500).json({ success: false, error: { message: 'Failed to get user info' } });
+  }
+});
 
 export default router;

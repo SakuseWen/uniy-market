@@ -30,7 +30,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // 初始化：从 sessionStorage 恢复认证状态（关闭标签页后自动清除）
+  // 初始化：从 sessionStorage 恢复认证状态，并从后端刷新最新用户信息
   useEffect(() => {
     const savedToken = sessionStorage.getItem('authToken');
     const savedUser = sessionStorage.getItem('authUser');
@@ -38,7 +38,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (savedToken && savedUser) {
       try {
         setToken(savedToken);
-        setUser(JSON.parse(savedUser));
+        const parsed = JSON.parse(savedUser);
+        setUser(parsed);
+
+        // Refresh user info from backend
+        fetch('http://localhost:3000/api/auth/me', {
+          headers: { 'Authorization': `Bearer ${savedToken}` },
+        })
+          .then(r => r.json())
+          .then(data => {
+            if (data.success && data.data) {
+              setUser(data.data);
+              sessionStorage.setItem('authUser', JSON.stringify(data.data));
+            }
+          })
+          .catch(() => {});
       } catch (error) {
         console.error('Failed to restore auth state:', error);
         sessionStorage.removeItem('authToken');
