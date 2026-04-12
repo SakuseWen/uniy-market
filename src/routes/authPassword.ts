@@ -93,8 +93,9 @@ router.post('/login',
         });
       }
 
-      // Check if user is verified (but allow suspended users to login)
-      if (!user.isVerified && user.status !== 'suspended') {
+      // Check if user is verified
+      // Suspended users who were previously verified can still login (with restricted access)
+      if (!user.isVerified) {
         return res.status(403).json({
           success: false,
           error: {
