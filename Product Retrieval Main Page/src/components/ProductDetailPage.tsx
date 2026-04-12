@@ -18,6 +18,7 @@ import { SellerInfoCard } from './SellerInfoCard';
 import { ProductTabs } from './ProductTabs';
 import { SafetyNotice } from './SafetyNotice';
 import { RelatedItems } from './RelatedItems';
+import { TranslateButton } from './TranslateButton';
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -258,7 +259,8 @@ export function ProductDetailPage({
           {/* Right: Product Summary */}
           <div className="bg-white rounded-lg p-6 h-fit sticky top-20">
             {/* Title */}
-            <h1 className="mb-4">{getLocalizedTitle()}</h1>
+            <h1 className="mb-1">{getLocalizedTitle()}</h1>
+            <TranslateButton text={product.title} language={language} className="mb-4" />
 
             {/* Price */}
             <div className="flex items-baseline gap-3 mb-4">
