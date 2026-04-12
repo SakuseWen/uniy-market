@@ -306,12 +306,12 @@ export default function AdminPage() {
           {/* ── Reports Tab ── */}
           <TabsContent value="reports">
             <div className="mb-4 flex gap-2">
+              <Button size="sm" variant={reportFilter === '' ? 'default' : 'outline'} onClick={() => setReportFilter('')}>All</Button>
               {['pending', 'under_review', 'resolved', 'dismissed'].map((s) => (
                 <Button key={s} size="sm" variant={reportFilter === s ? 'default' : 'outline'} onClick={() => setReportFilter(s)}>
                   {s.replace(/_/g, ' ')}
                 </Button>
               ))}
-              <Button size="sm" variant={reportFilter === '' ? 'default' : 'outline'} onClick={() => setReportFilter('')}>All</Button>
             </div>
             {reportsLoading ? (
               <div className="flex justify-center py-12"><Loader2 className="w-8 h-8 animate-spin text-blue-600" /></div>

@@ -176,7 +176,7 @@ export default function LoginPage() {
                         <input type="checkbox" className="rounded" />
                         <span>{t('rememberMe')}</span>
                       </label>
-                      <a href="#" className="text-sm text-blue-600 hover:underline">
+                      <a href="#" className="text-sm text-blue-600 hover:underline" onClick={(e) => { e.preventDefault(); navigate('/forgot-password'); }}>
                         {t('forgotPassword')}
                       </a>
                     </div>

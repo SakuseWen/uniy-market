@@ -253,7 +253,7 @@ export function Header({ language, onLanguageChange }: HeaderProps) {
             <nav className="hidden md:flex items-center gap-6">
               <a href="#" className="hover:text-blue-600 transition-colors" onClick={() => navigate('/')}>{t('home')}</a>
               <a href="#" className="hover:text-blue-600 transition-colors" onClick={() => navigate('/my-page')}>{t('myPage')}</a>
-              <a href="#" className="hover:text-blue-600 transition-colors">{t('helpCenter')}</a>
+              <a href="#" className="hover:text-blue-600 transition-colors" onClick={() => navigate('/help')}>{t('helpCenter')}</a>
             </nav>
           </div>
 
