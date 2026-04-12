@@ -143,6 +143,7 @@ router.get('/users/:userId', async (req: Request, res: Response) => {
 router.post('/users/:userId/suspend', async (req: Request, res: Response) => {
   try {
     const { userId } = req.params;
+    console.log('[Admin] Suspend user:', userId);
     const { reason } = req.body;
     const adminId = (req as any).user.userID;
 
@@ -289,6 +290,7 @@ router.patch('/users/:userId/verify', async (req: Request, res: Response) => {
   try {
     const { userId } = req.params;
     const { isVerified } = req.body;
+    console.log('[Admin] Verify user:', userId, 'isVerified:', isVerified);
 
     const userModel = new UserModel();
     const user = await userModel.getUserById(userId);

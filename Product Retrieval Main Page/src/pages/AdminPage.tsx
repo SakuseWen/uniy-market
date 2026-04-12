@@ -115,10 +115,14 @@ export default function AdminPage() {
 
   const handleToggleVerify = async (userId: string, current: boolean) => {
     try {
-      await adminService.toggleVerify(userId, !current);
+      const res = await adminService.toggleVerify(userId, !current);
+      console.log('[Admin] toggleVerify response:', res.data);
       toast.success(current ? 'Verification revoked' : 'Verification granted');
-      loadUsers();
-    } catch (e: any) { toast.error(e.response?.data?.error?.message || 'Failed'); }
+      await loadUsers();
+    } catch (e: any) {
+      console.error('[Admin] toggleVerify error:', e.response?.data || e.message);
+      toast.error(e.response?.data?.error?.message || e.response?.data?.error || 'Failed');
+    }
   };
 
   const handleRemoveProduct = async (productId: string) => {
