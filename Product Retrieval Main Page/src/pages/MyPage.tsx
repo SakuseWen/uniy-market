@@ -916,14 +916,18 @@ function MyPage() {
                           {isSeller && isPending && (
                             <>
                               <Button size="sm" className="text-white" style={{ background: '#16a34a' }} onClick={async () => {
-                                await dealService.acceptDeal(deal.dealID);
-                                toast.success(t('dealAccepted'));
-                                loadDeals();
+                                try {
+                                  await dealService.acceptDeal(deal.dealID);
+                                  toast.success(t('dealAccepted'));
+                                  loadDeals();
+                                } catch (err: any) { toast.error(err?.suspendedMessage || err.response?.data?.error?.message || 'Failed'); }
                               }}><Check className="w-3 h-3 mr-1" />{t('acceptDeal')}</Button>
                               <Button size="sm" className="text-white" style={{ background: '#dc2626' }} onClick={async () => {
-                                await dealService.rejectDeal(deal.dealID);
-                                toast.success(t('dealRejected'));
-                                loadDeals();
+                                try {
+                                  await dealService.rejectDeal(deal.dealID);
+                                  toast.success(t('dealRejected'));
+                                  loadDeals();
+                                } catch (err: any) { toast.error(err?.suspendedMessage || err.response?.data?.error?.message || 'Failed'); }
                               }}><XIcon className="w-3 h-3 mr-1" />{t('rejectDeal')}</Button>
                             </>
                           )}
@@ -931,14 +935,18 @@ function MyPage() {
                           {isAccepted && (
                             <>
                               <Button size="sm" className="text-white" style={{ background: '#16a34a' }} disabled={isSeller ? deal.sellerConfirmed : deal.buyerConfirmed} onClick={async () => {
-                                const res = await dealService.confirmDeal(deal.dealID);
-                                toast.success(res.completed ? t('dealCompleted') : t('dealConfirmedWaiting'));
-                                loadDeals();
+                                try {
+                                  const res = await dealService.confirmDeal(deal.dealID);
+                                  toast.success(res.completed ? t('dealCompleted') : t('dealConfirmedWaiting'));
+                                  loadDeals();
+                                } catch (err: any) { toast.error(err?.suspendedMessage || err.response?.data?.error?.message || 'Failed'); }
                               }}><Check className="w-3 h-3 mr-1" />{(isSeller ? deal.sellerConfirmed : deal.buyerConfirmed) ? t('confirmed') : t('confirmDeal')}</Button>
                               <Button size="sm" variant="outline" style={{ color: '#dc2626' }} onClick={async () => {
-                                await dealService.cancelDeal(deal.dealID);
-                                toast.success(t('dealCancelled'));
-                                loadDeals();
+                                try {
+                                  await dealService.cancelDeal(deal.dealID);
+                                  toast.success(t('dealCancelled'));
+                                  loadDeals();
+                                } catch (err: any) { toast.error(err?.suspendedMessage || err.response?.data?.error?.message || 'Failed'); }
                               }}><XIcon className="w-3 h-3 mr-1" />{t('cancelDeal')}</Button>
                             </>
                           )}
@@ -957,8 +965,10 @@ function MyPage() {
                           )}
                           {(isCompleted || isCancelled) && (
                             <Button size="sm" variant="outline" style={{ color: '#dc2626' }} onClick={async () => {
-                              await dealService.deleteDeal(deal.dealID);
-                              loadDeals();
+                              try {
+                                await dealService.deleteDeal(deal.dealID);
+                                loadDeals();
+                              } catch (err: any) { toast.error(err?.suspendedMessage || err.response?.data?.error?.message || 'Failed'); }
                             }}><Trash2 className="w-3 h-3 mr-1" />{t('delete')}</Button>
                           )}
                         </div>

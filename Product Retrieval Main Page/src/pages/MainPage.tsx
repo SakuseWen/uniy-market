@@ -223,8 +223,8 @@ export default function MainPage() {
       const res = await chatService.createOrGetChat(listingID, sellerID);
       const chatID = res.data.data?.chatID;
       navigate(`/chat/${chatID}`);
-    } catch {
-      toast.error('无法发起对话，请稍后重试');
+    } catch (err: any) {
+      toast.error(err?.suspendedMessage || '无法发起对话，请稍后重试');
     } finally {
       setContactingId(null);
     }
@@ -239,7 +239,7 @@ export default function MainPage() {
       await dealService.createDeal(productId, user.userID, product.seller.id, product.price);
       toast.success(t('dealRequestSent'));
     } catch (err: any) {
-      toast.error(err.response?.data?.error?.message || 'Failed');
+      toast.error(err?.suspendedMessage || err.response?.data?.error?.message || 'Failed');
     }
   };
 
