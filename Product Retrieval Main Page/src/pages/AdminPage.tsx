@@ -214,7 +214,7 @@ export default function AdminPage() {
                         <div className="flex items-center gap-2">
                           <span className="font-semibold truncate">{u.name}</span>
                           {u.isAdmin ? <Badge className="bg-purple-100 text-purple-700">Admin</Badge> : null}
-                          {Number(u.isVerified) === 1 ? <Badge className="bg-green-100 text-green-700"><GraduationCap className="w-3 h-3 mr-1" />Edu</Badge> : null}
+                          {Number(u.eduVerified) === 1 ? <Badge className="bg-green-100 text-green-700"><GraduationCap className="w-3 h-3 mr-1" />Edu</Badge> : null}
                         </div>
                         <p className="text-sm text-gray-500 truncate">{u.email}</p>
                       </div>
@@ -222,8 +222,8 @@ export default function AdminPage() {
                         {u.status}
                       </Badge>
                       <div className="flex gap-1">
-                        <Button size="sm" variant="outline" onClick={() => handleToggleVerify(u.userID, Number(u.isVerified) === 1)} title={Number(u.isVerified) === 1 ? 'Revoke Edu' : 'Grant Edu'}>
-                          <GraduationCap className={`w-4 h-4 ${Number(u.isVerified) === 1 ? 'text-green-600' : 'text-gray-400'}`} />
+                        <Button size="sm" variant="outline" onClick={() => handleToggleVerify(u.userID, Number(u.eduVerified) === 1)} title={Number(u.eduVerified) === 1 ? 'Revoke Edu' : 'Grant Edu'}>
+                          <GraduationCap className={`w-4 h-4 ${Number(u.eduVerified) === 1 ? 'text-green-600' : 'text-gray-400'}`} />
                         </Button>
                         {u.status === 'active' ? (
                           <Button size="sm" variant="outline" className="text-orange-600" onClick={() => setActionDialog({ type: 'suspend', target: u })}>Suspend</Button>
