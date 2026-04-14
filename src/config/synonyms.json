@@ -17,6 +17,8 @@
   "笔记本": ["电脑", "laptop", "notebook"],
   "台式机": ["电脑", "desktop", "pc"],
   "desktop": ["台式机", "pc", "电脑", "computer"],
+  "คอมพิวเตอร์": ["电脑", "laptop", "macbook", "computer", "pc", "notebook", "โน้ตบุ๊ก"],
+  "โน้ตบุ๊ก": ["笔记本", "laptop", "notebook", "电脑", "macbook", "คอมพิวเตอร์"],
 
   "平板": ["ipad", "tablet", "แท็บเล็ต", "平板电脑"],
   "ipad": ["平板", "tablet", "apple", "แท็บเล็ต"],
@@ -71,5 +73,27 @@
   "bicycle": ["自行车", "bike", "จักรยาน"],
 
   "便宜": ["cheap", "ถูก", "低价", "特价", "打折", "bargain"],
-  "cheap": ["便宜", "ถูก", "低价", "affordable"]
+  "cheap": ["便宜", "ถูก", "低价", "affordable"],
+
+  "โทรศัพท์": ["手机", "phone", "iphone", "smartphone", "มือถือ"],
+  "มือถือ": ["手机", "phone", "smartphone", "โทรศัพท์", "iphone"],
+  "แท็บเล็ต": ["平板", "ipad", "tablet", "平板电脑"],
+  "หูฟัง": ["耳机", "headphone", "earphone", "airpods"],
+  "กล้อง": ["相机", "camera", "单反", "dslr"],
+  "นาฬิกา": ["手表", "watch", "smartwatch"],
+  "ที่ชาร์จ": ["充电器", "charger", "cable", "充电宝"],
+  "มือสอง": ["二手", "used", "secondhand", "闲置"],
+  "ใหม่": ["全新", "new", "brand new", "未拆封"],
+  "หนังสือเรียน": ["教材", "textbook", "课本", "book"],
+  "หนังสือ": ["书", "book", "教材", "textbook"],
+  "เฟอร์นิเจอร์": ["家具", "furniture", "桌子", "椅子"],
+  "โต๊ะ": ["桌子", "desk", "table"],
+  "เก้าอี้": ["椅子", "chair", "办公椅"],
+  "เสื้อผ้า": ["衣服", "clothes", "clothing", "服装"],
+  "รองเท้า": ["鞋", "shoes", "sneakers", "运动鞋"],
+  "กีฬา": ["运动", "sports", "fitness", "健身"],
+  "ตั๋ว": ["票", "ticket", "门票"],
+  "เกม": ["游戏", "game", "gaming", "switch"],
+  "จักรยาน": ["自行车", "bicycle", "bike", "单车"],
+  "ถูก": ["便宜", "cheap", "低价", "affordable"]
 }
