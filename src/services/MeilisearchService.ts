@@ -62,7 +62,11 @@ class MeilisearchService {
         apiKey: MEILI_API_KEY,
       });
       // 创建或获取索引 / Create or get index
-      await this.client.createIndex(INDEX_NAME, { primaryKey: PRIMARY_KEY });
+      try {
+        await this.client.createIndex(INDEX_NAME, { primaryKey: PRIMARY_KEY });
+      } catch (_e) {
+        // 索引已存在，忽略 / Index already exists, ignore
+      }
       this.index = this.client.index(INDEX_NAME);
 
       // 配置可搜索属性（标题和描述权重最高）/ Configure searchable attributes
