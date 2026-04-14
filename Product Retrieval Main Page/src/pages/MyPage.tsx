@@ -1014,20 +1014,20 @@ function MyPage() {
                 ) : (
                   <div className="grid gap-4">
                     {myReviews.map((review: any) => (
-                      <Card key={review.reviewID}>
+                      <Card key={review.reviewID} className="w-full overflow-hidden">
                         <CardContent className="p-4">
-                          <div className="flex items-start gap-3">
+                          <div className="flex items-start gap-3 min-w-0">
                             <Avatar className="w-8 h-8 flex-shrink-0">
                               <AvatarImage src={review.reviewerProfileImage?.startsWith('/') ? `http://localhost:3000${review.reviewerProfileImage}` : ''} />
                               <AvatarFallback className="text-xs bg-gradient-to-br from-blue-500 to-purple-600 text-white">{review.reviewerName?.substring(0, 2).toUpperCase() || 'U'}</AvatarFallback>
                             </Avatar>
-                            <div className="flex-1">
-                              <div className="flex items-center gap-2 mb-1">
+                            <div className="flex-1 min-w-0 overflow-hidden">
+                              <div className="flex flex-wrap items-center gap-2 mb-1">
                                 <span className="font-semibold text-sm">{review.reviewerName}</span>
                                 <StarRating rating={review.rating} size={14} />
                                 <span className="text-xs text-gray-400">{new Date(review.createdAt).toLocaleDateString()}</span>
                               </div>
-                              {review.comment && <p className="text-base sm:text-sm text-gray-700 break-all">{review.comment}</p>}
+                              {review.comment && <p className="text-base sm:text-sm text-gray-700 break-all overflow-hidden">{review.comment}</p>}
                               {/* 评价翻译按钮 / Review translate button */}
                               {review.comment && (
                                 <TranslateButton text={review.comment} language={language} />

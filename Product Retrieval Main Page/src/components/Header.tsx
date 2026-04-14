@@ -451,12 +451,12 @@ export function Header({ language, onLanguageChange }: HeaderProps) {
             </Button>
 
             {/* 汉堡菜单 — 仅移动端显示 / Hamburger — mobile only */}
-            <div className="md:hidden">
+            <div className="flex md:!hidden items-center">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon">
+                  <button type="button" className="inline-flex items-center justify-center rounded-md p-2 hover:bg-gray-100" aria-label="Menu">
                     <Menu className="w-5 h-5" />
-                  </Button>
+                  </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48">
                   <DropdownMenuItem onClick={() => navigate('/')}>
