@@ -402,7 +402,7 @@ export default function MainPage() {
                   onFavorite={handleFavorite}
                   onCompare={handleCompare}
                   onContact={handleContact}
-                  onBuy={!product.sold ? handleBuy : undefined}
+                  onBuy={!product.sold && product.seller?.id !== user?.userID ? handleBuy : undefined}
                   isFavorited={favoritedIds.includes(product.id)}
                   isInComparison={isInComparison(product.id)}
                   inTransaction={inTransactionIds.includes(product.id)}

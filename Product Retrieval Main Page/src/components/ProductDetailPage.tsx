@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router';
-import { ChevronLeft, Heart, Scale, Flag, MessageCircle, Pencil } from 'lucide-react';
+import { ChevronLeft, Heart, Scale, Flag, MessageCircle, Pencil, ShoppingCart, Loader2 } from 'lucide-react';
 import { Product } from '../lib/mockData';
 import { Language, translate } from '../lib/i18n';
 import { ReportDialog } from './ReportDialog';
@@ -354,6 +354,38 @@ export function ProductDetailPage({
                 {t('addToFavorites')}
               </Button>
             </div>
+
+            {/* 购买按钮 — 仅非卖家可见 / Buy button — only visible to non-sellers */}
+            {!isSeller && (
+              <div className="mb-3">
+                {!deal ? (
+                  <Button
+                    className="w-full text-white hover:shadow-lg hover:scale-105 transition-all duration-200"
+                    style={{ background: 'linear-gradient(to right, #f59e0b, #ef4444)' }}
+                    onClick={handleBuy}
+                    disabled={dealLoading}
+                  >
+                    {dealLoading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <ShoppingCart className="w-4 h-4 mr-2" />}
+                    {t('buyNow') || 'Buy / Request'}
+                  </Button>
+                ) : deal.status === 'completed' ? (
+                  <Badge className="w-full justify-center py-2 bg-green-100 text-green-700">{t('dealCompleted') || 'Transaction completed'}</Badge>
+                ) : deal.notes === 'accepted' || deal.status === 'accepted' ? (
+                  <div className="flex gap-2">
+                    <Button size="sm" className="flex-1" style={{ background: '#16a34a', color: 'white' }} onClick={handleConfirmDeal} disabled={dealLoading}>
+                      {t('confirmDeal') || 'Confirm Complete'}
+                    </Button>
+                    <Button size="sm" variant="outline" className="flex-1 text-red-600" onClick={handleCancelDeal} disabled={dealLoading}>
+                      {t('cancelDeal') || 'Cancel Deal'}
+                    </Button>
+                  </div>
+                ) : deal.status === 'rejected' ? (
+                  <Badge className="w-full justify-center py-2 bg-red-100 text-red-700">{t('sellerRejectedDeal') || 'The seller has rejected this deal'}</Badge>
+                ) : (
+                  <Badge className="w-full justify-center py-2 bg-yellow-100 text-yellow-700">{t('waitingSellerAccept') || 'Waiting for seller to accept...'}</Badge>
+                )}
+              </div>
+            )}
 
             <div className="grid grid-cols-2 gap-3">
               <Button
