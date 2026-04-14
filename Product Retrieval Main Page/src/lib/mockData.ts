@@ -7,7 +7,7 @@ export interface Product {
   negotiable: boolean;
   condition: 'new' | 'ninetyNew' | 'eightyNew' | 'repairable';
   campus: 'mainCampus' | 'secondaryCampus' | 'offCampus';
-  category: 'books' | 'electronics' | 'dormFurniture' | 'sports' | 'clothing' | 'tickets' | 'others';
+  category: 'books' | 'electronics' | 'dormFurniture' | 'sports' | 'clothing' | 'tickets' | 'others' | 'transportation';
   image: string;
   images?: string[];
   description?: string;

@@ -79,6 +79,7 @@ function transformProduct(backendProduct: BackendProduct): Product {
     'Furniture': 'dormFurniture',
     'Sports': 'sports',
     'Other': 'others',
+    'Transportation': 'transportation',
   };
 
   const categoryName = backendProduct.category?.name || '';
