@@ -55,7 +55,8 @@ class MeilisearchService {
     try {
       // 动态导入 ESM-only 的 meilisearch 包 / Dynamic import of ESM-only meilisearch package
       const meili = await eval('import("meilisearch")') as any;
-      const MeiliSearch = meili.MeiliSearch || meili.default?.MeiliSearch || meili.default;
+      // 注意：新版包导出名为 Meilisearch（小写 s），非 MeiliSearch
+      const MeiliSearch = meili.Meilisearch || meili.MeiliSearch || meili.default;
 
       this.client = new MeiliSearch({
         host: MEILI_HOST,
