@@ -240,7 +240,7 @@ export function ProductDetailPage({
       </div>
 
       {/* Main Content */}
-      <div className="container mx-auto px-4 py-6">
+      <div className="container mx-auto px-4 py-4 sm:py-6">
         {/* Back Button */}
         <Button variant="ghost" onClick={onBack} className="mb-4">
           <ChevronLeft className="w-4 h-4 mr-1" />
@@ -257,9 +257,9 @@ export function ProductDetailPage({
           />
 
           {/* Right: Product Summary */}
-          <div className="bg-white rounded-lg p-6 h-fit sticky top-20">
+          <div className="bg-white rounded-lg p-4 sm:p-6 h-fit sticky top-20">
             {/* Title */}
-            <h1 className="mb-1">{getLocalizedTitle()}</h1>
+            <h1 className="text-xl sm:text-2xl mb-1">{getLocalizedTitle()}</h1>
             <TranslateButton text={product.title} language={language} className="mb-4" />
 
             {/* Price */}
@@ -424,6 +424,26 @@ export function ProductDetailPage({
         targetId={product.id}
         targetName={getLocalizedTitle()}
       />
+
+      {/* 移动端底部固定操作栏 / Mobile fixed bottom action bar */}
+      <div className="fixed bottom-0 left-0 w-full bg-white border-t shadow-lg py-3 px-4 sm:hidden z-50">
+        <div className="flex gap-2">
+          {isSeller ? (
+            <Button className="flex-1 py-3 text-white" style={{ background: 'linear-gradient(to right, #22c55e, #0d9488)' }} onClick={() => navigate(`/edit-product/${product.id}`)}>
+              <Pencil className="w-4 h-4 mr-2" />{t('editProduct')}
+            </Button>
+          ) : (
+            <Button className="flex-1 py-3 bg-gradient-to-r from-blue-500 to-purple-600" onClick={handleContactSeller}>
+              <MessageCircle className="w-4 h-4 mr-2" />{t('contactSeller')}
+            </Button>
+          )}
+          <Button variant="outline" className="py-3" onClick={handleToggleFavorite}>
+            <Heart className={`w-4 h-4 ${isFavorite ? 'fill-red-500 text-red-500' : ''}`} />
+          </Button>
+        </div>
+      </div>
+      {/* 底部占位，防止固定栏遮挡内容 / Bottom spacer for fixed bar */}
+      <div className="h-16 sm:hidden" />
     </div>
   );
 }

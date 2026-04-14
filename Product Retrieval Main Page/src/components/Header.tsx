@@ -8,7 +8,7 @@
  * 彻底移除轮询，改为 WebSocket notification 事件实时驱动
  * Polling removed entirely; driven by WebSocket notification events in real-time
  */
-import { Bell, User, LogOut, MessageCircle, ShoppingBag, Shield } from 'lucide-react';
+import { Bell, User, LogOut, MessageCircle, ShoppingBag, Shield, Menu, Home, HelpCircle, Package } from 'lucide-react';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
@@ -260,8 +260,8 @@ export function Header({ language, onLanguageChange }: HeaderProps) {
           {/* ── 右侧区域 / Right section ─────────────────────────────────── */}
           <div className="flex items-center gap-4">
 
-            {/* 学校认证徽章 / Edu verification badge */}
-            <div className="hidden sm:block">
+            {/* 学校认证徽章 / Edu verification badge — 移动端隐藏 */}
+            <div className="hidden md:block">
               {user?.eduVerified ? (
                 <Badge variant="secondary" className="gap-1">
                   <span className="text-green-600">✓</span>
@@ -449,6 +449,39 @@ export function Header({ language, onLanguageChange }: HeaderProps) {
             >
               {t('postItemCTA')}
             </Button>
+
+            {/* 汉堡菜单 — 仅移动端显示 / Hamburger — mobile only */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="md:hidden">
+                  <Menu className="w-5 h-5" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuItem onClick={() => navigate('/')}>
+                  <Home className="w-4 h-4 mr-2" />{t('home')}
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate('/my-page')}>
+                  <User className="w-4 h-4 mr-2" />{t('myPage')}
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate('/help')}>
+                  <HelpCircle className="w-4 h-4 mr-2" />{t('helpCenter')}
+                </DropdownMenuItem>
+                {isAuthenticated && (
+                  <DropdownMenuItem onClick={() => {
+                    if (!user?.eduVerified) { toast.error(t('eduRequiredToPost')); return; }
+                    navigate('/create-product');
+                  }}>
+                    <Package className="w-4 h-4 mr-2" />{t('postItem')}
+                  </DropdownMenuItem>
+                )}
+                {user?.isAdmin && (
+                  <DropdownMenuItem onClick={() => navigate('/admin')}>
+                    <Shield className="w-4 h-4 mr-2" />Admin
+                  </DropdownMenuItem>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
       </div>
