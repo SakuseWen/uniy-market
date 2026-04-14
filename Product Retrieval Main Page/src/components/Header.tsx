@@ -8,7 +8,7 @@
  * 彻底移除轮询，改为 WebSocket notification 事件实时驱动
  * Polling removed entirely; driven by WebSocket notification events in real-time
  */
-import { Bell, User, LogOut, MessageCircle, ShoppingBag, Shield } from 'lucide-react';
+import { Bell, User, LogOut, MessageCircle, ShoppingBag, Shield, Menu, X, Home, HelpCircle, Package } from 'lucide-react';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
@@ -56,6 +56,9 @@ export function Header({ language, onLanguageChange }: HeaderProps) {
 
   // ─── Popover 状态 / Popover state ─────────────────────────────────────────
   const [popoverOpen, setPopoverOpen] = useState(false);
+
+  // ─── 移动端菜单状态 / Mobile menu state ────────────────────────────────────
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // ─── WebSocket ref / WebSocket 连接引用 ───────────────────────────────────
   const socketRef = useRef<Socket | null>(null);
@@ -243,12 +246,16 @@ export function Header({ language, onLanguageChange }: HeaderProps) {
         <div className="flex items-center justify-between">
 
           {/* ── Logo + 导航 / Logo + Nav ─────────────────────────────────── */}
-          <div className="flex items-center gap-8">
+          <div className="flex items-center gap-4 md:gap-8">
+            {/* 移动端汉堡菜单按钮 / Mobile hamburger button */}
+            <button className="md:hidden p-1" onClick={() => setMobileMenuOpen(!mobileMenuOpen)} aria-label="Menu">
+              {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            </button>
             <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate('/')}>
-              <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+              <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center flex-shrink-0">
                 <span className="text-white">🎓</span>
               </div>
-              <span className="hidden sm:block">Uniy Market</span>
+              <span className="hidden sm:block font-semibold">Uniy Market</span>
             </div>
             <nav className="hidden md:flex items-center gap-6">
               <a href="#" className="hover:text-blue-600 transition-colors" onClick={() => navigate('/')}>{t('home')}</a>
@@ -452,6 +459,36 @@ export function Header({ language, onLanguageChange }: HeaderProps) {
           </div>
         </div>
       </div>
+
+      {/* ── 移动端抽屉菜单 / Mobile drawer menu ──────────────────────────── */}
+      {mobileMenuOpen && (
+        <div className="md:hidden border-t bg-white">
+          <div className="container mx-auto px-4 py-3 space-y-1">
+            <button className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg hover:bg-gray-50 text-left" onClick={() => { navigate('/'); setMobileMenuOpen(false); }}>
+              <Home className="w-5 h-5 text-blue-600" /> {t('home')}
+            </button>
+            <button className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg hover:bg-gray-50 text-left" onClick={() => { navigate('/my-page'); setMobileMenuOpen(false); }}>
+              <User className="w-5 h-5 text-blue-600" /> {t('myPage')}
+            </button>
+            <button className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg hover:bg-gray-50 text-left" onClick={() => { navigate('/help'); setMobileMenuOpen(false); }}>
+              <HelpCircle className="w-5 h-5 text-blue-600" /> {t('helpCenter')}
+            </button>
+            {isAuthenticated && (
+              <button className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg hover:bg-gray-50 text-left" onClick={() => {
+                if (!user?.eduVerified) { toast.error(t('eduRequiredToPost')); return; }
+                navigate('/create-product'); setMobileMenuOpen(false);
+              }}>
+                <Package className="w-5 h-5 text-purple-600" /> {t('postItem')}
+              </button>
+            )}
+            {user?.isAdmin && (
+              <button className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg hover:bg-gray-50 text-left" onClick={() => { navigate('/admin'); setMobileMenuOpen(false); }}>
+                <Shield className="w-5 h-5 text-red-500" /> Admin
+              </button>
+            )}
+          </div>
+        </div>
+      )}
     </header>
   );
 }

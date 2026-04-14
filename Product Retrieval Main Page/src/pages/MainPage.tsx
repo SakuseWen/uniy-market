@@ -285,7 +285,7 @@ export default function MainPage() {
       {/* Main Content */}
       <div className="container mx-auto px-4 py-6">
         {/* Toolbar - View Mode and Sorting */}
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
           <div className="flex items-center gap-4">
             <span className="text-gray-600">
               {t('showing')} <strong>{filteredProducts.length}</strong> {t('results')}

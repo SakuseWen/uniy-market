@@ -63,7 +63,7 @@ export function SearchFilterBar({
         <div className="flex flex-wrap gap-3 items-center">
           {/* Campus */}
           <Select value={filters.campus} onValueChange={(value) => updateFilter('campus', value)}>
-            <SelectTrigger className="w-[150px]">
+            <SelectTrigger className="w-[130px] sm:w-[150px]">
               <SelectValue placeholder={t('campus')} />
             </SelectTrigger>
             <SelectContent>
@@ -76,7 +76,7 @@ export function SearchFilterBar({
 
           {/* Category */}
           <Select value={filters.category} onValueChange={(value) => updateFilter('category', value)}>
-            <SelectTrigger className="w-[180px]">
+            <SelectTrigger className="w-[140px] sm:w-[180px]">
               <SelectValue placeholder={t('category')} />
             </SelectTrigger>
             <SelectContent>
@@ -93,7 +93,7 @@ export function SearchFilterBar({
 
           {/* Condition */}
           <Select value={filters.condition} onValueChange={(value) => updateFilter('condition', value)}>
-            <SelectTrigger className="w-[140px]">
+            <SelectTrigger className="w-[120px] sm:w-[140px]">
               <SelectValue placeholder={t('condition')} />
             </SelectTrigger>
             <SelectContent>
@@ -106,7 +106,7 @@ export function SearchFilterBar({
 
           {/* Delivery Type */}
           <Select value={filters.deliveryType} onValueChange={(value) => updateFilter('deliveryType', value)}>
-            <SelectTrigger className="w-[160px]">
+            <SelectTrigger className="w-[130px] sm:w-[160px]">
               <SelectValue placeholder={t('deliveryType')} />
             </SelectTrigger>
             <SelectContent>
