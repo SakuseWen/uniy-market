@@ -103,8 +103,9 @@ router.get('/google/callback',
         maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
       });
 
-      // Redirect to frontend with success
-      return res.redirect(`/public/app.html?auth=success`);
+      // Redirect to React frontend with success
+      const frontendUrl = process.env['FRONTEND_URL'] || 'http://localhost:5173';
+      return res.redirect(`${frontendUrl}?auth=success`);
 
     } catch (error) {
       console.error('OAuth callback error:', error);
