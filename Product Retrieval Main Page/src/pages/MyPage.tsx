@@ -523,8 +523,8 @@ function MyPage() {
             </div>
           ) : (
             /* View Mode */
-            <div className="flex flex-col items-center gap-4">
-              {/* Edu 认证 — 手机端显示在最上方居中 / Mobile: show at top center */}
+            <div className="flex flex-col xl:flex-row items-center gap-4 xl:gap-6">
+              {/* Edu 认证 — 仅手机端显示在最上方居中 */}
               <div className="xl:hidden w-full flex justify-center">
                 {user?.eduVerified ? (
                   <Badge variant="secondary" className="gap-1 py-1.5 px-3">
@@ -535,13 +535,8 @@ function MyPage() {
                   <Button variant="outline" size="sm" className="gap-1" onClick={() => {
                     if ((user as any)?.status === 'suspended') {
                       const lang = localStorage.getItem('preferredLanguage') as any || 'en';
-                      const msgs: Record<string, string> = {
-                        en: 'Your account has been suspended. You cannot perform this action. Please contact the administrator.',
-                        zh: '您的账户已被暂停使用，无法执行此操作。请联系管理员。',
-                        th: 'บัญชีของคุณถูกระงับ ไม่สามารถดำเนินการนี้ได้ กรุณาติดต่อผู้ดูแลระบบ',
-                      };
-                      toast.error(msgs[lang] || msgs.en);
-                      return;
+                      const msgs: Record<string, string> = { en: 'Your account has been suspended. You cannot perform this action. Please contact the administrator.', zh: '您的账户已被暂停使用，无法执行此操作。请联系管理员。', th: 'บัญชีของคุณถูกระงับ ไม่สามารถดำเนินการนี้ได้ กรุณาติดต่อผู้ดูแลระบบ' };
+                      toast.error(msgs[lang] || msgs.en); return;
                     }
                     setEduStep('email');
                   }}>
@@ -549,39 +544,34 @@ function MyPage() {
                   </Button>
                 )}
               </div>
-              <Avatar className="w-20 h-20">
+              <Avatar className="w-20 h-20 flex-shrink-0">
                 <AvatarImage src={user?.profileImage ? `http://localhost:3000${user.profileImage}` : ''} />
                 <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white text-xl">
                   {user?.name ? user.name.substring(0, 2).toUpperCase() : 'U'}
                 </AvatarFallback>
               </Avatar>
-              <div className="flex flex-col justify-center gap-1 text-center w-full">
-                <p className="text-xl font-bold break-words">{user?.name || 'User'}</p>
-                <p className="text-sm text-gray-500 break-all">{user?.email || ''}</p>
+              <div className="flex flex-col justify-center gap-1 flex-1 min-w-0 text-center xl:text-left">
+                <p className="text-xl font-bold truncate">{user?.name || 'User'}</p>
+                <p className="text-sm text-gray-500 truncate">{user?.email || ''}</p>
                 {user?.bio && <p className="text-sm text-gray-600 mt-1 break-words">{user.bio}</p>}
               </div>
-              <div className="flex flex-col gap-2 w-full max-w-xs">
-                <Button variant="outline" size="sm" onClick={() => { setIsEditing(true); setEditName(user?.name || ''); setEditBio(user?.bio || ''); }} className="gap-1 w-full">
+              <div className="flex flex-col gap-2 w-full max-w-xs xl:w-auto xl:max-w-none xl:flex-shrink-0">
+                <Button variant="outline" size="sm" onClick={() => { setIsEditing(true); setEditName(user?.name || ''); setEditBio(user?.bio || ''); }} className="gap-1">
                   <Edit2 className="w-4 h-4" /> {t('editProfile')}
                 </Button>
-                {/* Edu 认证 — PC端显示在按钮区 / PC: show in buttons area */}
+                {/* Edu 认证 — 仅 PC 端显示在按钮区 */}
                 <div className="hidden xl:block">
                   {user?.eduVerified ? (
-                    <Badge variant="secondary" className="gap-1 py-1.5 px-3 justify-center w-full">
+                    <Badge variant="secondary" className="gap-1 py-1.5 px-3">
                       <GraduationCap className="w-4 h-4 text-green-600" />
                       <span className="text-green-600">✓</span> {t('eduVerified')}
                     </Badge>
                   ) : (
-                    <Button variant="outline" size="sm" className="gap-1 w-full" onClick={() => {
+                    <Button variant="outline" size="sm" className="gap-1" onClick={() => {
                       if ((user as any)?.status === 'suspended') {
                         const lang = localStorage.getItem('preferredLanguage') as any || 'en';
-                        const msgs: Record<string, string> = {
-                          en: 'Your account has been suspended. You cannot perform this action. Please contact the administrator.',
-                          zh: '您的账户已被暂停使用，无法执行此操作。请联系管理员。',
-                          th: 'บัญชีของคุณถูกระงับ ไม่สามารถดำเนินการนี้ได้ กรุณาติดต่อผู้ดูแลระบบ',
-                        };
-                        toast.error(msgs[lang] || msgs.en);
-                        return;
+                        const msgs: Record<string, string> = { en: 'Your account has been suspended. You cannot perform this action. Please contact the administrator.', zh: '您的账户已被暂停使用，无法执行此操作。请联系管理员。', th: 'บัญชีของคุณถูกระงับ ไม่สามารถดำเนินการนี้ได้ กรุณาติดต่อผู้ดูแลระบบ' };
+                        toast.error(msgs[lang] || msgs.en); return;
                       }
                       setEduStep('email');
                     }}>
@@ -589,7 +579,7 @@ function MyPage() {
                     </Button>
                   )}
                 </div>
-                <Button variant="outline" size="sm" className="gap-1 w-full text-red-500 border-red-200 hover:bg-red-50 hover:text-red-600" onClick={() => setDeleteStep('notice')}>
+                <Button variant="outline" size="sm" className="gap-1 text-red-500 border-red-200 hover:bg-red-50 hover:text-red-600" onClick={() => setDeleteStep('notice')}>
                   <UserX className="w-4 h-4" /> {t('deleteAccount')}
                 </Button>
               </div>
