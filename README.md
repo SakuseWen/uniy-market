@@ -287,13 +287,6 @@ curl -X POST http://localhost:3000/api/admin/sync-search \
 
 ---
 
-## 👥 默认账号 / Default Accounts
-
-| 角色 | 邮箱 | 密码 |
-|------|------|------|
-| 管理员 / Admin | admin@university.edu | admin123 |
-
----
 
 ## 📄 License
 
