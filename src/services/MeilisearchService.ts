@@ -141,7 +141,20 @@ class MeilisearchService {
       // 3. 拼写容错配置
       await this.index.updateTypoTolerance({
         enabled: true,
-        minWordSizeForTypos: { oneTypo: 4, twoTypos: 8 },
+        minWordSizeForTypos: { 
+          oneTypo: 3, // 从 4 降到 3。兼顾中文的 3字词（如“充电器”）和较长的英文短词。
+          twoTypos: 7 // 从 8 降到 7。
+        },
+        // 核心优化：豁免词典 (Disable Typos On Words)
+        // 把绝对不能容错的短词保护起来，防止调低门槛后出现“指鹿为马”的情况。
+        disableOnWords: [
+          'pc', 'mac', 'pad', 'hp', 'ns', // 极短的英文专有名词，错一个字母就变成了别的意思
+          '全新', '二手', '闲置', // 交易属性词，必须精确匹配
+          '手机', '电脑', '微单' // 虽然只有2个字本来就不会纠错，但为了未来系统扩展，建议把核心品类写上
+        ],
+        // 如果未来把 category（分类）或 brand（品牌）设为了可搜索字段，
+        // 强烈建议在这里禁用纠错，保证分类筛选的绝对精确。
+        disableOnAttributes: [] 
       });
 
       console.log('[Meilisearch] 高级搜索规则配置完成 / Advanced settings configured');

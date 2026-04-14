@@ -38,6 +38,7 @@ export function LocationPicker({ latitude, longitude, address, onChange, readonl
   const [lng, setLng] = useState(longitude || 100.3250);
   const [addr, setAddr] = useState(address || '');
   const [searchQuery, setSearchQuery] = useState('');
+  const [searching, setSearching] = useState(false);
 
   const handleMapClick = (newLat: number, newLng: number) => {
     if (readonly) return;
@@ -56,9 +57,15 @@ export function LocationPicker({ latitude, longitude, address, onChange, readonl
   };
 
   const handleSearch = () => {
-    if (!searchQuery.trim()) return;
-    fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchQuery)}&limit=1`)
-      .then(r => r.json())
+    if (!searchQuery.trim() || searching) return;
+    setSearching(true);
+    fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchQuery)}&limit=1`, {
+      headers: { 'Accept': 'application/json' },
+    })
+      .then(r => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json();
+      })
       .then(results => {
         if (results.length > 0) {
           const newLat = parseFloat(results[0].lat);
@@ -70,7 +77,8 @@ export function LocationPicker({ latitude, longitude, address, onChange, readonl
           onChange(newLat, newLng, newAddr);
         }
       })
-      .catch(() => {});
+      .catch((err) => { console.error('Location search failed:', err); })
+      .finally(() => setSearching(false));
   };
 
   const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
@@ -85,7 +93,9 @@ export function LocationPicker({ latitude, longitude, address, onChange, readonl
             placeholder="Search location..."
             onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleSearch(); } }}
           />
-          <Button type="button" variant="outline" onClick={handleSearch}><Search className="w-4 h-4" /></Button>
+          <Button type="button" variant="outline" onClick={handleSearch} disabled={searching}>
+            {searching ? <span className="w-4 h-4 border-2 border-gray-300 border-t-gray-600 rounded-full animate-spin" /> : <Search className="w-4 h-4" />}
+          </Button>
         </div>
       )}
       <div style={{ height: 300, borderRadius: 8, overflow: 'hidden', border: '1px solid #e5e7eb' }}>

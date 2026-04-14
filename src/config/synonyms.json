@@ -107,5 +107,52 @@
   "ถูก": ["便宜", "cheap", "低价", "affordable", "bargain"],
 
   "苹果": ["apple", "iphone", "macbook", "ipad", "airpods"],
-  "apple": ["苹果", "iphone", "macbook", "ipad", "airpods"]
+  "apple": ["苹果", "iphone", "macbook", "ipad", "airpods"],
+
+  "免费": ["free", "giveaway", "ฟรี", "赠送", "แจก", "แจกฟรี"],
+  "free": ["免费", "giveaway", "ฟรี", "赠送", "แจก", "แจกฟรี"],
+  "ฟรี": ["免费", "free", "giveaway", "赠送", "แจก", "แจกฟรี"],
+
+  "交换": ["exchange", "trade", "แลกเปลี่ยน", "แลก", "换物"],
+  "exchange": ["交换", "trade", "แลกเปลี่ยน", "แลก", "换物"],
+  "trade": ["交换", "exchange", "แลกเปลี่ยน", "แลก", "换物"],
+  "แลกเปลี่ยน": ["交换", "exchange", "trade", "แลก", "换物"],
+
+  "计算器": ["calculator", "เครื่องคิดเลข", "科学计算器"],
+  "calculator": ["计算器", "เครื่องคิดเลข", "科学计算器"],
+  "เครื่องคิดเลข": ["计算器", "calculator", "科学计算器"],
+
+  "触控笔": ["stylus", "apple pencil", "pen", "ปากกา", "ปากกาไอแพด"],
+  "stylus": ["触控笔", "apple pencil", "pen", "ปากกา", "ปากกาไอแพด"],
+  "ปากกาไอแพด": ["触控笔", "stylus", "apple pencil", "pen", "ปากกา"],
+
+  "化妆品": ["cosmetics", "makeup", "เครื่องสำอาง", "美妆", "彩妆"],
+  "cosmetics": ["化妆品", "makeup", "เครื่องสำอาง", "美妆", "彩妆"],
+  "makeup": ["化妆品", "cosmetics", "เครื่องสำอาง", "美妆", "彩妆"],
+  "เครื่องสำอาง": ["化妆品", "cosmetics", "makeup", "美妆", "彩妆"],
+
+  "香水": ["perfume", "fragrance", "น้ำหอม"],
+  "perfume": ["香水", "fragrance", "น้ำหอม"],
+  "น้ำหอม": ["香水", "perfume", "fragrance"],
+
+  "摩托": ["motorcycle", "motorbike", "มอเตอร์ไซค์", "รถเครื่อง", "机车", "motor"],
+  "摩托车": ["motorcycle", "motorbike", "มอเตอร์ไซค์", "รถเครื่อง", "机车", "motor", "摩托"],
+  "motor": ["摩托车", "motorbike", "มอเตอร์ไซค์", "รถเครื่อง", "机车", "摩托"],
+  "motorcycle": ["摩托车", "motorbike", "มอเตอร์ไซค์", "รถเครื่อง", "机车", "motor", "摩托"],
+  "motorbike": ["摩托车", "motorcycle", "มอเตอร์ไซค์", "รถเครื่อง", "机车", "motor", "摩托"],
+  "มอเตอร์ไซค์": ["摩托车", "motorcycle", "motorbike", "รถเครื่อง", "机车", "motor", "摩托"],
+
+  "风扇": ["fan", "พัดลม", "电风扇"],
+  "fan": ["风扇", "พัดลม", "电风扇"],
+  "พัดลม": ["风扇", "fan", "电风扇"],
+
+  "冰箱": ["refrigerator", "fridge", "ตู้เย็น", "小冰箱"],
+  "refrigerator": ["冰箱", "fridge", "ตู้เย็น", "小冰箱"],
+  "fridge": ["冰箱", "refrigerator", "ตู้เย็น", "小冰箱"],
+  "ตู้เย็น": ["冰箱", "refrigerator", "fridge", "小冰箱"],
+
+  "显示器": ["monitor", "screen", "display", "หน้าจอ", "จอคอม"],
+  "monitor": ["显示器", "screen", "display", "หน้าจอ", "จอคอม"],
+  "หน้าจอ": ["显示器", "monitor", "screen", "display", "จอคอม"],
+  "จอคอม": ["显示器", "monitor", "screen", "display", "หน้าจอ"]
 }
