@@ -243,10 +243,10 @@ export function Header({ language, onLanguageChange }: HeaderProps) {
   return (
     <header className="bg-white border-b">
       <div className="container mx-auto px-4 py-3">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between min-w-0">
 
           {/* ── Logo + 导航 / Logo + Nav ─────────────────────────────────── */}
-          <div className="flex items-center gap-4 md:gap-8">
+          <div className="flex items-center gap-2 sm:gap-4 md:gap-8 min-w-0">
             {/* 移动端汉堡菜单按钮 / Mobile hamburger button */}
             <button className="md:hidden p-1" onClick={() => setMobileMenuOpen(!mobileMenuOpen)} aria-label="Menu">
               {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
@@ -265,12 +265,12 @@ export function Header({ language, onLanguageChange }: HeaderProps) {
           </div>
 
           {/* ── 右侧区域 / Right section ─────────────────────────────────── */}
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 sm:gap-4 flex-shrink-0">
 
-            {/* 学校认证徽章 / Edu verification badge */}
-            <div className="hidden sm:block">
+            {/* 学校认证徽章 / Edu verification badge — 仅中大屏显示 */}
+            <div className="hidden md:block">
               {user?.eduVerified ? (
-                <Badge variant="secondary" className="gap-1">
+                <Badge variant="secondary" className="gap-1 text-xs">
                   <span className="text-green-600">✓</span>
                   {t('verified')} - {getMaskedEduEmail()}
                 </Badge>
@@ -402,8 +402,9 @@ export function Header({ language, onLanguageChange }: HeaderProps) {
             {/* 语言切换 / Language switch */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm">
-                  {language === 'en' ? 'English' : language === 'zh' ? '中文' : 'ไทย'}
+                <Button variant="ghost" size="sm" className="px-2 sm:px-3">
+                  <span className="hidden sm:inline">{language === 'en' ? 'English' : language === 'zh' ? '中文' : 'ไทย'}</span>
+                  <span className="sm:hidden">{language === 'en' ? 'EN' : language === 'zh' ? '中' : 'ไท'}</span>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
