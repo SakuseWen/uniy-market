@@ -99,7 +99,7 @@ export function ProductCard({
       </div>
 
       {/* Product Info */}
-      <div className="p-4">
+      <div className="p-2 md:p-4">
         {/* Title */}
         <h3 className="line-clamp-2 mb-2 min-h-[3em]">
           {getTitle()}

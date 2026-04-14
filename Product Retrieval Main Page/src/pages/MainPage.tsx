@@ -393,7 +393,7 @@ export default function MainPage() {
             </Button>
           </div>
         ) : viewMode === 'grid' ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 pb-32">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-6 pb-32">
             {filteredProducts.map((product) => (
               <div key={product.id} onClick={() => handleProductClick(product)} className="cursor-pointer">
                 <ProductCard
