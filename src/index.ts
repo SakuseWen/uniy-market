@@ -23,8 +23,6 @@ import { securityHeaders, contentSecurityPolicy, attachCsrfToken } from './middl
 // Import routes
 import authRoutes from './routes/auth';
 import authPasswordRoutes from './routes/authPassword';
-import testAuthRoutes from './routes/testAuth';
-// import universityRoutes from './routes/university'; // Temporarily disabled due to TS errors
 import productRoutes from './routes/product';
 import languageRoutes from './routes/language';
 import chatRoutes, { setWebSocketService } from './routes/chat';
@@ -140,13 +138,17 @@ app.use(preventParameterPollution);
 // CSRF token attachment
 app.use(attachCsrfToken);
 
-// Static files
+// Serve static uploads (avatars, product images, etc.)
 app.use('/public', express.static(path.join(__dirname, '../public')));
 app.use('/uploads', express.static(path.join(__dirname, '../public/uploads')));
 
-// Serve app.html as the main application
+// Root endpoint — API status
 app.get('/', (_req, res) => {
-  res.sendFile(path.join(__dirname, '../public/app.html'));
+  res.json({
+    message: 'Uniy Market API is running',
+    version: '1.0.0',
+    status: 'OK',
+  });
 });
 
 // Health check endpoint
@@ -186,8 +188,6 @@ app.get('/api', (_req, res) => {
 // Mount API routes
 app.use('/api/auth', authLimiter, authRoutes);
 app.use('/api/auth', authLimiter, authPasswordRoutes);
-app.use('/api/test-auth', testAuthRoutes); // Test authentication routes (development only)
-// app.use('/api/university', universityRoutes); // Temporarily disabled due to TS errors
 app.use('/api/products', apiLimiter, productRoutes);
 app.use('/api/language', apiLimiter, languageRoutes);
 app.use('/api/chats', apiLimiter, chatRoutes);

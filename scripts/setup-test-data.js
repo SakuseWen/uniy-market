@@ -51,9 +51,8 @@ try {
     console.log('\n✅ Test data setup completed successfully!');
     console.log('\n🎯 Next steps:');
     console.log('1. Start the server: npm run dev');
-    console.log('2. Open http://localhost:3000/public/test-login.html');
-    console.log('3. Select a test user to login');
-    console.log('4. Test all the features!');
+    console.log('2. Open http://localhost:5173 (React frontend)');
+    console.log('3. Login and test all the features!');
     
 } catch (error) {
     console.error('\n❌ Error setting up test data:', error.message);
