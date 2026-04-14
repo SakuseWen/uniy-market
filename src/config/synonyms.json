@@ -1,0 +1,158 @@
+{
+  "_comment": "Meilisearch 同义词配置 — 三语互通（中英泰），每个词的同义词列表必须包含其他两种语言的对应词",
+
+  "手机": ["phone", "smartphone", "mobile", "โทรศัพท์", "มือถือ", "iphone", "华为", "小米", "三星", "samsung", "oppo", "vivo"],
+  "phone": ["手机", "smartphone", "mobile", "โทรศัพท์", "มือถือ", "iphone"],
+  "smartphone": ["手机", "phone", "mobile", "โทรศัพท์", "มือถือ"],
+  "โทรศัพท์": ["手机", "phone", "smartphone", "mobile", "มือถือ", "iphone"],
+  "มือถือ": ["手机", "phone", "smartphone", "mobile", "โทรศัพท์", "iphone"],
+  "iphone": ["手机", "phone", "smartphone", "โทรศัพท์", "มือถือ", "apple", "苹果"],
+  "华为": ["huawei", "手机", "phone", "โทรศัพท์"],
+  "小米": ["xiaomi", "redmi", "手机", "phone", "โทรศัพท์"],
+  "三星": ["samsung", "galaxy", "手机", "phone", "โทรศัพท์"],
+  "samsung": ["三星", "galaxy", "手机", "phone", "โทรศัพท์"],
+
+  "电脑": ["computer", "laptop", "pc", "macbook", "notebook", "คอมพิวเตอร์", "โน้ตบุ๊ก", "笔记本", "台式机", "desktop"],
+  "computer": ["电脑", "laptop", "pc", "macbook", "notebook", "คอมพิวเตอร์", "โน้ตบุ๊ก", "笔记本", "desktop"],
+  "laptop": ["电脑", "computer", "pc", "macbook", "notebook", "คอมพิวเตอร์", "โน้ตบุ๊ก", "笔记本"],
+  "คอมพิวเตอร์": ["电脑", "computer", "laptop", "pc", "macbook", "notebook", "โน้ตบุ๊ก", "笔记本", "desktop"],
+  "โน้ตบุ๊ก": ["电脑", "computer", "laptop", "notebook", "macbook", "คอมพิวเตอร์", "笔记本"],
+  "笔记本": ["电脑", "computer", "laptop", "notebook", "macbook", "คอมพิวเตอร์", "โน้ตบุ๊ก"],
+  "macbook": ["电脑", "computer", "laptop", "คอมพิวเตอร์", "โน้ตบุ๊ก", "笔记本", "apple", "苹果", "mac"],
+  "pc": ["电脑", "computer", "desktop", "คอมพิวเตอร์", "台式机"],
+  "台式机": ["电脑", "computer", "desktop", "pc", "คอมพิวเตอร์"],
+  "desktop": ["电脑", "computer", "pc", "台式机", "คอมพิวเตอร์"],
+
+  "平板": ["tablet", "ipad", "แท็บเล็ต", "平板电脑"],
+  "tablet": ["平板", "ipad", "แท็บเล็ต", "平板电脑"],
+  "แท็บเล็ต": ["平板", "tablet", "ipad", "平板电脑"],
+  "ipad": ["平板", "tablet", "แท็บเล็ต", "平板电脑", "apple"],
+
+  "耳机": ["headphone", "earphone", "airpods", "earbuds", "หูฟัง", "蓝牙耳机"],
+  "headphone": ["耳机", "earphone", "airpods", "earbuds", "หูฟัง"],
+  "earphone": ["耳机", "headphone", "airpods", "earbuds", "หูฟัง"],
+  "หูฟัง": ["耳机", "headphone", "earphone", "airpods", "earbuds"],
+  "airpods": ["耳机", "headphone", "earphone", "หูฟัง", "apple", "蓝牙耳机"],
+
+  "相机": ["camera", "กล้อง", "单反", "微单", "数码相机", "dslr"],
+  "camera": ["相机", "กล้อง", "单反", "dslr", "微单"],
+  "กล้อง": ["相机", "camera", "单反", "dslr", "微单"],
+
+  "手表": ["watch", "smartwatch", "นาฬิกา", "智能手表"],
+  "watch": ["手表", "smartwatch", "นาฬิกา", "智能手表"],
+  "smartwatch": ["手表", "watch", "นาฬิกา", "智能手表"],
+  "นาฬิกา": ["手表", "watch", "smartwatch", "智能手表"],
+
+  "充电器": ["charger", "ที่ชาร์จ", "充电宝", "数据线", "power bank", "cable"],
+  "charger": ["充电器", "ที่ชาร์จ", "充电宝", "cable", "power bank"],
+  "ที่ชาร์จ": ["充电器", "charger", "充电宝", "cable", "power bank"],
+
+  "二手": ["used", "secondhand", "มือสอง", "闲置", "九成新", "清仓", "旧货", "pre-owned"],
+  "used": ["二手", "secondhand", "มือสอง", "闲置", "pre-owned"],
+  "secondhand": ["二手", "used", "มือสอง", "闲置", "pre-owned"],
+  "มือสอง": ["二手", "used", "secondhand", "闲置", "pre-owned"],
+  "闲置": ["二手", "used", "มือสอง", "不用了"],
+  "九成新": ["二手", "used", "มือสอง", "几乎全新", "like new", "95新"],
+
+  "全新": ["new", "brand new", "ใหม่", "未拆封"],
+  "new": ["全新", "brand new", "ใหม่", "未拆封"],
+  "ใหม่": ["全新", "new", "brand new", "未拆封"],
+
+  "教材": ["textbook", "หนังสือเรียน", "课本", "教科书", "参考书"],
+  "textbook": ["教材", "หนังสือเรียน", "课本", "book"],
+  "หนังสือเรียน": ["教材", "textbook", "课本", "book"],
+  "课本": ["教材", "textbook", "หนังสือเรียน", "教科书"],
+  "书": ["book", "หนังสือ", "教材", "小说", "参考书"],
+  "book": ["书", "หนังสือ", "教材", "textbook", "หนังสือเรียน"],
+  "หนังสือ": ["书", "book", "教材", "textbook"],
+
+  "家具": ["furniture", "เฟอร์นิเจอร์", "桌子", "椅子", "书架", "床", "柜子"],
+  "furniture": ["家具", "เฟอร์นิเจอร์", "desk", "chair", "shelf"],
+  "เฟอร์นิเจอร์": ["家具", "furniture", "桌子", "椅子", "โต๊ะ", "เก้าอี้"],
+  "桌子": ["desk", "table", "โต๊ะ", "书桌"],
+  "desk": ["桌子", "table", "โต๊ะ"],
+  "โต๊ะ": ["桌子", "desk", "table"],
+  "椅子": ["chair", "เก้าอี้", "办公椅"],
+  "chair": ["椅子", "เก้าอี้", "办公椅"],
+  "เก้าอี้": ["椅子", "chair", "办公椅"],
+
+  "衣服": ["clothes", "clothing", "เสื้อผ้า", "服装", "外套"],
+  "clothes": ["衣服", "clothing", "เสื้อผ้า", "服装"],
+  "clothing": ["衣服", "clothes", "เสื้อผ้า", "服装"],
+  "เสื้อผ้า": ["衣服", "clothes", "clothing", "服装"],
+  "鞋": ["shoes", "รองเท้า", "sneakers", "运动鞋", "球鞋"],
+  "shoes": ["鞋", "รองเท้า", "sneakers", "运动鞋"],
+  "รองเท้า": ["鞋", "shoes", "sneakers", "运动鞋"],
+
+  "运动": ["sports", "กีฬา", "fitness", "健身", "exercise"],
+  "sports": ["运动", "กีฬา", "fitness", "exercise", "健身"],
+  "กีฬา": ["运动", "sports", "fitness", "exercise", "健身"],
+
+  "票": ["ticket", "ตั๋ว", "门票", "演出票", "电影票"],
+  "ticket": ["票", "ตั๋ว", "门票"],
+  "ตั๋ว": ["票", "ticket", "门票"],
+
+  "游戏": ["game", "gaming", "เกม", "switch", "ps5", "xbox", "游戏机"],
+  "game": ["游戏", "gaming", "เกม", "switch"],
+  "gaming": ["游戏", "game", "เกม"],
+  "เกม": ["游戏", "game", "gaming", "switch"],
+
+  "自行车": ["bicycle", "bike", "จักรยาน", "单车"],
+  "bicycle": ["自行车", "bike", "จักรยาน", "单车"],
+  "bike": ["自行车", "bicycle", "จักรยาน", "单车"],
+  "จักรยาน": ["自行车", "bicycle", "bike", "单车"],
+
+  "便宜": ["cheap", "ถูก", "低价", "特价", "打折", "bargain", "affordable"],
+  "cheap": ["便宜", "ถูก", "低价", "affordable", "bargain"],
+  "ถูก": ["便宜", "cheap", "低价", "affordable", "bargain"],
+
+  "苹果": ["apple", "iphone", "macbook", "ipad", "airpods"],
+  "apple": ["苹果", "iphone", "macbook", "ipad", "airpods"],
+
+  "免费": ["free", "giveaway", "ฟรี", "赠送", "แจก", "แจกฟรี"],
+  "free": ["免费", "giveaway", "ฟรี", "赠送", "แจก", "แจกฟรี"],
+  "ฟรี": ["免费", "free", "giveaway", "赠送", "แจก", "แจกฟรี"],
+
+  "交换": ["exchange", "trade", "แลกเปลี่ยน", "แลก", "换物"],
+  "exchange": ["交换", "trade", "แลกเปลี่ยน", "แลก", "换物"],
+  "trade": ["交换", "exchange", "แลกเปลี่ยน", "แลก", "换物"],
+  "แลกเปลี่ยน": ["交换", "exchange", "trade", "แลก", "换物"],
+
+  "计算器": ["calculator", "เครื่องคิดเลข", "科学计算器"],
+  "calculator": ["计算器", "เครื่องคิดเลข", "科学计算器"],
+  "เครื่องคิดเลข": ["计算器", "calculator", "科学计算器"],
+
+  "触控笔": ["stylus", "apple pencil", "pen", "ปากกา", "ปากกาไอแพด"],
+  "stylus": ["触控笔", "apple pencil", "pen", "ปากกา", "ปากกาไอแพด"],
+  "ปากกาไอแพด": ["触控笔", "stylus", "apple pencil", "pen", "ปากกา"],
+
+  "化妆品": ["cosmetics", "makeup", "เครื่องสำอาง", "美妆", "彩妆"],
+  "cosmetics": ["化妆品", "makeup", "เครื่องสำอาง", "美妆", "彩妆"],
+  "makeup": ["化妆品", "cosmetics", "เครื่องสำอาง", "美妆", "彩妆"],
+  "เครื่องสำอาง": ["化妆品", "cosmetics", "makeup", "美妆", "彩妆"],
+
+  "香水": ["perfume", "fragrance", "น้ำหอม"],
+  "perfume": ["香水", "fragrance", "น้ำหอม"],
+  "น้ำหอม": ["香水", "perfume", "fragrance"],
+
+  "摩托": ["motorcycle", "motorbike", "มอเตอร์ไซค์", "รถเครื่อง", "机车", "motor"],
+  "摩托车": ["motorcycle", "motorbike", "มอเตอร์ไซค์", "รถเครื่อง", "机车", "motor", "摩托"],
+  "motor": ["摩托车", "motorbike", "มอเตอร์ไซค์", "รถเครื่อง", "机车", "摩托"],
+  "motorcycle": ["摩托车", "motorbike", "มอเตอร์ไซค์", "รถเครื่อง", "机车", "motor", "摩托"],
+  "motorbike": ["摩托车", "motorcycle", "มอเตอร์ไซค์", "รถเครื่อง", "机车", "motor", "摩托"],
+  "มอเตอร์ไซค์": ["摩托车", "motorcycle", "motorbike", "รถเครื่อง", "机车", "motor", "摩托"],
+
+  "风扇": ["fan", "พัดลม", "电风扇"],
+  "fan": ["风扇", "พัดลม", "电风扇"],
+  "พัดลม": ["风扇", "fan", "电风扇"],
+
+  "冰箱": ["refrigerator", "fridge", "ตู้เย็น", "小冰箱"],
+  "refrigerator": ["冰箱", "fridge", "ตู้เย็น", "小冰箱"],
+  "fridge": ["冰箱", "refrigerator", "ตู้เย็น", "小冰箱"],
+  "ตู้เย็น": ["冰箱", "refrigerator", "fridge", "小冰箱"],
+
+  "显示器": ["monitor", "screen", "display", "หน้าจอ", "จอคอม"],
+  "monitor": ["显示器", "screen", "display", "หน้าจอ", "จอคอม"],
+  "หน้าจอ": ["显示器", "monitor", "screen", "display", "จอคอม"],
+  "จอคอม": ["显示器", "monitor", "screen", "display", "หน้าจอ"]
+}

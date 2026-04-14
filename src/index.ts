@@ -37,6 +37,7 @@ import favoriteRoutes from './routes/favorite';
 import commentRoutes from './routes/comment';
 import dealNotificationRoutes from './routes/dealNotification';
 import adminRoutes from './routes/admin';
+import searchRoutes from './routes/search';
 
 // Load environment variables
 dotenv.config();
@@ -176,7 +177,8 @@ app.get('/api', (_req, res) => {
       location: '/api/location',
       reports: '/api/reports',
       favorites: '/api/favorites',
-      admin: '/api/admin'
+      admin: '/api/admin',
+      search: '/api/search'
     },
   });
 });
@@ -198,6 +200,7 @@ app.use('/api/favorites', apiLimiter, favoriteRoutes);
 app.use('/api/comments', apiLimiter, commentRoutes);
 app.use('/api/deal-notifications', apiLimiter, dealNotificationRoutes);
 app.use('/api/admin', adminLimiter, adminRoutes);
+app.use('/api/search', apiLimiter, searchRoutes);
 
 // Error handling middleware
 app.use(notFoundHandler);
@@ -212,6 +215,10 @@ async function startServer(): Promise<void> {
     await dbManager.initialize();
     
     console.log('Database initialized successfully');
+
+    // Initialize Meilisearch search engine
+    const { meilisearchService } = await import('./services/MeilisearchService');
+    await meilisearchService.initialize();
 
     // Initialize WebSocket service
     webSocketService = new WebSocketService(httpServer);
