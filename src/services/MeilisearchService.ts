@@ -6,8 +6,9 @@
  * 2. 初始化 products 索引及可搜索/可过滤属性
  * 3. 提供文档的增删改查方法（供双写逻辑调用）
  * 4. 提供全量同步方法（供管理端调用）
+ *
+ * 注意：meilisearch 包是 ESM-only，需要用 dynamic import() 加载
  */
-import { MeiliSearch, Index } from 'meilisearch';
 import { ProductModel } from '../models/ProductModel';
 
 // ─── 索引文档类型定义 / Index document type ─────────────────────────────────
@@ -41,26 +42,28 @@ const PRIMARY_KEY = 'id';
 // ─── 服务类 / Service class ─────────────────────────────────────────────────
 
 class MeilisearchService {
-  private client: MeiliSearch;
-  private index: Index<MeiliProduct> | null = null;
+  private client: any = null;
+  private index: any = null;
   private ready = false;
 
-  constructor() {
-    this.client = new MeiliSearch({
-      host: MEILI_HOST,
-      apiKey: MEILI_API_KEY,
-    });
-  }
+  constructor() {}
 
   /**
-   * 初始化索引：创建 index、设置可搜索/可过滤/可排序属性
-   * Initialize index: create index, configure searchable/filterable/sortable attributes
+   * 初始化索引：动态加载 ESM 包、创建 index、设置可搜索/可过滤/可排序属性
    */
   async initialize(): Promise<void> {
     try {
+      // 动态导入 ESM-only 的 meilisearch 包 / Dynamic import of ESM-only meilisearch package
+      const meili = await (Function('return import("meilisearch")')() as Promise<any>);
+      const { MeiliSearch } = meili;
+
+      this.client = new MeiliSearch({
+        host: MEILI_HOST,
+        apiKey: MEILI_API_KEY,
+      });
       // 创建或获取索引 / Create or get index
       await this.client.createIndex(INDEX_NAME, { primaryKey: PRIMARY_KEY });
-      this.index = this.client.index<MeiliProduct>(INDEX_NAME);
+      this.index = this.client.index(INDEX_NAME);
 
       // 配置可搜索属性（标题和描述权重最高）/ Configure searchable attributes
       await this.index.updateSearchableAttributes([
