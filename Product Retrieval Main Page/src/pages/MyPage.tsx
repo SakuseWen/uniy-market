@@ -523,29 +523,29 @@ function MyPage() {
             </div>
           ) : (
             /* View Mode */
-            <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6">
-              <Avatar className="w-20 h-20 flex-shrink-0">
+            <div className="flex flex-col items-center gap-4">
+              <Avatar className="w-20 h-20">
                 <AvatarImage src={user?.profileImage ? `http://localhost:3000${user.profileImage}` : ''} />
                 <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white text-xl">
                   {user?.name ? user.name.substring(0, 2).toUpperCase() : 'U'}
                 </AvatarFallback>
               </Avatar>
-              <div className="flex flex-col justify-center gap-1 flex-1 min-w-0 text-center sm:text-left">
-                <p className="text-xl font-bold truncate">{user?.name || 'User'}</p>
-                <p className="text-sm text-gray-500 truncate">{user?.email || ''}</p>
+              <div className="flex flex-col justify-center gap-1 text-center w-full">
+                <p className="text-xl font-bold break-words">{user?.name || 'User'}</p>
+                <p className="text-sm text-gray-500 break-all">{user?.email || ''}</p>
                 {user?.bio && <p className="text-sm text-gray-600 mt-1 break-words">{user.bio}</p>}
               </div>
-              <div className="flex flex-wrap sm:flex-col gap-2 justify-center">
-                <Button variant="outline" size="sm" onClick={() => { setIsEditing(true); setEditName(user?.name || ''); setEditBio(user?.bio || ''); }} className="gap-1">
+              <div className="flex flex-col gap-2 w-full max-w-xs">
+                <Button variant="outline" size="sm" onClick={() => { setIsEditing(true); setEditName(user?.name || ''); setEditBio(user?.bio || ''); }} className="gap-1 w-full">
                   <Edit2 className="w-4 h-4" /> {t('editProfile')}
                 </Button>
                 {user?.eduVerified ? (
-                  <Badge variant="secondary" className="gap-1 py-1.5 px-3">
+                  <Badge variant="secondary" className="gap-1 py-1.5 px-3 justify-center">
                     <GraduationCap className="w-4 h-4 text-green-600" />
                     <span className="text-green-600">✓</span> {t('eduVerified')}
                   </Badge>
                 ) : (
-                  <Button variant="outline" size="sm" className="gap-1" onClick={() => {
+                  <Button variant="outline" size="sm" className="gap-1 w-full" onClick={() => {
                     if ((user as any)?.status === 'suspended') {
                       const lang = localStorage.getItem('preferredLanguage') as any || 'en';
                       const msgs: Record<string, string> = {
@@ -561,7 +561,7 @@ function MyPage() {
                     <GraduationCap className="w-4 h-4" /> {t('eduVerification')}
                   </Button>
                 )}
-                <Button variant="outline" size="sm" className="gap-1 text-red-500 border-red-200 hover:bg-red-50 hover:text-red-600" onClick={() => setDeleteStep('notice')}>
+                <Button variant="outline" size="sm" className="gap-1 w-full text-red-500 border-red-200 hover:bg-red-50 hover:text-red-600" onClick={() => setDeleteStep('notice')}>
                   <UserX className="w-4 h-4" /> {t('deleteAccount')}
                 </Button>
               </div>
