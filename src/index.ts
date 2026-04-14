@@ -213,6 +213,10 @@ async function startServer(): Promise<void> {
     
     console.log('Database initialized successfully');
 
+    // Initialize Meilisearch search engine
+    const { meilisearchService } = await import('./services/MeilisearchService');
+    await meilisearchService.initialize();
+
     // Initialize WebSocket service
     webSocketService = new WebSocketService(httpServer);
     // 将 WebSocket 注入到需要实时推送的路由 / Inject WebSocket into routes that need real-time push

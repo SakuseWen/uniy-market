@@ -3,6 +3,7 @@ import { authenticateToken, requireAdmin } from '../middleware/auth';
 import { AdminService } from '../services/AdminService';
 import { UserModel } from '../models/UserModel';
 import { ProductModel } from '../models/ProductModel';
+import { meilisearchService } from '../services/MeilisearchService';
 import { ReportModel } from '../models/ReportModel';
 import { AuditLogModel } from '../models/AuditLogModel';
 
@@ -598,6 +599,30 @@ router.get('/audit-logs/statistics', async (req: Request, res: Response) => {
         code: 'GET_AUDIT_STATISTICS_ERROR',
         message: 'Failed to retrieve audit log statistics',
         details: error instanceof Error ? error.message : 'Unknown error',
+      },
+    });
+  }
+});
+
+/**
+ * POST /api/admin/sync-search
+ * 全量同步商品数据到 Meilisearch / Full sync products to Meilisearch
+ */
+router.post('/sync-search', async (req: Request, res: Response) => {
+  try {
+    const result = await meilisearchService.fullSync();
+    res.json({
+      success: true,
+      data: result,
+      message: `Synced ${result.synced} products to Meilisearch`,
+    });
+  } catch (error) {
+    console.error('Sync search error:', error);
+    res.status(500).json({
+      success: false,
+      error: {
+        code: 'SYNC_SEARCH_ERROR',
+        message: error instanceof Error ? error.message : 'Failed to sync search index',
       },
     });
   }
