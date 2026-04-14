@@ -59,14 +59,18 @@ export function LocationPicker({ latitude, longitude, address, onChange, readonl
   const handleSearch = () => {
     if (!searchQuery.trim() || searching) return;
     setSearching(true);
-    fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchQuery)}&limit=1`, {
+    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchQuery)}&limit=1`;
+    console.log('[LocationPicker] Searching:', url);
+    fetch(url, {
       headers: { 'Accept': 'application/json' },
     })
       .then(r => {
+        console.log('[LocationPicker] Response status:', r.status);
         if (!r.ok) throw new Error(`HTTP ${r.status}`);
         return r.json();
       })
       .then(results => {
+        console.log('[LocationPicker] Results:', results);
         if (results.length > 0) {
           const newLat = parseFloat(results[0].lat);
           const newLng = parseFloat(results[0].lon);
@@ -77,7 +81,7 @@ export function LocationPicker({ latitude, longitude, address, onChange, readonl
           onChange(newLat, newLng, newAddr);
         }
       })
-      .catch((err) => { console.error('Location search failed:', err); })
+      .catch((err) => { console.error('[LocationPicker] Search failed:', err); })
       .finally(() => setSearching(false));
   };
 
