@@ -1,0 +1,75 @@
+{
+  "_comment": "Meilisearch 同义词配置 — 数据与逻辑解耦，修改此文件后重启后端即可生效",
+
+  "手机": ["iphone", "华为", "小米", "智能手机", "phone", "smartphone", "โทรศัพท์", "มือถือ", "oppo", "vivo", "samsung", "三星"],
+  "phone": ["手机", "iphone", "smartphone", "โทรศัพท์", "มือถือ", "mobile"],
+  "smartphone": ["手机", "phone", "智能手机", "โทรศัพท์"],
+  "iphone": ["手机", "phone", "apple", "苹果", "ios"],
+  "华为": ["huawei", "手机", "phone"],
+  "小米": ["xiaomi", "手机", "redmi"],
+  "三星": ["samsung", "galaxy", "手机"],
+  "samsung": ["三星", "galaxy", "phone"],
+
+  "电脑": ["macbook", "笔记本", "pc", "laptop", "computer", "คอมพิวเตอร์", "โน้ตบุ๊ก", "台式机", "desktop"],
+  "laptop": ["电脑", "笔记本", "macbook", "notebook", "คอมพิวเตอร์", "โน้ตบุ๊ก"],
+  "macbook": ["电脑", "laptop", "apple", "苹果", "mac"],
+  "computer": ["电脑", "pc", "laptop", "desktop"],
+  "笔记本": ["电脑", "laptop", "notebook"],
+  "台式机": ["电脑", "desktop", "pc"],
+  "desktop": ["台式机", "pc", "电脑"],
+
+  "平板": ["ipad", "tablet", "แท็บเล็ต", "平板电脑"],
+  "ipad": ["平板", "tablet", "apple", "แท็บเล็ต"],
+  "tablet": ["平板", "ipad", "แท็บเล็ต", "平板电脑"],
+
+  "耳机": ["airpods", "headphone", "earphone", "หูฟัง", "蓝牙耳机", "earbuds"],
+  "headphone": ["耳机", "earphone", "หูฟัง", "airpods"],
+  "airpods": ["耳机", "headphone", "apple", "蓝牙耳机"],
+
+  "相机": ["camera", "กล้อง", "单反", "微单", "数码相机"],
+  "camera": ["相机", "กล้อง", "单反", "dslr"],
+
+  "手表": ["watch", "smartwatch", "นาฬิกา", "智能手表", "apple watch"],
+  "watch": ["手表", "smartwatch", "นาฬิกา"],
+
+  "充电器": ["charger", "ที่ชาร์จ", "充电宝", "数据线", "power bank"],
+  "charger": ["充电器", "ที่ชาร์จ", "cable"],
+
+  "二手": ["闲置", "九成新", "清仓", "used", "secondhand", "มือสอง", "旧货"],
+  "used": ["二手", "secondhand", "闲置", "มือสอง", "pre-owned"],
+  "闲置": ["二手", "used", "不用了"],
+  "九成新": ["二手", "几乎全新", "like new", "95新"],
+  "全新": ["new", "未拆封", "brand new", "ใหม่"],
+  "new": ["全新", "brand new", "ใหม่", "未拆封"],
+
+  "教材": ["课本", "教科书", "textbook", "หนังสือเรียน", "参考书"],
+  "textbook": ["教材", "课本", "book", "หนังสือเรียน"],
+  "课本": ["教材", "textbook", "教科书"],
+  "书": ["book", "หนังสือ", "教材", "小说", "参考书"],
+  "book": ["书", "หนังสือ", "textbook", "教材"],
+
+  "家具": ["桌子", "椅子", "书架", "furniture", "เฟอร์นิเจอร์", "床", "柜子"],
+  "furniture": ["家具", "desk", "chair", "shelf", "เฟอร์นิเจอร์"],
+  "桌子": ["desk", "table", "โต๊ะ", "书桌"],
+  "椅子": ["chair", "เก้าอี้", "办公椅"],
+
+  "衣服": ["服装", "外套", "clothes", "clothing", "เสื้อผ้า"],
+  "clothes": ["衣服", "clothing", "服装", "เสื้อผ้า"],
+  "鞋": ["shoes", "รองเท้า", "运动鞋", "球鞋", "sneakers"],
+  "shoes": ["鞋", "รองเท้า", "sneakers", "运动鞋"],
+
+  "运动": ["sports", "กีฬา", "健身", "fitness", "球拍", "瑜伽"],
+  "sports": ["运动", "กีฬา", "fitness", "exercise"],
+
+  "票": ["ticket", "ตั๋ว", "门票", "演出票", "电影票"],
+  "ticket": ["票", "ตั๋ว", "门票"],
+
+  "游戏": ["game", "เกม", "switch", "ps5", "xbox", "游戏机"],
+  "game": ["游戏", "เกม", "gaming", "switch"],
+
+  "自行车": ["bicycle", "bike", "จักรยาน", "单车"],
+  "bicycle": ["自行车", "bike", "จักรยาน"],
+
+  "便宜": ["cheap", "ถูก", "低价", "特价", "打折", "bargain"],
+  "cheap": ["便宜", "ถูก", "低价", "affordable"]
+}

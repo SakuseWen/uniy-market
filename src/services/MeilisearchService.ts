@@ -1,19 +1,20 @@
 /**
- * MeilisearchService — Meilisearch 搜索引擎服务封装
+ * MeilisearchService — Meilisearch 搜索引擎服务封装（企业级重构版）
  *
- * 职责：
- * 1. 管理与 Meilisearch 实例的连接
- * 2. 初始化 products 索引及可搜索/可过滤属性
- * 3. 提供文档的增删改查方法（供双写逻辑调用）
- * 4. 提供全量同步方法（供管理端调用）
+ * 设计原则：
+ * - 数据与逻辑解耦：同义词配置从 src/config/synonyms.json 动态加载
+ * - 优雅降级：所有 Meilisearch 操作失败仅记录日志，不影响核心业务
+ * - 单例模式：全局唯一实例，避免重复连接
  *
- * 注意：meilisearch 包是 ESM-only，需要用 dynamic import() 加载
+ * 注意：meilisearch 包是 ESM-only，需要用 eval('import()') 绕过 ts-node 编译
  */
+import fs from 'fs';
+import path from 'path';
 import { ProductModel } from '../models/ProductModel';
 
 // ─── 索引文档类型定义 / Index document type ─────────────────────────────────
 
-/** Meilisearch 中存储的商品文档结构 */
+/** Meilisearch 中存储的商品文档结构，与 SQLite ProductListing 表对应 */
 export interface MeiliProduct {
   /** 主键，对应 SQLite ProductListing.listingID */
   id: string;
@@ -32,12 +33,22 @@ export interface MeiliProduct {
   updatedAt: string;
 }
 
+/** 搜索结果类型（包含 processingTimeMs）*/
+export interface MeiliSearchResult {
+  hits: MeiliProduct[];
+  estimatedTotalHits: number;
+  processingTimeMs: number;
+}
+
 // ─── 服务配置 / Service config ───────────────────────────────────────────────
 
 const MEILI_HOST = process.env['MEILI_HOST'] || 'http://localhost:7700';
 const MEILI_API_KEY = process.env['MEILI_API_KEY'] || '';
 const INDEX_NAME = 'products';
 const PRIMARY_KEY = 'id';
+
+/** 同义词配置文件路径 */
+const SYNONYMS_PATH = path.join(__dirname, '../config/synonyms.json');
 
 // ─── 服务类 / Service class ─────────────────────────────────────────────────
 
@@ -49,179 +60,157 @@ class MeilisearchService {
   constructor() {}
 
   /**
-   * 初始化索引：动态加载 ESM 包、创建 index、设置可搜索/可过滤/可排序属性
+   * 初始化：动态加载 ESM 包 → 创建索引 → 配置属性 → 加载高级规则
    */
   async initialize(): Promise<void> {
     try {
-      // 动态导入 ESM-only 的 meilisearch 包 / Dynamic import of ESM-only meilisearch package
+      // 动态导入 ESM-only 的 meilisearch 包
       const meili = await eval('import("meilisearch")') as any;
-      // 注意：新版包导出名为 Meilisearch（小写 s），非 MeiliSearch
       const MeiliSearch = meili.Meilisearch || meili.MeiliSearch || meili.default;
 
-      this.client = new MeiliSearch({
-        host: MEILI_HOST,
-        apiKey: MEILI_API_KEY,
-      });
-      // 创建或获取索引 / Create or get index
-      try {
-        await this.client.createIndex(INDEX_NAME, { primaryKey: PRIMARY_KEY });
-      } catch (_e) {
-        // 索引已存在，忽略 / Index already exists, ignore
-      }
+      this.client = new MeiliSearch({ host: MEILI_HOST, apiKey: MEILI_API_KEY });
+
+      // 创建或获取索引（已存在则静默跳过）
+      try { await this.client.createIndex(INDEX_NAME, { primaryKey: PRIMARY_KEY }); } catch (_e) {}
       this.index = this.client.index(INDEX_NAME);
 
-      // 配置可搜索属性（严格限制只搜索标题和描述，防止匹配到 id/价格）
-      // Searchable attributes: strictly title and description only
-      await this.index.updateSearchableAttributes([
-        'title',
-        'description',
-      ]);
+      // 配置索引属性
+      await this.configureIndexAttributes();
 
-      // 配置可过滤属性 / Configure filterable attributes
-      await this.index.updateFilterableAttributes([
-        'categoryID',
-        'price',
-        'condition',
-        'location',
-        'status',
-        'sellerID',
-      ]);
-
-      // 配置可排序属性 / Configure sortable attributes
-      await this.index.updateSortableAttributes([
-        'price',
-        'createdAt',
-        'views',
-      ]);
-
-      // 配置高级搜索规则（同义词等）/ Configure advanced search rules
+      // 加载高级搜索规则（同义词、排名、容错）
       await this.initMeiliSettings();
 
       this.ready = true;
       console.log('[Meilisearch] 索引初始化完成 / Index initialized');
     } catch (error) {
-      console.warn('[Meilisearch] 初始化失败，搜索将回退到 SQL LIKE / Init failed, search will fallback to SQL LIKE:', error);
+      console.warn('[Meilisearch] 初始化失败，搜索将回退到 SQL LIKE / Init failed, fallback to SQL:', error);
       this.ready = false;
     }
   }
 
-  /** 检查服务是否可用 / Check if service is available */
+  /** 检查服务是否可用 */
   isReady(): boolean {
     return this.ready && this.index !== null;
   }
 
-  // ─── 高级搜索配置 / Advanced search settings ────────────────────────────
+  // ─── 索引属性配置 / Index attribute configuration ──────────────────────
 
   /**
-   * 配置高级搜索规则：同义词、停用词、排名规则等
-   * Configure advanced search rules: synonyms, stop words, ranking rules, etc.
+   * 配置可搜索、可过滤、可排序属性
+   * 严格限制搜索字段为 title 和 description，防止匹配到 id/价格等无关字段
+   */
+  private async configureIndexAttributes(): Promise<void> {
+    if (!this.index) return;
+
+    // 可搜索属性：仅标题和描述（按权重排序，title 优先）
+    await this.index.updateSearchableAttributes(['title', 'description']);
+
+    // 可过滤属性：支持前端筛选
+    await this.index.updateFilterableAttributes([
+      'categoryID', 'price', 'condition', 'location', 'status', 'sellerID',
+    ]);
+
+    // 可排序属性：支持前端排序
+    await this.index.updateSortableAttributes(['price', 'createdAt', 'views']);
+  }
+
+  // ─── 高级搜索配置（数据与逻辑解耦）/ Advanced settings ────────────────
+
+  /**
+   * 从 synonyms.json 加载同义词，配置排名规则和拼写容错
+   * 修改同义词只需编辑 src/config/synonyms.json，重启后端即可生效
    */
   async initMeiliSettings(): Promise<void> {
     if (!this.index) return;
     try {
-      // 同义词配置：让用户用不同词汇都能搜到相关商品
-      // Synonyms: allow users to find products with different terms
-      await this.index.updateSynonyms({
-        // 手机相关 / Phone related
-        '手机': ['iphone', '华为', '小米', '智能手机', 'phone', 'smartphone', 'โทรศัพท์'],
-        'phone': ['手机', 'iphone', 'smartphone', 'โทรศัพท์'],
-        'iphone': ['手机', 'phone', 'apple', '苹果'],
-        '华为': ['huawei', '手机'],
-        '小米': ['xiaomi', '手机'],
-        // 电脑相关 / Computer related
-        '电脑': ['macbook', '笔记本', 'pc', 'laptop', 'computer', 'คอมพิวเตอร์'],
-        'laptop': ['电脑', '笔记本', 'macbook', 'notebook', 'คอมพิวเตอร์'],
-        'macbook': ['电脑', 'laptop', 'apple', '苹果'],
-        'computer': ['电脑', 'pc', 'laptop'],
-        '笔记本': ['电脑', 'laptop', 'notebook'],
-        // 二手/成色相关 / Used/condition related
-        '二手': ['闲置', '九成新', '清仓', 'used', 'secondhand', 'มือสอง'],
-        'used': ['二手', 'secondhand', '闲置', 'มือสอง'],
-        '闲置': ['二手', 'used'],
-        '九成新': ['二手', '几乎全新', 'like new'],
-        // 书籍相关 / Books related
-        '教材': ['课本', '教科书', 'textbook', 'หนังสือเรียน'],
-        'textbook': ['教材', '课本', 'book'],
-        '课本': ['教材', 'textbook'],
-        // 家具相关 / Furniture related
-        '家具': ['桌子', '椅子', '书架', 'furniture', 'เฟอร์นิเจอร์'],
-        'furniture': ['家具', 'desk', 'chair', 'shelf'],
-        // 衣服相关 / Clothing related
-        '衣服': ['服装', '外套', 'clothes', 'clothing', 'เสื้อผ้า'],
-        'clothes': ['衣服', 'clothing', '服装'],
-      });
+      // 1. 从 JSON 文件动态加载同义词（数据与逻辑解耦）
+      const synonyms = this.loadSynonyms();
+      await this.index.updateSynonyms(synonyms);
+      console.log(`[Meilisearch] 已加载 ${Object.keys(synonyms).length} 组同义词 / Loaded ${Object.keys(synonyms).length} synonym groups`);
 
-      // 排名规则：自定义搜索结果排序优先级
-      // Ranking rules: customize search result priority
+      // 2. 排名规则：自定义搜索结果排序优先级
       await this.index.updateRankingRules([
-        'words',        // 匹配词数 / Number of matched words
-        'typo',         // 拼写容错 / Typo tolerance
-        'proximity',    // 词语接近度 / Word proximity
-        'attribute',    // 属性权重（title > description）/ Attribute weight
-        'sort',         // 用户自定义排序 / User-defined sort
-        'exactness',    // 精确匹配 / Exact match
+        'words',      // 匹配词数
+        'typo',       // 拼写容错
+        'proximity',  // 词语接近度
+        'attribute',  // 属性权重（title > description）
+        'sort',       // 用户自定义排序
+        'exactness',  // 精确匹配
       ]);
 
-      // 拼写容错配置 / Typo tolerance settings
+      // 3. 拼写容错配置
       await this.index.updateTypoTolerance({
         enabled: true,
-        minWordSizeForTypos: {
-          oneTypo: 4,   // 4个字符以上允许1个拼写错误
-          twoTypos: 8,  // 8个字符以上允许2个拼写错误
-        },
+        minWordSizeForTypos: { oneTypo: 4, twoTypos: 8 },
       });
 
       console.log('[Meilisearch] 高级搜索规则配置完成 / Advanced settings configured');
     } catch (error) {
-      console.warn('[Meilisearch] 高级搜索规则配置失败（不影响基础搜索）/ Advanced settings failed (basic search still works):', error);
+      console.error('[Meilisearch] 高级搜索规则配置失败（不影响基础搜索）/ Advanced settings failed:', error);
     }
   }
 
-  // ─── 文档操作 / Document operations ─────────────────────────────────────
+  /**
+   * 从 src/config/synonyms.json 读取同义词配置
+   * 过滤掉以 _ 开头的注释字段
+   */
+  private loadSynonyms(): Record<string, string[]> {
+    try {
+      const raw = fs.readFileSync(SYNONYMS_PATH, 'utf-8');
+      const parsed = JSON.parse(raw);
+      // 过滤掉 _comment 等非同义词字段
+      const synonyms: Record<string, string[]> = {};
+      for (const [key, value] of Object.entries(parsed)) {
+        if (!key.startsWith('_') && Array.isArray(value)) {
+          synonyms[key] = value as string[];
+        }
+      }
+      return synonyms;
+    } catch (error) {
+      console.error('[Meilisearch] 读取同义词文件失败 / Failed to load synonyms.json:', error);
+      return {};
+    }
+  }
+
+  // ─── 文档操作（双写）/ Document operations (dual-write) ────────────────
 
   /**
-   * 添加或更新单个商品文档（用于创建/更新双写）
-   * Add or update a single product document (for create/update dual-write)
+   * 添加或更新商品文档（创建/更新双写）
+   * 失败仅记录日志，绝不抛出异常
    */
   async upsertProduct(product: MeiliProduct): Promise<void> {
     if (!this.isReady()) return;
     try {
       await this.index!.addDocuments([product]);
     } catch (error) {
-      console.warn('[Meilisearch] 同步商品失败 / Failed to sync product:', product.id, error);
+      console.error('[Meilisearch] 双写同步失败 / Dual-write sync failed:', product.id, error);
     }
   }
 
   /**
-   * 删除单个商品文档（用于删除双写）
-   * Delete a single product document (for delete dual-write)
+   * 删除商品文档（删除双写）
+   * 失败仅记录日志，绝不抛出异常
    */
   async deleteProduct(productId: string): Promise<void> {
     if (!this.isReady()) return;
     try {
       await this.index!.deleteDocument(productId);
     } catch (error) {
-      console.warn('[Meilisearch] 删除商品索引失败 / Failed to delete product from index:', productId, error);
+      console.error('[Meilisearch] 双写删除失败 / Dual-write delete failed:', productId, error);
     }
   }
 
-  // ─── 搜索 / Search ─────────────────────────────────────────────────────
+  // ─── 搜索（含 processingTimeMs）/ Search ───────────────────────────────
 
   /**
-   * 搜索商品
-   * Search products with query, filters, pagination
+   * 搜索商品，返回结果包含 processingTimeMs
    */
   async search(
     query: string,
-    options?: {
-      filter?: string[];
-      sort?: string[];
-      limit?: number;
-      offset?: number;
-    }
-  ): Promise<{ hits: MeiliProduct[]; estimatedTotalHits: number }> {
+    options?: { filter?: string[]; sort?: string[]; limit?: number; offset?: number }
+  ): Promise<MeiliSearchResult> {
     if (!this.isReady()) {
-      return { hits: [], estimatedTotalHits: 0 };
+      return { hits: [], estimatedTotalHits: 0, processingTimeMs: 0 };
     }
     try {
       const result = await this.index!.search(query, {
@@ -233,60 +222,35 @@ class MeilisearchService {
       return {
         hits: result.hits as MeiliProduct[],
         estimatedTotalHits: result.estimatedTotalHits || 0,
+        processingTimeMs: result.processingTimeMs || 0,
       };
     } catch (error) {
-      console.warn('[Meilisearch] 搜索失败，将回退到 SQL / Search failed, will fallback to SQL:', error);
-      return { hits: [], estimatedTotalHits: 0 };
+      console.error('[Meilisearch] 搜索失败 / Search failed:', error);
+      return { hits: [], estimatedTotalHits: 0, processingTimeMs: 0 };
     }
   }
 
   // ─── 全量同步 / Full sync ──────────────────────────────────────────────
 
-  /**
-   * 从 SQLite 全量同步所有有效商品到 Meilisearch
-   * Full sync all active products from SQLite to Meilisearch
-   */
   async fullSync(): Promise<{ synced: number }> {
-    if (!this.index) {
-      throw new Error('Meilisearch index not initialized');
-    }
+    if (!this.index) throw new Error('Meilisearch index not initialized');
 
     const productModel = new ProductModel();
-    // 查询所有有效商品 / Query all active products
     const allProducts: any[] = await (productModel as any).query(
       "SELECT * FROM ProductListing WHERE status = 'active' ORDER BY createdAt DESC"
     );
 
-    // 映射为 MeiliProduct 格式 / Map to MeiliProduct format
-    const documents: MeiliProduct[] = allProducts.map((p: any) => ({
-      id: p.listingID,
-      title: p.title || '',
-      description: p.description || '',
-      price: Number(p.price) || 0,
-      stock: Number(p.stock) || 1,
-      condition: p.condition || 'used',
-      location: p.location || '',
-      categoryID: Number(p.categoryID),
-      sellerID: p.sellerID || '',
-      status: p.status || 'active',
-      views: Number(p.views) || 0,
-      deliveryType: p.deliveryType || 'faceToFace',
-      createdAt: p.createdAt || '',
-      updatedAt: p.updatedAt || '',
-    }));
+    const documents: MeiliProduct[] = allProducts.map(toMeiliProduct);
 
-    // 清空索引后重新导入 / Clear index then re-import
     await this.index.deleteAllDocuments();
-    if (documents.length > 0) {
-      await this.index.addDocuments(documents);
-    }
+    if (documents.length > 0) await this.index.addDocuments(documents);
 
-    console.log(`[Meilisearch] 全量同步完成：${documents.length} 条商品 / Full sync done: ${documents.length} products`);
+    console.log(`[Meilisearch] 全量同步完成：${documents.length} 条 / Full sync: ${documents.length} products`);
     return { synced: documents.length };
   }
 }
 
-// ─── 单例导出 / Singleton export ─────────────────────────────────────────────
+// ─── 工具函数 / Utility ──────────────────────────────────────────────────────
 
 /** 将 SQLite 商品行转换为 MeiliProduct 文档 */
 export function toMeiliProduct(row: any): MeiliProduct {
@@ -307,5 +271,7 @@ export function toMeiliProduct(row: any): MeiliProduct {
     updatedAt: row.updatedAt || '',
   };
 }
+
+// ─── 单例导出 / Singleton export ─────────────────────────────────────────────
 
 export const meilisearchService = new MeilisearchService();

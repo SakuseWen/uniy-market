@@ -124,8 +124,10 @@ router.post('/',
 
       const product = await getProductModel().createProduct(productData);
 
-      // 双写：同步到 Meilisearch（失败不影响主流程）/ Dual-write: sync to Meilisearch (failure won't affect main flow)
-      meilisearchService.upsertProduct(toMeiliProduct(product)).catch(() => {});
+      // 双写：同步到 Meilisearch（失败仅记录日志，不影响主流程）
+      meilisearchService.upsertProduct(toMeiliProduct(product)).catch(err => {
+        console.error('[DualWrite] 创建商品同步失败 / Create sync failed:', product.listingID, err);
+      });
 
       return res.status(201).json({
         success: true,
@@ -329,8 +331,10 @@ router.put('/:id',
       const updates = req.body;
       const updatedProduct = await getProductModel().updateProduct(id!, updates);
 
-      // 双写：同步到 Meilisearch / Dual-write: sync to Meilisearch
-      meilisearchService.upsertProduct(toMeiliProduct(updatedProduct)).catch(() => {});
+      // 双写：同步到 Meilisearch（失败仅记录日志，不影响主流程）
+      meilisearchService.upsertProduct(toMeiliProduct(updatedProduct)).catch(err => {
+        console.error('[DualWrite] 更新商品同步失败 / Update sync failed:', id, err);
+      });
 
       return res.json({
         success: true,
@@ -411,8 +415,10 @@ router.delete('/:id', authenticateToken, async (req: express.Request, res: expre
       });
     }
 
-    // 双写：从 Meilisearch 删除 / Dual-write: delete from Meilisearch
-    meilisearchService.deleteProduct(id!).catch(() => {});
+    // 双写：从 Meilisearch 删除（失败仅记录日志，不影响主流程）
+    meilisearchService.deleteProduct(id!).catch(err => {
+      console.error('[DualWrite] 删除商品同步失败 / Delete sync failed:', id, err);
+    });
 
     // Delete image files from disk
     for (const img of images) {

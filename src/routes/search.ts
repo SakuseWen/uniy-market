@@ -6,7 +6,7 @@
  */
 import express from 'express';
 import { query, validationResult } from 'express-validator';
-import { meilisearchService, MeiliProduct } from '../services/MeilisearchService';
+import { meilisearchService, MeiliProduct, MeiliSearchResult } from '../services/MeilisearchService';
 import { ProductModel } from '../models/ProductModel';
 import { UserModel } from '../models/UserModel';
 import { ReviewModel } from '../models/ReviewModel';
@@ -98,6 +98,7 @@ router.get('/',
       let hits: any[] = [];
       let total = 0;
       let engine: 'meilisearch' | 'sqlite' = 'sqlite';
+      let processingTimeMs = 0;
 
       // ── 优先 Meilisearch / Prefer Meilisearch ──────────────────────────
       if (meilisearchService.isReady()) {
@@ -116,7 +117,7 @@ router.get('/',
           else if (sortBy === 'date_asc') sort.push('createdAt:asc');
           else if (sortBy === 'date_desc') sort.push('createdAt:desc');
 
-          const meiliResult = await meilisearchService.search(q || '', {
+          const meiliResult: MeiliSearchResult = await meilisearchService.search(q || '', {
             filter: filters,
             sort: sort.length > 0 ? sort : [],
             limit,
@@ -125,9 +126,10 @@ router.get('/',
 
           hits = meiliResult.hits.map((h: MeiliProduct) => ({ ...h, listingID: h.id }));
           total = meiliResult.estimatedTotalHits;
+          processingTimeMs = meiliResult.processingTimeMs;
           engine = 'meilisearch';
         } catch (e) {
-          console.warn('[Search] Meilisearch 失败，回退 SQL / Meilisearch failed, falling back to SQL:', e);
+          console.error('[Search] Meilisearch 失败，回退 SQL / Meilisearch failed, falling back to SQL:', e);
         }
       }
 
@@ -187,6 +189,7 @@ router.get('/',
         hasNext: page * limit < total,
         hasPrev: page > 1,
         engine,
+        processingTimeMs,
       });
     } catch (error) {
       console.error('[Search] 搜索失败 / Search failed:', error);
