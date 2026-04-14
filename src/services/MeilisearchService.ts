@@ -70,11 +70,11 @@ class MeilisearchService {
       }
       this.index = this.client.index(INDEX_NAME);
 
-      // 配置可搜索属性（标题和描述权重最高）/ Configure searchable attributes
+      // 配置可搜索属性（严格限制只搜索标题和描述，防止匹配到 id/价格）
+      // Searchable attributes: strictly title and description only
       await this.index.updateSearchableAttributes([
         'title',
         'description',
-        'location',
       ]);
 
       // 配置可过滤属性 / Configure filterable attributes
@@ -94,6 +94,9 @@ class MeilisearchService {
         'views',
       ]);
 
+      // 配置高级搜索规则（同义词等）/ Configure advanced search rules
+      await this.initMeiliSettings();
+
       this.ready = true;
       console.log('[Meilisearch] 索引初始化完成 / Index initialized');
     } catch (error) {
@@ -105,6 +108,73 @@ class MeilisearchService {
   /** 检查服务是否可用 / Check if service is available */
   isReady(): boolean {
     return this.ready && this.index !== null;
+  }
+
+  // ─── 高级搜索配置 / Advanced search settings ────────────────────────────
+
+  /**
+   * 配置高级搜索规则：同义词、停用词、排名规则等
+   * Configure advanced search rules: synonyms, stop words, ranking rules, etc.
+   */
+  async initMeiliSettings(): Promise<void> {
+    if (!this.index) return;
+    try {
+      // 同义词配置：让用户用不同词汇都能搜到相关商品
+      // Synonyms: allow users to find products with different terms
+      await this.index.updateSynonyms({
+        // 手机相关 / Phone related
+        '手机': ['iphone', '华为', '小米', '智能手机', 'phone', 'smartphone', 'โทรศัพท์'],
+        'phone': ['手机', 'iphone', 'smartphone', 'โทรศัพท์'],
+        'iphone': ['手机', 'phone', 'apple', '苹果'],
+        '华为': ['huawei', '手机'],
+        '小米': ['xiaomi', '手机'],
+        // 电脑相关 / Computer related
+        '电脑': ['macbook', '笔记本', 'pc', 'laptop', 'computer', 'คอมพิวเตอร์'],
+        'laptop': ['电脑', '笔记本', 'macbook', 'notebook', 'คอมพิวเตอร์'],
+        'macbook': ['电脑', 'laptop', 'apple', '苹果'],
+        'computer': ['电脑', 'pc', 'laptop'],
+        '笔记本': ['电脑', 'laptop', 'notebook'],
+        // 二手/成色相关 / Used/condition related
+        '二手': ['闲置', '九成新', '清仓', 'used', 'secondhand', 'มือสอง'],
+        'used': ['二手', 'secondhand', '闲置', 'มือสอง'],
+        '闲置': ['二手', 'used'],
+        '九成新': ['二手', '几乎全新', 'like new'],
+        // 书籍相关 / Books related
+        '教材': ['课本', '教科书', 'textbook', 'หนังสือเรียน'],
+        'textbook': ['教材', '课本', 'book'],
+        '课本': ['教材', 'textbook'],
+        // 家具相关 / Furniture related
+        '家具': ['桌子', '椅子', '书架', 'furniture', 'เฟอร์นิเจอร์'],
+        'furniture': ['家具', 'desk', 'chair', 'shelf'],
+        // 衣服相关 / Clothing related
+        '衣服': ['服装', '外套', 'clothes', 'clothing', 'เสื้อผ้า'],
+        'clothes': ['衣服', 'clothing', '服装'],
+      });
+
+      // 排名规则：自定义搜索结果排序优先级
+      // Ranking rules: customize search result priority
+      await this.index.updateRankingRules([
+        'words',        // 匹配词数 / Number of matched words
+        'typo',         // 拼写容错 / Typo tolerance
+        'proximity',    // 词语接近度 / Word proximity
+        'attribute',    // 属性权重（title > description）/ Attribute weight
+        'sort',         // 用户自定义排序 / User-defined sort
+        'exactness',    // 精确匹配 / Exact match
+      ]);
+
+      // 拼写容错配置 / Typo tolerance settings
+      await this.index.updateTypoTolerance({
+        enabled: true,
+        minWordSizeForTypos: {
+          oneTypo: 4,   // 4个字符以上允许1个拼写错误
+          twoTypos: 8,  // 8个字符以上允许2个拼写错误
+        },
+      });
+
+      console.log('[Meilisearch] 高级搜索规则配置完成 / Advanced settings configured');
+    } catch (error) {
+      console.warn('[Meilisearch] 高级搜索规则配置失败（不影响基础搜索）/ Advanced settings failed (basic search still works):', error);
+    }
   }
 
   // ─── 文档操作 / Document operations ─────────────────────────────────────
