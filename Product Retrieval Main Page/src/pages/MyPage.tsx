@@ -525,7 +525,7 @@ function MyPage() {
             /* View Mode */
             <div className="flex flex-col items-center gap-4">
               {/* Edu 认证 — 手机端显示在最上方居中 / Mobile: show at top center */}
-              <div className="lg:hidden w-full flex justify-center">
+              <div className="xl:hidden w-full flex justify-center">
                 {user?.eduVerified ? (
                   <Badge variant="secondary" className="gap-1 py-1.5 px-3">
                     <GraduationCap className="w-4 h-4 text-green-600" />
@@ -565,7 +565,7 @@ function MyPage() {
                   <Edit2 className="w-4 h-4" /> {t('editProfile')}
                 </Button>
                 {/* Edu 认证 — PC端显示在按钮区 / PC: show in buttons area */}
-                <div className="hidden lg:block">
+                <div className="hidden xl:block">
                   {user?.eduVerified ? (
                     <Badge variant="secondary" className="gap-1 py-1.5 px-3 justify-center w-full">
                       <GraduationCap className="w-4 h-4 text-green-600" />
@@ -1055,7 +1055,7 @@ function MyPage() {
                                 <StarRating rating={review.rating} size={14} />
                                 <span className="text-xs text-gray-400">{new Date(review.createdAt).toLocaleDateString()}</span>
                               </div>
-                              {review.comment && <p className="text-sm text-gray-700 break-words overflow-hidden">{review.comment}</p>}
+                              {review.comment && <p className="text-sm text-gray-700 break-all overflow-hidden max-w-full">{review.comment}</p>}
                               {/* 评价翻译按钮 / Review translate button */}
                               {review.comment && (
                                 <TranslateButton text={review.comment} language={language} />
