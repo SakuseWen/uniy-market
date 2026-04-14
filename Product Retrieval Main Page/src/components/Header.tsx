@@ -8,7 +8,7 @@
  * 彻底移除轮询，改为 WebSocket notification 事件实时驱动
  * Polling removed entirely; driven by WebSocket notification events in real-time
  */
-import { Bell, User, LogOut, MessageCircle, ShoppingBag, Shield, Menu, X, Home, HelpCircle, Package } from 'lucide-react';
+import { Bell, User, LogOut, MessageCircle, ShoppingBag, Shield } from 'lucide-react';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
@@ -56,9 +56,6 @@ export function Header({ language, onLanguageChange }: HeaderProps) {
 
   // ─── Popover 状态 / Popover state ─────────────────────────────────────────
   const [popoverOpen, setPopoverOpen] = useState(false);
-
-  // ─── 移动端菜单状态 / Mobile menu state ────────────────────────────────────
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // ─── WebSocket ref / WebSocket 连接引用 ───────────────────────────────────
   const socketRef = useRef<Socket | null>(null);
@@ -243,21 +240,17 @@ export function Header({ language, onLanguageChange }: HeaderProps) {
   return (
     <header className="bg-white border-b">
       <div className="container mx-auto px-4 py-3">
-        <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center justify-between">
 
           {/* ── Logo + 导航 / Logo + Nav ─────────────────────────────────── */}
-          <div className="flex items-center gap-2 sm:gap-4 md:gap-8 min-w-0">
-            {/* 移动端汉堡菜单按钮 — 仅 lg 以下显示 / Mobile hamburger — only below lg */}
-            <button className="xl:hidden p-1" onClick={() => setMobileMenuOpen(!mobileMenuOpen)} aria-label="Menu">
-              {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-            </button>
+          <div className="flex items-center gap-8">
             <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate('/')}>
-              <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center flex-shrink-0">
+              <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
                 <span className="text-white">🎓</span>
               </div>
-              <span className="hidden sm:block font-semibold">Uniy Market</span>
+              <span className="hidden sm:block">Uniy Market</span>
             </div>
-            <nav className="hidden xl:flex items-center gap-6">
+            <nav className="hidden md:flex items-center gap-6">
               <a href="#" className="hover:text-blue-600 transition-colors" onClick={() => navigate('/')}>{t('home')}</a>
               <a href="#" className="hover:text-blue-600 transition-colors" onClick={() => navigate('/my-page')}>{t('myPage')}</a>
               <a href="#" className="hover:text-blue-600 transition-colors" onClick={() => navigate('/help')}>{t('helpCenter')}</a>
@@ -265,12 +258,12 @@ export function Header({ language, onLanguageChange }: HeaderProps) {
           </div>
 
           {/* ── 右侧区域 / Right section ─────────────────────────────────── */}
-          <div className="flex items-center gap-1 sm:gap-2 md:gap-4 flex-shrink-0">
+          <div className="flex items-center gap-4">
 
-            {/* 学校认证徽章 / Edu verification badge — 仅中大屏显示 */}
-            <div className="hidden xl:block">
+            {/* 学校认证徽章 / Edu verification badge */}
+            <div className="hidden sm:block">
               {user?.eduVerified ? (
-                <Badge variant="secondary" className="gap-1 text-xs">
+                <Badge variant="secondary" className="gap-1">
                   <span className="text-green-600">✓</span>
                   {t('verified')} - {getMaskedEduEmail()}
                 </Badge>
@@ -402,9 +395,8 @@ export function Header({ language, onLanguageChange }: HeaderProps) {
             {/* 语言切换 / Language switch */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm" className="px-2 sm:px-3">
-                  <span className="hidden sm:inline">{language === 'en' ? 'English' : language === 'zh' ? '中文' : 'ไทย'}</span>
-                  <span className="sm:hidden">{language === 'en' ? 'EN' : language === 'zh' ? '中' : 'ไท'}</span>
+                <Button variant="ghost" size="sm">
+                  {language === 'en' ? 'English' : language === 'zh' ? '中文' : 'ไทย'}
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
@@ -448,7 +440,7 @@ export function Header({ language, onLanguageChange }: HeaderProps) {
 
             {/* 发布商品按钮 / Post item button */}
             <Button
-              className="hidden xl:flex bg-gradient-to-r from-blue-500 to-purple-600 hover:shadow-lg hover:scale-105 transition-all duration-200"
+              className="hidden lg:flex bg-gradient-to-r from-blue-500 to-purple-600 hover:shadow-lg hover:scale-105 transition-all duration-200"
               onClick={() => {
                 if (!user) { navigate('/login'); return; }
                 if (!user.eduVerified) { toast.error(t('eduRequiredToPost')); return; }
@@ -460,36 +452,6 @@ export function Header({ language, onLanguageChange }: HeaderProps) {
           </div>
         </div>
       </div>
-
-      {/* ── 移动端抽屉菜单 / Mobile drawer menu ──────────────────────────── */}
-      {mobileMenuOpen && (
-        <div className="xl:hidden border-t bg-white">
-          <div className="container mx-auto px-4 py-3 space-y-1">
-            <button className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg hover:bg-gray-50 text-left" onClick={() => { navigate('/'); setMobileMenuOpen(false); }}>
-              <Home className="w-5 h-5 text-blue-600" /> {t('home')}
-            </button>
-            <button className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg hover:bg-gray-50 text-left" onClick={() => { navigate('/my-page'); setMobileMenuOpen(false); }}>
-              <User className="w-5 h-5 text-blue-600" /> {t('myPage')}
-            </button>
-            <button className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg hover:bg-gray-50 text-left" onClick={() => { navigate('/help'); setMobileMenuOpen(false); }}>
-              <HelpCircle className="w-5 h-5 text-blue-600" /> {t('helpCenter')}
-            </button>
-            {isAuthenticated && (
-              <button className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg hover:bg-gray-50 text-left" onClick={() => {
-                if (!user?.eduVerified) { toast.error(t('eduRequiredToPost')); return; }
-                navigate('/create-product'); setMobileMenuOpen(false);
-              }}>
-                <Package className="w-5 h-5 text-purple-600" /> {t('postItem')}
-              </button>
-            )}
-            {user?.isAdmin && (
-              <button className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg hover:bg-gray-50 text-left" onClick={() => { navigate('/admin'); setMobileMenuOpen(false); }}>
-                <Shield className="w-5 h-5 text-red-500" /> Admin
-              </button>
-            )}
-          </div>
-        </div>
-      )}
     </header>
   );
 }

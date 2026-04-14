@@ -257,7 +257,7 @@ export function ProductDetailPage({
           />
 
           {/* Right: Product Summary */}
-          <div className="bg-white rounded-lg p-4 sm:p-6 h-fit lg:sticky lg:top-20">
+          <div className="bg-white rounded-lg p-6 h-fit sticky top-20">
             {/* Title */}
             <h1 className="mb-1">{getLocalizedTitle()}</h1>
             <TranslateButton text={product.title} language={language} className="mb-4" />

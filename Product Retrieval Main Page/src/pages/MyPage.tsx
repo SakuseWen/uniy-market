@@ -523,9 +523,22 @@ function MyPage() {
             </div>
           ) : (
             /* View Mode */
-            <div className="flex flex-col xl:flex-row items-center gap-4 xl:gap-6">
-              {/* Edu 认证 — 仅手机端显示在最上方居中 */}
-              <div className="xl:hidden w-full flex justify-center">
+            <div className="flex items-center gap-6">
+              <Avatar className="w-20 h-20 flex-shrink-0">
+                <AvatarImage src={user?.profileImage ? `http://localhost:3000${user.profileImage}` : ''} />
+                <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white text-xl">
+                  {user?.name ? user.name.substring(0, 2).toUpperCase() : 'U'}
+                </AvatarFallback>
+              </Avatar>
+              <div className="flex flex-col justify-center gap-1 flex-1">
+                <p className="text-xl font-bold">{user?.name || 'User'}</p>
+                <p className="text-sm text-gray-500">{user?.email || ''}</p>
+                {user?.bio && <p className="text-sm text-gray-600 mt-1">{user.bio}</p>}
+              </div>
+              <div className="flex flex-col gap-2">
+                <Button variant="outline" size="sm" onClick={() => { setIsEditing(true); setEditName(user?.name || ''); setEditBio(user?.bio || ''); }} className="gap-1">
+                  <Edit2 className="w-4 h-4" /> {t('editProfile')}
+                </Button>
                 {user?.eduVerified ? (
                   <Badge variant="secondary" className="gap-1 py-1.5 px-3">
                     <GraduationCap className="w-4 h-4 text-green-600" />
@@ -535,50 +548,19 @@ function MyPage() {
                   <Button variant="outline" size="sm" className="gap-1" onClick={() => {
                     if ((user as any)?.status === 'suspended') {
                       const lang = localStorage.getItem('preferredLanguage') as any || 'en';
-                      const msgs: Record<string, string> = { en: 'Your account has been suspended. You cannot perform this action. Please contact the administrator.', zh: '您的账户已被暂停使用，无法执行此操作。请联系管理员。', th: 'บัญชีของคุณถูกระงับ ไม่สามารถดำเนินการนี้ได้ กรุณาติดต่อผู้ดูแลระบบ' };
-                      toast.error(msgs[lang] || msgs.en); return;
+                      const msgs: Record<string, string> = {
+                        en: 'Your account has been suspended. You cannot perform this action. Please contact the administrator.',
+                        zh: '您的账户已被暂停使用，无法执行此操作。请联系管理员。',
+                        th: 'บัญชีของคุณถูกระงับ ไม่สามารถดำเนินการนี้ได้ กรุณาติดต่อผู้ดูแลระบบ',
+                      };
+                      toast.error(msgs[lang] || msgs.en);
+                      return;
                     }
                     setEduStep('email');
                   }}>
                     <GraduationCap className="w-4 h-4" /> {t('eduVerification')}
                   </Button>
                 )}
-              </div>
-              <Avatar className="w-20 h-20 flex-shrink-0">
-                <AvatarImage src={user?.profileImage ? `http://localhost:3000${user.profileImage}` : ''} />
-                <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white text-xl">
-                  {user?.name ? user.name.substring(0, 2).toUpperCase() : 'U'}
-                </AvatarFallback>
-              </Avatar>
-              <div className="flex flex-col justify-center gap-1 flex-1 min-w-0 text-center xl:text-left">
-                <p className="text-xl font-bold truncate">{user?.name || 'User'}</p>
-                <p className="text-sm text-gray-500 truncate">{user?.email || ''}</p>
-                {user?.bio && <p className="text-sm text-gray-600 mt-1 break-words">{user.bio}</p>}
-              </div>
-              <div className="flex flex-col gap-2 w-full max-w-xs xl:w-auto xl:max-w-none xl:flex-shrink-0">
-                <Button variant="outline" size="sm" onClick={() => { setIsEditing(true); setEditName(user?.name || ''); setEditBio(user?.bio || ''); }} className="gap-1">
-                  <Edit2 className="w-4 h-4" /> {t('editProfile')}
-                </Button>
-                {/* Edu 认证 — 仅 PC 端显示在按钮区 */}
-                <div className="hidden xl:block">
-                  {user?.eduVerified ? (
-                    <Badge variant="secondary" className="gap-1 py-1.5 px-3">
-                      <GraduationCap className="w-4 h-4 text-green-600" />
-                      <span className="text-green-600">✓</span> {t('eduVerified')}
-                    </Badge>
-                  ) : (
-                    <Button variant="outline" size="sm" className="gap-1" onClick={() => {
-                      if ((user as any)?.status === 'suspended') {
-                        const lang = localStorage.getItem('preferredLanguage') as any || 'en';
-                        const msgs: Record<string, string> = { en: 'Your account has been suspended. You cannot perform this action. Please contact the administrator.', zh: '您的账户已被暂停使用，无法执行此操作。请联系管理员。', th: 'บัญชีของคุณถูกระงับ ไม่สามารถดำเนินการนี้ได้ กรุณาติดต่อผู้ดูแลระบบ' };
-                        toast.error(msgs[lang] || msgs.en); return;
-                      }
-                      setEduStep('email');
-                    }}>
-                      <GraduationCap className="w-4 h-4" /> {t('eduVerification')}
-                    </Button>
-                  )}
-                </div>
                 <Button variant="outline" size="sm" className="gap-1 text-red-500 border-red-200 hover:bg-red-50 hover:text-red-600" onClick={() => setDeleteStep('notice')}>
                   <UserX className="w-4 h-4" /> {t('deleteAccount')}
                 </Button>
@@ -589,13 +571,13 @@ function MyPage() {
 
         {/* 8.1: Tabs — value 绑定到 URL 参数 / Tabs value bound to URL param */}
         <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
-          <TabsList className="w-full mb-4 flex overflow-x-auto scrollbar-hide" style={{ WebkitOverflowScrolling: 'touch' }}>
-            <TabsTrigger value="chat-history" className="flex-1 whitespace-nowrap text-xs sm:text-sm">{t('chatHistory')}</TabsTrigger>
-            <TabsTrigger value="my-products" className="flex-1 whitespace-nowrap text-xs sm:text-sm">{t('myProducts')}</TabsTrigger>
-            <TabsTrigger value="favorites" className="flex-1 whitespace-nowrap text-xs sm:text-sm" onClick={loadFavorites}>{t('favorites')}</TabsTrigger>
-            <TabsTrigger value="deals" className="flex-1 whitespace-nowrap text-xs sm:text-sm" onClick={loadDeals}>{t('deals')}</TabsTrigger>
-            <TabsTrigger value="my-reviews" className="flex-1 whitespace-nowrap text-xs sm:text-sm" onClick={loadMyReviews}>{t('myReviews')}</TabsTrigger>
-            <TabsTrigger value="my-reports" className="flex-1 whitespace-nowrap text-xs sm:text-sm" onClick={loadMyReports}>{t('myReports') || 'My Reports'}</TabsTrigger>
+          <TabsList className="w-full mb-4">
+            <TabsTrigger value="chat-history" className="flex-1">{t('chatHistory')}</TabsTrigger>
+            <TabsTrigger value="my-products" className="flex-1">{t('myProducts')}</TabsTrigger>
+            <TabsTrigger value="favorites" className="flex-1" onClick={loadFavorites}>{t('favorites')}</TabsTrigger>
+            <TabsTrigger value="deals" className="flex-1" onClick={loadDeals}>{t('deals')}</TabsTrigger>
+            <TabsTrigger value="my-reviews" className="flex-1" onClick={loadMyReviews}>{t('myReviews')}</TabsTrigger>
+            <TabsTrigger value="my-reports" className="flex-1" onClick={loadMyReports}>{t('myReports') || 'My Reports'}</TabsTrigger>
           </TabsList>
 
           {/* 8.3: Chat History Tab — 真实数据 / Real chat data */}
@@ -1039,13 +1021,13 @@ function MyPage() {
                               <AvatarImage src={review.reviewerProfileImage?.startsWith('/') ? `http://localhost:3000${review.reviewerProfileImage}` : ''} />
                               <AvatarFallback className="text-xs bg-gradient-to-br from-blue-500 to-purple-600 text-white">{review.reviewerName?.substring(0, 2).toUpperCase() || 'U'}</AvatarFallback>
                             </Avatar>
-                            <div className="flex-1 min-w-0">
-                              <div className="flex flex-wrap items-center gap-2 mb-1">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-1">
                                 <span className="font-semibold text-sm">{review.reviewerName}</span>
                                 <StarRating rating={review.rating} size={14} />
                                 <span className="text-xs text-gray-400">{new Date(review.createdAt).toLocaleDateString()}</span>
                               </div>
-                              {review.comment && <p className="text-sm text-gray-700 break-all overflow-hidden max-w-full">{review.comment}</p>}
+                              {review.comment && <p className="text-sm text-gray-700">{review.comment}</p>}
                               {/* 评价翻译按钮 / Review translate button */}
                               {review.comment && (
                                 <TranslateButton text={review.comment} language={language} />
