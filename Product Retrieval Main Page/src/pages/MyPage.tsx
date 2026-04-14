@@ -523,19 +523,19 @@ function MyPage() {
             </div>
           ) : (
             /* View Mode */
-            <div className="flex items-center gap-6">
+            <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6">
               <Avatar className="w-20 h-20 flex-shrink-0">
                 <AvatarImage src={user?.profileImage ? `http://localhost:3000${user.profileImage}` : ''} />
                 <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white text-xl">
                   {user?.name ? user.name.substring(0, 2).toUpperCase() : 'U'}
                 </AvatarFallback>
               </Avatar>
-              <div className="flex flex-col justify-center gap-1 flex-1">
-                <p className="text-xl font-bold">{user?.name || 'User'}</p>
-                <p className="text-sm text-gray-500">{user?.email || ''}</p>
-                {user?.bio && <p className="text-sm text-gray-600 mt-1">{user.bio}</p>}
+              <div className="flex flex-col justify-center gap-1 flex-1 min-w-0 text-center sm:text-left">
+                <p className="text-xl font-bold truncate">{user?.name || 'User'}</p>
+                <p className="text-sm text-gray-500 truncate">{user?.email || ''}</p>
+                {user?.bio && <p className="text-sm text-gray-600 mt-1 break-words">{user.bio}</p>}
               </div>
-              <div className="flex flex-col gap-2">
+              <div className="flex flex-wrap sm:flex-col gap-2 justify-center">
                 <Button variant="outline" size="sm" onClick={() => { setIsEditing(true); setEditName(user?.name || ''); setEditBio(user?.bio || ''); }} className="gap-1">
                   <Edit2 className="w-4 h-4" /> {t('editProfile')}
                 </Button>
@@ -571,13 +571,13 @@ function MyPage() {
 
         {/* 8.1: Tabs — value 绑定到 URL 参数 / Tabs value bound to URL param */}
         <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
-          <TabsList className="w-full mb-4">
-            <TabsTrigger value="chat-history" className="flex-1">{t('chatHistory')}</TabsTrigger>
-            <TabsTrigger value="my-products" className="flex-1">{t('myProducts')}</TabsTrigger>
-            <TabsTrigger value="favorites" className="flex-1" onClick={loadFavorites}>{t('favorites')}</TabsTrigger>
-            <TabsTrigger value="deals" className="flex-1" onClick={loadDeals}>{t('deals')}</TabsTrigger>
-            <TabsTrigger value="my-reviews" className="flex-1" onClick={loadMyReviews}>{t('myReviews')}</TabsTrigger>
-            <TabsTrigger value="my-reports" className="flex-1" onClick={loadMyReports}>{t('myReports') || 'My Reports'}</TabsTrigger>
+          <TabsList className="w-full mb-4 flex overflow-x-auto">
+            <TabsTrigger value="chat-history" className="flex-1 whitespace-nowrap text-xs sm:text-sm">{t('chatHistory')}</TabsTrigger>
+            <TabsTrigger value="my-products" className="flex-1 whitespace-nowrap text-xs sm:text-sm">{t('myProducts')}</TabsTrigger>
+            <TabsTrigger value="favorites" className="flex-1 whitespace-nowrap text-xs sm:text-sm" onClick={loadFavorites}>{t('favorites')}</TabsTrigger>
+            <TabsTrigger value="deals" className="flex-1 whitespace-nowrap text-xs sm:text-sm" onClick={loadDeals}>{t('deals')}</TabsTrigger>
+            <TabsTrigger value="my-reviews" className="flex-1 whitespace-nowrap text-xs sm:text-sm" onClick={loadMyReviews}>{t('myReviews')}</TabsTrigger>
+            <TabsTrigger value="my-reports" className="flex-1 whitespace-nowrap text-xs sm:text-sm" onClick={loadMyReports}>{t('myReports') || 'My Reports'}</TabsTrigger>
           </TabsList>
 
           {/* 8.3: Chat History Tab — 真实数据 / Real chat data */}
@@ -1021,13 +1021,13 @@ function MyPage() {
                               <AvatarImage src={review.reviewerProfileImage?.startsWith('/') ? `http://localhost:3000${review.reviewerProfileImage}` : ''} />
                               <AvatarFallback className="text-xs bg-gradient-to-br from-blue-500 to-purple-600 text-white">{review.reviewerName?.substring(0, 2).toUpperCase() || 'U'}</AvatarFallback>
                             </Avatar>
-                            <div className="flex-1">
-                              <div className="flex items-center gap-2 mb-1">
+                            <div className="flex-1 min-w-0">
+                              <div className="flex flex-wrap items-center gap-2 mb-1">
                                 <span className="font-semibold text-sm">{review.reviewerName}</span>
                                 <StarRating rating={review.rating} size={14} />
                                 <span className="text-xs text-gray-400">{new Date(review.createdAt).toLocaleDateString()}</span>
                               </div>
-                              {review.comment && <p className="text-sm text-gray-700">{review.comment}</p>}
+                              {review.comment && <p className="text-sm text-gray-700 break-words overflow-hidden">{review.comment}</p>}
                               {/* 评价翻译按钮 / Review translate button */}
                               {review.comment && (
                                 <TranslateButton text={review.comment} language={language} />
