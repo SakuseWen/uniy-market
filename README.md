@@ -242,7 +242,7 @@ npm run dev
 # Login as admin to get token, then call sync endpoint
 TOKEN=$(curl -s -X POST http://localhost:3000/api/auth/login \
   -H "Content-Type: application/json" \
-  -d '{"email":"admin@university.edu","password":"admin123"}' \
+  -d '{"email":"your-admin@email","password":"your-admin-password"}' \
   | python3 -c "import sys,json; print(json.load(sys.stdin)['data']['token'])")
 
 curl -X POST http://localhost:3000/api/admin/sync-search \
