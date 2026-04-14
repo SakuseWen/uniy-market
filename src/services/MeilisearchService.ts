@@ -54,9 +54,8 @@ class MeilisearchService {
   async initialize(): Promise<void> {
     try {
       // 动态导入 ESM-only 的 meilisearch 包 / Dynamic import of ESM-only meilisearch package
-      // 使用 eval 绕过 ts-node 将 import() 转换为 require() 的行为
       const meili = await eval('import("meilisearch")') as any;
-      const { MeiliSearch } = meili;
+      const MeiliSearch = meili.MeiliSearch || meili.default?.MeiliSearch || meili.default;
 
       this.client = new MeiliSearch({
         host: MEILI_HOST,
