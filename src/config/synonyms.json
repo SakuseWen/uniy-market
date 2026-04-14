@@ -13,10 +13,10 @@
   "电脑": ["macbook", "笔记本", "pc", "laptop", "computer", "คอมพิวเตอร์", "โน้ตบุ๊ก", "台式机", "desktop"],
   "laptop": ["电脑", "笔记本", "macbook", "notebook", "คอมพิวเตอร์", "โน้ตบุ๊ก"],
   "macbook": ["电脑", "laptop", "apple", "苹果", "mac"],
-  "computer": ["电脑", "pc", "laptop", "desktop"],
+  "computer": ["电脑", "pc", "laptop", "desktop", "macbook", "notebook"],
   "笔记本": ["电脑", "laptop", "notebook"],
   "台式机": ["电脑", "desktop", "pc"],
-  "desktop": ["台式机", "pc", "电脑"],
+  "desktop": ["台式机", "pc", "电脑", "computer"],
 
   "平板": ["ipad", "tablet", "แท็บเล็ต", "平板电脑"],
   "ipad": ["平板", "tablet", "apple", "แท็บเล็ต"],

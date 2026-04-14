@@ -534,23 +534,20 @@ router.get('/',
             offset,
           });
 
-          if (meiliResult.hits.length > 0 || meiliResult.estimatedTotalHits > 0) {
-            // 将 Meilisearch 结果映射为与 SQL 结果兼容的格式
-            // Map Meilisearch results to SQL-compatible format
-            const total = meiliResult.estimatedTotalHits;
-            result = {
-              data: meiliResult.hits.map((h: any) => ({ ...h, listingID: h.id })),
-              pagination: {
-                page,
-                limit,
-                total,
-                totalPages: Math.ceil(total / limit),
-                hasNext: page * limit < total,
-                hasPrev: page > 1,
-              },
-            };
-            usedMeili = true;
-          }
+          // Meilisearch 搜索成功即采用其结果（包括 0 条结果，0 条也是有效搜索结果）
+          const total = meiliResult.estimatedTotalHits;
+          result = {
+            data: meiliResult.hits.map((h: any) => ({ ...h, listingID: h.id })),
+            pagination: {
+              page,
+              limit,
+              total,
+              totalPages: Math.ceil(total / limit),
+              hasNext: page * limit < total,
+              hasPrev: page > 1,
+            },
+          };
+          usedMeili = true;
         } catch (e) {
           console.warn('[Meilisearch] 搜索失败，回退到 SQL / Search failed, falling back to SQL:', e);
         }
