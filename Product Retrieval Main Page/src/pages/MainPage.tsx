@@ -164,7 +164,12 @@ export default function MainPage() {
 
     // Client-side delivery type filter
     if (filters.deliveryType !== 'all') {
-      results = results.filter((p: any) => p.deliveryType === filters.deliveryType);
+      results = results.filter((p: any) => {
+        const dt = p.deliveryType;
+        // deliveryType 可能是字符串或数组 / May be string or array
+        if (Array.isArray(dt)) return dt.includes(filters.deliveryType);
+        return dt === filters.deliveryType;
+      });
     }
 
     // Client-side sorting for 'nearest' (API doesn't support this)
