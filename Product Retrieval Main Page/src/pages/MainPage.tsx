@@ -91,6 +91,7 @@ export default function MainPage() {
       'dormFurniture': 4,
       'sports': 5,
       'others': 6,
+      'transportation': 7,
     };
 
     if (filters.category !== 'all' && categoryIdMap[filters.category]) {
@@ -161,6 +162,11 @@ export default function MainPage() {
       results = results.filter((p) => !p.sold && !inTransactionIds.includes(p.id));
     }
 
+    // Client-side delivery type filter
+    if (filters.deliveryType !== 'all') {
+      results = results.filter((p: any) => p.deliveryType === filters.deliveryType);
+    }
+
     // Client-side sorting for 'nearest' (API doesn't support this)
     if (sortBy === 'nearest') {
       results.sort((a, b) => {
@@ -171,7 +177,7 @@ export default function MainPage() {
     }
 
     return results;
-  }, [apiProducts, filters.availableOnly, sortBy, inTransactionIds]);
+  }, [apiProducts, filters.availableOnly, filters.deliveryType, sortBy, inTransactionIds]);
 
   // Show error toast
   useEffect(() => {

@@ -86,6 +86,7 @@ export function SearchFilterBar({
               <SelectItem value="clothing">{t('clothing')}</SelectItem>
               <SelectItem value="dormFurniture">{t('dormFurniture')}</SelectItem>
               <SelectItem value="sports">{t('sports')}</SelectItem>
+              <SelectItem value="transportation">{t('transportation')}</SelectItem>
               <SelectItem value="others">{t('others')}</SelectItem>
             </SelectContent>
           </Select>
