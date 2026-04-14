@@ -1,4 +1,4 @@
-import { Heart, MessageCircle, GitCompare, CheckCircle, MapPin, Loader2, ShoppingCart } from 'lucide-react';
+import { Heart, MessageCircle, GitCompare, CheckCircle, MapPin, Loader2, ShoppingCart, Pencil } from 'lucide-react';
 import { StarRating } from './StarRating';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
@@ -16,6 +16,7 @@ interface ProductCardProps {
   /** 12.2 更新签名：接收 listingID 和 sellerID / Updated signature: receives listingID and sellerID */
   onContact?: (listingID: string, sellerID: string) => void;
   onBuy?: (productId: string) => void;
+  onEdit?: (productId: string) => void;
   isFavorited?: boolean;
   isInComparison?: boolean;
   inTransaction?: boolean;
@@ -32,6 +33,7 @@ export function ProductCard({
   onCompare,
   onContact,
   onBuy,
+  onEdit,
   isFavorited = false,
   isInComparison = false,
   inTransaction = false,
@@ -198,6 +200,18 @@ export function ProductCard({
                 <MessageCircle className="w-3 h-3" />
               )}
               {t('contactSeller')}
+            </Button>
+          )}
+          {/* 卖家显示"编辑商品"按钮 / Show "Edit Product" button for the seller's own listing */}
+          {isSeller && onEdit && (
+            <Button
+              size="sm"
+              className="flex-1 gap-1 text-white hover:shadow-lg hover:scale-105 transition-all duration-200"
+              style={{ background: 'linear-gradient(to right, #22c55e, #0d9488)' }}
+              onClick={(e) => { e.stopPropagation(); onEdit(product.id); }}
+            >
+              <Pencil className="w-3 h-3" />
+              {t('editProduct')}
             </Button>
           )}
         </div>

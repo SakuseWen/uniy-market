@@ -91,7 +91,7 @@ export default function MainPage() {
       'dormFurniture': 4,
       'sports': 5,
       'others': 6,
-      'transportation': 7,
+      'transportation': 1645,
     };
 
     if (filters.category !== 'all' && categoryIdMap[filters.category]) {
@@ -164,7 +164,11 @@ export default function MainPage() {
 
     // Client-side delivery type filter
     if (filters.deliveryType !== 'all') {
-      results = results.filter((p: any) => p.deliveryType === filters.deliveryType);
+      results = results.filter((p: any) => {
+        const dt = p.deliveryType;
+        if (Array.isArray(dt)) return dt.includes(filters.deliveryType);
+        return dt === filters.deliveryType;
+      });
     }
 
     // Client-side sorting for 'nearest' (API doesn't support this)
@@ -403,6 +407,7 @@ export default function MainPage() {
                   onCompare={handleCompare}
                   onContact={handleContact}
                   onBuy={!product.sold && product.seller?.id !== user?.userID ? handleBuy : undefined}
+                  onEdit={product.seller?.id === user?.userID ? (id: string) => navigate(`/edit-product/${id}`) : undefined}
                   isFavorited={favoritedIds.includes(product.id)}
                   isInComparison={isInComparison(product.id)}
                   inTransaction={inTransactionIds.includes(product.id)}
