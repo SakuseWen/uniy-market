@@ -451,37 +451,39 @@ export function Header({ language, onLanguageChange }: HeaderProps) {
             </Button>
 
             {/* 汉堡菜单 — 仅移动端显示 / Hamburger — mobile only */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="md:hidden">
-                  <Menu className="w-5 h-5" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48">
-                <DropdownMenuItem onClick={() => navigate('/')}>
-                  <Home className="w-4 h-4 mr-2" />{t('home')}
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => navigate('/my-page')}>
-                  <User className="w-4 h-4 mr-2" />{t('myPage')}
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => navigate('/help')}>
-                  <HelpCircle className="w-4 h-4 mr-2" />{t('helpCenter')}
-                </DropdownMenuItem>
-                {isAuthenticated && (
-                  <DropdownMenuItem onClick={() => {
-                    if (!user?.eduVerified) { toast.error(t('eduRequiredToPost')); return; }
-                    navigate('/create-product');
-                  }}>
-                    <Package className="w-4 h-4 mr-2" />{t('postItem')}
+            <div className="md:hidden">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon">
+                    <Menu className="w-5 h-5" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48">
+                  <DropdownMenuItem onClick={() => navigate('/')}>
+                    <Home className="w-4 h-4 mr-2" />{t('home')}
                   </DropdownMenuItem>
-                )}
-                {user?.isAdmin && (
-                  <DropdownMenuItem onClick={() => navigate('/admin')}>
-                    <Shield className="w-4 h-4 mr-2" />Admin
+                  <DropdownMenuItem onClick={() => navigate('/my-page')}>
+                    <User className="w-4 h-4 mr-2" />{t('myPage')}
                   </DropdownMenuItem>
-                )}
-              </DropdownMenuContent>
-            </DropdownMenu>
+                  <DropdownMenuItem onClick={() => navigate('/help')}>
+                    <HelpCircle className="w-4 h-4 mr-2" />{t('helpCenter')}
+                  </DropdownMenuItem>
+                  {isAuthenticated && (
+                    <DropdownMenuItem onClick={() => {
+                      if (!user?.eduVerified) { toast.error(t('eduRequiredToPost')); return; }
+                      navigate('/create-product');
+                    }}>
+                      <Package className="w-4 h-4 mr-2" />{t('postItem')}
+                    </DropdownMenuItem>
+                  )}
+                  {user?.isAdmin && (
+                    <DropdownMenuItem onClick={() => navigate('/admin')}>
+                      <Shield className="w-4 h-4 mr-2" />Admin
+                    </DropdownMenuItem>
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
           </div>
         </div>
       </div>

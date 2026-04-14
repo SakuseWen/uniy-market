@@ -571,13 +571,13 @@ function MyPage() {
 
         {/* 8.1: Tabs — value 绑定到 URL 参数 / Tabs value bound to URL param */}
         <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
-          <TabsList className="w-full mb-4">
-            <TabsTrigger value="chat-history" className="flex-1">{t('chatHistory')}</TabsTrigger>
-            <TabsTrigger value="my-products" className="flex-1">{t('myProducts')}</TabsTrigger>
-            <TabsTrigger value="favorites" className="flex-1" onClick={loadFavorites}>{t('favorites')}</TabsTrigger>
-            <TabsTrigger value="deals" className="flex-1" onClick={loadDeals}>{t('deals')}</TabsTrigger>
-            <TabsTrigger value="my-reviews" className="flex-1" onClick={loadMyReviews}>{t('myReviews')}</TabsTrigger>
-            <TabsTrigger value="my-reports" className="flex-1" onClick={loadMyReports}>{t('myReports') || 'My Reports'}</TabsTrigger>
+          <TabsList className="w-full mb-4 flex overflow-x-auto flex-nowrap px-1 [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: 'none' }}>
+            <TabsTrigger value="chat-history" className="flex-shrink-0 whitespace-nowrap text-xs sm:text-sm">{t('chatHistory')}</TabsTrigger>
+            <TabsTrigger value="my-products" className="flex-shrink-0 whitespace-nowrap text-xs sm:text-sm">{t('myProducts')}</TabsTrigger>
+            <TabsTrigger value="favorites" className="flex-shrink-0 whitespace-nowrap text-xs sm:text-sm" onClick={loadFavorites}>{t('favorites')}</TabsTrigger>
+            <TabsTrigger value="deals" className="flex-shrink-0 whitespace-nowrap text-xs sm:text-sm" onClick={loadDeals}>{t('deals')}</TabsTrigger>
+            <TabsTrigger value="my-reviews" className="flex-shrink-0 whitespace-nowrap text-xs sm:text-sm" onClick={loadMyReviews}>{t('myReviews')}</TabsTrigger>
+            <TabsTrigger value="my-reports" className="flex-shrink-0 whitespace-nowrap text-xs sm:text-sm" onClick={loadMyReports}>{t('myReports') || 'My Reports'}</TabsTrigger>
           </TabsList>
 
           {/* 8.3: Chat History Tab — 真实数据 / Real chat data */}
@@ -1027,15 +1027,15 @@ function MyPage() {
                                 <StarRating rating={review.rating} size={14} />
                                 <span className="text-xs text-gray-400">{new Date(review.createdAt).toLocaleDateString()}</span>
                               </div>
-                              {review.comment && <p className="text-sm text-gray-700">{review.comment}</p>}
+                              {review.comment && <p className="text-base sm:text-sm text-gray-700 break-all">{review.comment}</p>}
                               {/* 评价翻译按钮 / Review translate button */}
                               {review.comment && (
                                 <TranslateButton text={review.comment} language={language} />
                               )}
                               {review.images && review.images.length > 0 && (
-                                <div className="flex gap-2 mt-2">
+                                <div className="flex flex-wrap gap-3 mt-2">
                                   {review.images.map((img: any) => (
-                                    <img key={img.imageID} src={`http://localhost:3000${img.imagePath}`} alt="" style={{ width: 80, height: 80, objectFit: 'cover', borderRadius: 6 }} />
+                                    <img key={img.imageID} src={`http://localhost:3000${img.imagePath}`} alt="" className="w-24 h-24 sm:w-20 sm:h-20 object-cover rounded-md" />
                                   ))}
                                 </div>
                               )}
@@ -1072,8 +1072,8 @@ function MyPage() {
                   const images = report.evidence_images ? JSON.parse(report.evidence_images) : [];
                   return (
                     <Card key={report.report_id}>
-                      <CardContent className="p-4">
-                        <div className="flex items-start justify-between mb-2">
+                      <CardContent className="p-3 sm:p-4">
+                        <div className="flex flex-wrap items-start justify-between gap-2 mb-2">
                           <div>
                             <Badge variant="outline" className="mr-2">{t(report.report_type) || report.report_type}</Badge>
                             <Badge variant="outline">{t(report.category) || report.category.replace(/_/g, ' ')}</Badge>
@@ -1082,11 +1082,11 @@ function MyPage() {
                             {t(report.status) || report.status}
                           </Badge>
                         </div>
-                        <p className="text-sm text-gray-700 mb-2">{report.reason}</p>
+                        <p className="text-base sm:text-sm text-gray-700 mb-2 break-all">{report.reason}</p>
                         {images.length > 0 && (
-                          <div className="flex gap-2 mb-2">
+                          <div className="flex flex-wrap gap-3 mb-2">
                             {images.map((img: string, i: number) => (
-                              <img key={i} src={`http://localhost:3000${img}`} alt="" className="w-16 h-16 object-cover rounded border" />
+                              <img key={i} src={`http://localhost:3000${img}`} alt="" className="w-24 h-24 sm:w-16 sm:h-16 object-cover rounded-md border" />
                             ))}
                           </div>
                         )}
