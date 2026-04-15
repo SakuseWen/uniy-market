@@ -34,7 +34,6 @@ Uniy Market is a campus-oriented C2C second-hand trading platform with trilingua
 | **Socket.IO 4** | WebSocket 实时通信（聊天、通知） |
 | **JSON Web Token** | 身份认证与会话管理 |
 | **bcryptjs** | 密码哈希加密 |
-| **Passport + Google OAuth 2.0** | 第三方登录 |
 | **Sharp** | 图片压缩与格式转换 |
 | **Multer** | 文件上传处理 |
 | **Resend** | 邮件发送（验证码、密码重置） |
