@@ -61,19 +61,6 @@ export function SearchFilterBar({
 
         {/* Quick Filters */}
         <div className="flex flex-wrap gap-3 items-center">
-          {/* Campus */}
-          <Select value={filters.campus} onValueChange={(value) => updateFilter('campus', value)}>
-            <SelectTrigger className="w-[150px]">
-              <SelectValue placeholder={t('campus')} />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">{t('campus')}</SelectItem>
-              <SelectItem value="mainCampus">{t('mainCampus')}</SelectItem>
-              <SelectItem value="secondaryCampus">{t('secondaryCampus')}</SelectItem>
-              <SelectItem value="offCampus">{t('offCampus')}</SelectItem>
-            </SelectContent>
-          </Select>
-
           {/* Category */}
           <Select value={filters.category} onValueChange={(value) => updateFilter('category', value)}>
             <SelectTrigger className="w-[180px]">
@@ -151,16 +138,8 @@ export function SearchFilterBar({
         </div>
 
         {/* Active Filters Display */}
-        {(filters.campus !== 'all' || filters.category !== 'all' || filters.condition !== 'all') && (
+        {(filters.category !== 'all' || filters.condition !== 'all') && (
           <div className="flex gap-2 mt-3 flex-wrap">
-            {filters.campus !== 'all' && (
-              <Badge variant="secondary" className="gap-2">
-                {t(filters.campus as any)}
-                <button onClick={() => updateFilter('campus', 'all')} className="hover:bg-gray-300 rounded-full px-1">
-                  ×
-                </button>
-              </Badge>
-            )}
             {filters.category !== 'all' && (
               <Badge variant="secondary" className="gap-2">
                 {t(filters.category as any)}

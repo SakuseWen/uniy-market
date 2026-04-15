@@ -303,7 +303,6 @@ export default function MainPage() {
                 <SelectItem value="latest">{t('latest')}</SelectItem>
                 <SelectItem value="priceLowToHigh">{t('priceLowToHigh')}</SelectItem>
                 <SelectItem value="priceHighToLow">{t('priceHighToLow')}</SelectItem>
-                <SelectItem value="nearest">{t('nearest')}</SelectItem>
               </SelectContent>
             </Select>
 
