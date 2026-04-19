@@ -9,6 +9,7 @@ import { notificationService } from '../services/NotificationService';
 import translationService from '../services/TranslationService';
 import { locationService } from '../services/LocationService';
 import { moderateChatMessage, logFlaggedContent } from '../middleware/contentModeration';
+import { compressSingleImage } from '../middleware/imageProcessing';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
@@ -495,7 +496,7 @@ router.get('/:chatId/messages', authenticateToken, async (req: Request, res: Res
  * POST /api/chats/:chatId/messages
  * Send a message in a chat with real-time notifications and automatic translation
  */
-router.post('/:chatId/messages', authenticateToken, requireActiveUser, upload.single('image'), moderateChatMessage, logFlaggedContent, async (req: Request, res: Response) => {
+router.post('/:chatId/messages', authenticateToken, requireActiveUser, upload.single('image'), compressSingleImage, moderateChatMessage, logFlaggedContent, async (req: Request, res: Response) => {
   try {
     const user = (req as any).user;
     const { chatId } = req.params;

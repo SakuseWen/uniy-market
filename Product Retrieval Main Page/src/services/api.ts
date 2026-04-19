@@ -58,9 +58,12 @@ apiClient.interceptors.response.use(
         (error as any).suspendedMessage = msg;
       }
     }
-    // Add user-friendly message for rate limiting
+    // 请求频率限制：附加三语提示 / Rate limited: attach tri-lingual message
     if (error.response?.status === 429) {
       (error as any).rateLimited = true;
+      const lang = getCurrentLanguage();
+      const msg = translate(lang, 'rateLimited');
+      (error as any).rateLimitedMessage = msg;
     }
     return Promise.reject(error);
   }
