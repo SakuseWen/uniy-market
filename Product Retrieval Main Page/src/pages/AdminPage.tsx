@@ -15,6 +15,7 @@ import { toast } from 'sonner';
 import { Toaster } from '../components/ui/sonner';
 import { useAuth } from '../services/authContext';
 import { adminService } from '../services/adminService';
+import { getImageUrl } from '../lib/config';
 
 export default function AdminPage() {
   const navigate = useNavigate();
@@ -208,7 +209,7 @@ export default function AdminPage() {
                   <Card key={u.userID}>
                     <CardContent className="p-4 flex items-center gap-4">
                       <Avatar className="w-10 h-10">
-                        <AvatarImage src={u.profileImage ? `http://localhost:3000${u.profileImage}` : ''} />
+                        <AvatarImage src={u.profileImage ? getImageUrl(u.profileImage) : ''} />
                         <AvatarFallback>{u.name?.substring(0, 2).toUpperCase()}</AvatarFallback>
                       </Avatar>
                       <div className="flex-1 min-w-0">
@@ -258,7 +259,7 @@ export default function AdminPage() {
                       <div className="flex items-center gap-4 cursor-pointer" onClick={() => setExpandedProduct(expandedProduct === p.listingID ? null : p.listingID)}>
                         <div className="w-12 h-12 rounded bg-gray-200 flex-shrink-0 overflow-hidden">
                           {p.images?.[0]?.imagePath ? (
-                            <img src={`http://localhost:3000${p.images[0].imagePath}`} alt="" className="w-full h-full object-cover" />
+                            <img src={getImageUrl(p.images[0].imagePath)} alt="" className="w-full h-full object-cover" />
                           ) : (
                             <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">No img</div>
                           )}
@@ -291,7 +292,7 @@ export default function AdminPage() {
                           {p.images && p.images.length > 0 ? (
                             <div className="flex gap-2 mt-2">
                               {p.images.map((img: any, i: number) => (
-                                <img key={i} src={`http://localhost:3000${img.imagePath}`} alt="" className="w-20 h-20 object-cover rounded border" />
+                                <img key={i} src={getImageUrl(img.imagePath)} alt="" className="w-20 h-20 object-cover rounded border" />
                               ))}
                             </div>
                           ) : null}
@@ -342,7 +343,7 @@ export default function AdminPage() {
                         {images.length > 0 && (
                           <div className="flex gap-2 mb-2">
                             {images.map((img: string, i: number) => (
-                              <img key={i} src={`http://localhost:3000${img}`} alt="" className="w-16 h-16 object-cover rounded border" />
+                              <img key={i} src={getImageUrl(img)} alt="" className="w-16 h-16 object-cover rounded border" />
                             ))}
                           </div>
                         )}

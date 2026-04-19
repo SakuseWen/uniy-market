@@ -16,6 +16,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '../components/ui/dropdown-menu';
+import { getApiUrl } from '../lib/config';
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -72,7 +73,7 @@ export default function LoginPage() {
 
     setIsLoading(true);
     try {
-      const response = await fetch('http://localhost:3000/api/auth/register', {
+      const response = await fetch(getApiUrl('/auth/register'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

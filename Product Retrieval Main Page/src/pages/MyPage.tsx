@@ -34,6 +34,7 @@ import {
   AlertDialogTitle,
 } from '../components/ui/alert-dialog';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../components/ui/dialog';
+import { getImageUrl } from '../lib/config';
 
 interface UserProduct {
   listingID: string;
@@ -473,7 +474,7 @@ function MyPage() {
               <div className="flex items-center gap-6">
                 <div className="relative flex-shrink-0">
                   <Avatar className="w-20 h-20">
-                    <AvatarImage src={user?.profileImage ? `http://localhost:3000${user.profileImage}` : ''} />
+                    <AvatarImage src={user?.profileImage ? getImageUrl(user.profileImage) : ''} />
                     <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white text-xl">
                       {user?.name ? user.name.substring(0, 2).toUpperCase() : 'U'}
                     </AvatarFallback>
@@ -525,7 +526,7 @@ function MyPage() {
             /* View Mode */
             <div className="flex items-center gap-6">
               <Avatar className="w-20 h-20 flex-shrink-0">
-                <AvatarImage src={user?.profileImage ? `http://localhost:3000${user.profileImage}` : ''} />
+                <AvatarImage src={user?.profileImage ? getImageUrl(user.profileImage) : ''} />
                 <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white text-xl">
                   {user?.name ? user.name.substring(0, 2).toUpperCase() : 'U'}
                 </AvatarFallback>
@@ -619,7 +620,7 @@ function MyPage() {
                         onClick={() => navigate(`/chat/${chat.chatID}`)}
                       >
                         <Avatar className="w-12 h-12 flex-shrink-0">
-                          <AvatarImage src={other.image ? `http://localhost:3000${other.image}` : ''} />
+                          <AvatarImage src={other.image ? getImageUrl(other.image) : ''} />
                           <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white text-sm">
                             {other.name ? other.name.substring(0, 2).toUpperCase() : '??'}
                           </AvatarFallback>
@@ -717,7 +718,7 @@ function MyPage() {
                         <div className="flex-shrink-0">
                           {product.images && product.images.length > 0 ? (
                             <img
-                              src={`http://localhost:3000${product.images[0].imagePath}`}
+                              src={getImageUrl(product.images[0].imagePath)}
                               alt={product.title}
                               className="w-32 h-32 object-cover rounded-lg"
                               onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
@@ -821,7 +822,7 @@ function MyPage() {
                         <div className="flex-shrink-0">
                           {fav.images && fav.images.length > 0 ? (
                             <img
-                              src={`http://localhost:3000${fav.images[0].imagePath}`}
+                              src={getImageUrl(fav.images[0].imagePath)}
                               alt={fav.title}
                               className="w-32 h-32 object-cover rounded-lg"
                               onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
@@ -892,7 +893,7 @@ function MyPage() {
                           <div className="flex-shrink-0">
                             {deal.images && deal.images.length > 0 ? (
                               <img
-                                src={`http://localhost:3000${deal.images[0].imagePath}`}
+                                src={getImageUrl(deal.images[0].imagePath)}
                                 alt={deal.title}
                                 className="w-32 h-32 object-cover rounded-lg"
                                 onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
@@ -921,7 +922,7 @@ function MyPage() {
                         {isSeller && deal.buyerName && (
                           <div className="flex items-center gap-2 mb-2 cursor-pointer" onClick={(e) => { e.stopPropagation(); navigate(`/seller/${deal.buyerID}`); }}>
                             <Avatar className="w-7 h-7">
-                              <AvatarImage src={deal.buyerProfileImage?.startsWith('/') ? `http://localhost:3000${deal.buyerProfileImage}` : ''} />
+                              <AvatarImage src={deal.buyerProfileImage?.startsWith('/') ? getImageUrl(deal.buyerProfileImage) : ''} />
                               <AvatarFallback className="text-xs bg-gradient-to-br from-blue-500 to-purple-600 text-white">{deal.buyerName?.substring(0, 2).toUpperCase()}</AvatarFallback>
                             </Avatar>
                             <span className="text-blue-600 hover:underline font-medium">{t('buyer')}: {deal.buyerName}</span>
@@ -1020,7 +1021,7 @@ function MyPage() {
                         <CardContent className="p-4">
                           <div className="flex items-start gap-3 min-w-0">
                             <Avatar className="w-8 h-8 flex-shrink-0">
-                              <AvatarImage src={review.reviewerProfileImage?.startsWith('/') ? `http://localhost:3000${review.reviewerProfileImage}` : ''} />
+                              <AvatarImage src={review.reviewerProfileImage?.startsWith('/') ? getImageUrl(review.reviewerProfileImage) : ''} />
                               <AvatarFallback className="text-xs bg-gradient-to-br from-blue-500 to-purple-600 text-white">{review.reviewerName?.substring(0, 2).toUpperCase() || 'U'}</AvatarFallback>
                             </Avatar>
                             <div className="flex-1 min-w-0 overflow-hidden">
@@ -1037,7 +1038,7 @@ function MyPage() {
                               {review.images && review.images.length > 0 && (
                                 <div className="flex flex-wrap gap-3 mt-2">
                                   {review.images.map((img: any) => (
-                                    <img key={img.imageID} src={`http://localhost:3000${img.imagePath}`} alt="" className="w-24 h-24 sm:w-20 sm:h-20 object-cover rounded-md" />
+                                    <img key={img.imageID} src={getImageUrl(img.imagePath)} alt="" className="w-24 h-24 sm:w-20 sm:h-20 object-cover rounded-md" />
                                   ))}
                                 </div>
                               )}
@@ -1088,7 +1089,7 @@ function MyPage() {
                         {images.length > 0 && (
                           <div className="flex flex-wrap gap-3 mb-2">
                             {images.map((img: string, i: number) => (
-                              <img key={i} src={`http://localhost:3000${img}`} alt="" className="w-24 h-24 sm:w-16 sm:h-16 object-cover rounded-md border" />
+                              <img key={i} src={getImageUrl(img)} alt="" className="w-24 h-24 sm:w-16 sm:h-16 object-cover rounded-md border" />
                             ))}
                           </div>
                         )}

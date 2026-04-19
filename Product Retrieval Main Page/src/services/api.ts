@@ -2,8 +2,7 @@ import axios, { AxiosInstance, AxiosError } from 'axios';
 import { translate } from '../lib/i18n';
 import type { Language } from '../lib/i18n';
 
-// API 基础配置
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+import { API_BASE_URL } from '../lib/config';
 
 /** 获取当前语言偏好 / Get current language preference */
 function getCurrentLanguage(): Language {

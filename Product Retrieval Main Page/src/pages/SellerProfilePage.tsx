@@ -18,6 +18,7 @@ import { toast } from 'sonner';
 import { Toaster } from '../components/ui/sonner';
 import { useAuth } from '../services/authContext';
 import { ReportDialog } from '../components/ReportDialog';
+import { getImageUrl } from '../lib/config';
 
 interface SellerInfo {
   userID: string;
@@ -197,7 +198,7 @@ export default function SellerProfilePage() {
         <div className="bg-white rounded-xl border p-6 mb-6">
           <div className="flex items-center gap-6">
             <Avatar className="w-20 h-20 flex-shrink-0">
-              <AvatarImage src={seller.profileImage ? `http://localhost:3000${seller.profileImage}` : ''} />
+              <AvatarImage src={seller.profileImage ? getImageUrl(seller.profileImage) : ''} />
               <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white text-xl">
                 {seller.name ? seller.name.substring(0, 2).toUpperCase() : 'U'}
               </AvatarFallback>
@@ -272,7 +273,7 @@ export default function SellerProfilePage() {
                     <div className="flex-shrink-0">
                       {product.images && product.images.length > 0 ? (
                         <img
-                          src={`http://localhost:3000${product.images[0].imagePath}`}
+                          src={getImageUrl(product.images[0].imagePath)}
                           alt={product.title}
                           style={{ width: 100, height: 100, objectFit: 'cover', borderRadius: 8 }}
                         />
@@ -316,7 +317,7 @@ export default function SellerProfilePage() {
                 <CardContent className="p-4">
                   <div className="flex items-start gap-3">
                     <Avatar className="w-8 h-8 flex-shrink-0">
-                      <AvatarImage src={review.reviewerProfileImage?.startsWith('/') ? `http://localhost:3000${review.reviewerProfileImage}` : ''} />
+                      <AvatarImage src={review.reviewerProfileImage?.startsWith('/') ? getImageUrl(review.reviewerProfileImage) : ''} />
                       <AvatarFallback className="text-xs bg-gradient-to-br from-blue-500 to-purple-600 text-white">
                         {review.reviewerName?.substring(0, 2).toUpperCase() || 'U'}
                       </AvatarFallback>
@@ -335,7 +336,7 @@ export default function SellerProfilePage() {
                       {review.images && review.images.length > 0 && (
                         <div className="flex gap-2 mt-2">
                           {review.images.map((img: any) => (
-                            <img key={img.imageID} src={`http://localhost:3000${img.imagePath}`} alt="" style={{ width: 80, height: 80, objectFit: 'cover', borderRadius: 6 }} />
+                            <img key={img.imageID} src={getImageUrl(img.imagePath)} alt="" style={{ width: 80, height: 80, objectFit: 'cover', borderRadius: 6 }} />
                           ))}
                         </div>
                       )}

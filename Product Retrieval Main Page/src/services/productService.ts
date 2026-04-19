@@ -1,5 +1,6 @@
 import apiClient, { PaginatedResponse } from './api';
 import { Product } from '../lib/mockData';
+import { getImageUrl } from '../lib/config';
 
 // 后端商品类型
 interface BackendProduct {
@@ -58,7 +59,7 @@ function transformProduct(backendProduct: BackendProduct): Product {
   if (imagePath) {
     // If path starts with /, prepend backend URL
     if (imagePath.startsWith('/')) {
-      imageUrl = `http://localhost:3000${imagePath}`;
+      imageUrl = getImageUrl(imagePath);
     } else {
       imageUrl = imagePath;
     }
@@ -97,7 +98,7 @@ function transformProduct(backendProduct: BackendProduct): Product {
     images: backendProduct.images?.map(img => {
       // Also convert image paths to full URLs
       if (img.imagePath.startsWith('/')) {
-        return `http://localhost:3000${img.imagePath}`;
+        return getImageUrl(img.imagePath);
       }
       return img.imagePath;
     }) || [],

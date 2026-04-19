@@ -28,11 +28,12 @@ import apiClient from '../services/api';
 import { chatService, ChatSummary } from '../services/chatService';
 import { useChatNotification } from '../services/ChatNotificationContext';
 import { io, Socket } from 'socket.io-client';
+import { WS_URL, getImageUrl } from '../lib/config';
 
 const SOCKET_URL =
   (import.meta as any).env?.VITE_SOCKET_URL ||
   (import.meta as any).env?.VITE_WS_URL ||
-  'http://localhost:3000';
+  BACKEND_URL;
 
 interface HeaderProps {
   language: Language;
@@ -328,7 +329,7 @@ export function Header({ language, onLanguageChange }: HeaderProps) {
                           >
                             <div className="relative flex-shrink-0">
                               <Avatar className="w-10 h-10">
-                                <AvatarImage src={other.image ? `http://localhost:3000${other.image}` : ''} />
+                                <AvatarImage src={other.image ? getImageUrl(other.image) : ''} />
                                 <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white text-xs">
                                   {other.name ? other.name.slice(0, 2).toUpperCase() : '??'}
                                 </AvatarFallback>
@@ -412,7 +413,7 @@ export function Header({ language, onLanguageChange }: HeaderProps) {
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="sm" className="w-8 h-8 p-0 rounded-full">
                     <Avatar className="w-8 h-8">
-                      <AvatarImage src={user?.profileImage ? `http://localhost:3000${user.profileImage}` : ''} />
+                      <AvatarImage src={user?.profileImage ? getImageUrl(user.profileImage) : ''} />
                       <AvatarFallback>{user?.name?.charAt(0).toUpperCase() || 'U'}</AvatarFallback>
                     </Avatar>
                   </Button>

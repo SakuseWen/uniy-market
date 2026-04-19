@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { getApiUrl } from '../lib/config';
 
 export interface User {
   userID: string;
@@ -42,7 +43,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(parsed);
 
         // Refresh user info from backend
-        fetch('http://localhost:3000/api/auth/me', {
+        fetch(getApiUrl('/auth/me'), {
           headers: { 'Authorization': `Bearer ${savedToken}` },
         })
           .then(r => r.json())
@@ -64,7 +65,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = async (email: string, password: string) => {
     try {
-      const response = await fetch('http://localhost:3000/api/auth/login', {
+      const response = await fetch(getApiUrl('/auth/login'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
