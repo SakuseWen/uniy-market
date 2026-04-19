@@ -154,8 +154,9 @@ export function ProductDetailPage({
         setIsFavorite(true);
         toast.success(t('addedToFavorites'));
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Favorite error:', err);
+      toast.error(err?.suspendedMessage || err.response?.data?.error?.message || 'Failed');
     }
   };
 

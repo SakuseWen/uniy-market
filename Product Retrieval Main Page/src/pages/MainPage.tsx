@@ -208,7 +208,7 @@ export default function MainPage() {
       }
     } catch (err: any) {
       console.error('Favorite error:', err);
-      toast.error(err.response?.data?.error || 'Failed to update favorite');
+      toast.error(err?.suspendedMessage || err.response?.data?.error?.message || 'Failed to update favorite');
     }
   };
 
