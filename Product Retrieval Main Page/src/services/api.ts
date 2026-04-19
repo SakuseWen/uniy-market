@@ -41,8 +41,13 @@ apiClient.interceptors.response.use(
   (response) => response,
   (error: AxiosError) => {
     if (error.response?.status === 401) {
-      sessionStorage.removeItem('authToken');
-      sessionStorage.removeItem('authUser');
+      const errCode = (error.response.data as any)?.error?.code;
+      // 仅在 token 真正无效时清除，不清除 suspended 用户的 token
+      // Only clear token when truly invalid, not for suspended users
+      if (errCode === 'INVALID_TOKEN' || errCode === 'NO_TOKEN' || errCode === 'TOKEN_EXPIRED') {
+        sessionStorage.removeItem('authToken');
+        sessionStorage.removeItem('authUser');
+      }
     }
     // 账户被暂停：统一拦截并附加三语提示 / Account suspended: intercept and attach tri-lingual message
     if (error.response?.status === 403) {

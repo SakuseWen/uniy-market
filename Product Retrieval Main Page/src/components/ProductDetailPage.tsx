@@ -156,7 +156,16 @@ export function ProductDetailPage({
       }
     } catch (err: any) {
       console.error('Favorite error:', err);
-      toast.error(err?.suspendedMessage || err.response?.data?.error?.message || 'Failed');
+      const errCode = err.response?.data?.error?.code;
+      if (err?.suspendedMessage) {
+        toast.error(err.suspendedMessage);
+      } else if (errCode === 'ACCOUNT_INACTIVE') {
+        const lang = localStorage.getItem('preferredLanguage') as any || 'en';
+        const msgs: Record<string, string> = { en: 'Your account has been suspended. You cannot perform this action. Please contact the administrator.', zh: '您的账户已被暂停使用，无法执行此操作。请联系管理员。', th: 'บัญชีของคุณถูกระงับ ไม่สามารถดำเนินการนี้ได้ กรุณาติดต่อผู้ดูแลระบบ' };
+        toast.error(msgs[lang] || msgs.en);
+      } else {
+        toast.error(err.response?.data?.error?.message || 'Failed');
+      }
     }
   };
 
