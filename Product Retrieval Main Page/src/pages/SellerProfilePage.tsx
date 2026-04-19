@@ -233,7 +233,14 @@ export default function SellerProfilePage() {
                 <Button
                   variant="outline"
                   className="border-red-300 text-red-600 hover:bg-red-50"
-                  onClick={() => setReportOpen(true)}
+                  onClick={() => {
+                    if ((user as any)?.status === 'suspended') {
+                      const lang = localStorage.getItem('preferredLanguage') as any || 'en';
+                      const msgs: Record<string, string> = { en: 'Your account has been suspended. You cannot perform this action. Please contact the administrator.', zh: '您的账户已被暂停使用，无法执行此操作。请联系管理员。', th: 'บัญชีของคุณถูกระงับ ไม่สามารถดำเนินการนี้ได้ กรุณาติดต่อผู้ดูแลระบบ' };
+                      toast.error(msgs[lang] || msgs.en); return;
+                    }
+                    setReportOpen(true);
+                  }}
                 >
                   <Flag className="w-4 h-4 mr-2" />
                   {t('reportListing')}

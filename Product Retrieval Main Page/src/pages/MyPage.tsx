@@ -668,6 +668,7 @@ function MyPage() {
                   </div>
                   <Button
                     onClick={() => {
+                      if ((user as any)?.status === 'suspended') { toast.error(t('accountSuspended')); return; }
                       if (!user?.eduVerified) { toast.error(t('eduRequiredToPost')); return; }
                       navigate('/create-product');
                     }}
@@ -697,6 +698,7 @@ function MyPage() {
                   <p className="text-gray-600 mb-6">{t('startSelling')}</p>
                   <Button
                     onClick={() => {
+                      if ((user as any)?.status === 'suspended') { toast.error(t('accountSuspended')); return; }
                       if (!user?.eduVerified) { toast.error(t('eduRequiredToPost')); return; }
                       navigate('/create-product');
                     }}
