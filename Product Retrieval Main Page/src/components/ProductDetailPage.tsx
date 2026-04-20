@@ -423,7 +423,7 @@ export function ProductDetailPage({
 
         {/* Seller Information */}
         <div className="mb-8">
-          <SellerInfoCard seller={product.seller} language={language} />
+          <SellerInfoCard seller={product.seller} language={language} listingId={product.id} />
         </div>
 
         {/* Product Details Tabs */}

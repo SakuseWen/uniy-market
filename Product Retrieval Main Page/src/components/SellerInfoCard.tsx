@@ -1,22 +1,28 @@
-import { MessageCircle, Star, CheckCircle } from 'lucide-react';
+import { MessageCircle, Star, CheckCircle, Loader2 } from 'lucide-react';
+import { useState } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Language, translate } from '../lib/i18n';
 import { Product } from '../lib/mockData';
-import { useNavigate } from 'react-router';
+import { useNavigate, useLocation } from 'react-router';
 import { useAuth } from '../services/authContext';
+import { chatService } from '../services/chatService';
+import { toast } from 'sonner';
 
 interface SellerInfoCardProps {
   seller: Product['seller'];
   language: Language;
+  listingId?: string;
 }
 
-export function SellerInfoCard({ seller, language }: SellerInfoCardProps) {
+export function SellerInfoCard({ seller, language, listingId }: SellerInfoCardProps) {
   const t = (key: any) => translate(language, key);
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
+  const [sendingMessage, setSendingMessage] = useState(false);
 
   return (
     <Card>
@@ -92,12 +98,23 @@ export function SellerInfoCard({ seller, language }: SellerInfoCardProps) {
             <div className="flex gap-2">
               <Button 
                 className="bg-gradient-to-r from-blue-500 to-purple-600 hover:shadow-lg hover:scale-105 transition-all duration-200"
-                onClick={() => {
+                disabled={sendingMessage}
+                onClick={async () => {
                   if (!user) { navigate('/login'); return; }
-                  navigate(`/chat/${seller.id}`);
+                  if (!seller.id || !listingId) return;
+                  setSendingMessage(true);
+                  try {
+                    const res = await chatService.createOrGetChat(listingId, seller.id);
+                    const chatID = res.data.data?.chatID;
+                    if (chatID) navigate(`/chat/${chatID}`, { state: { from: location.pathname } });
+                  } catch (err: any) {
+                    toast.error(err?.suspendedMessage || err?.response?.data?.error?.message || 'Failed to open chat');
+                  } finally {
+                    setSendingMessage(false);
+                  }
                 }}
               >
-                <MessageCircle className="w-4 h-4 mr-2" />
+                {sendingMessage ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <MessageCircle className="w-4 h-4 mr-2" />}
                 {t('message')}
               </Button>
               <Button variant="outline" onClick={() => {
