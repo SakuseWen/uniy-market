@@ -2,8 +2,7 @@ import axios, { AxiosInstance, AxiosError } from 'axios';
 import { translate } from '../lib/i18n';
 import type { Language } from '../lib/i18n';
 
-// API 基础配置
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+import { API_BASE_URL } from '../lib/config';
 
 /** 获取当前语言偏好 / Get current language preference */
 function getCurrentLanguage(): Language {
@@ -41,8 +40,13 @@ apiClient.interceptors.response.use(
   (response) => response,
   (error: AxiosError) => {
     if (error.response?.status === 401) {
-      sessionStorage.removeItem('authToken');
-      sessionStorage.removeItem('authUser');
+      const errCode = (error.response.data as any)?.error?.code;
+      // 仅在 token 真正无效时清除，不清除 suspended 用户的 token
+      // Only clear token when truly invalid, not for suspended users
+      if (errCode === 'INVALID_TOKEN' || errCode === 'NO_TOKEN' || errCode === 'TOKEN_EXPIRED') {
+        sessionStorage.removeItem('authToken');
+        sessionStorage.removeItem('authUser');
+      }
     }
     // 账户被暂停：统一拦截并附加三语提示 / Account suspended: intercept and attach tri-lingual message
     if (error.response?.status === 403) {
@@ -54,9 +58,12 @@ apiClient.interceptors.response.use(
         (error as any).suspendedMessage = msg;
       }
     }
-    // Add user-friendly message for rate limiting
+    // 请求频率限制：附加三语提示 / Rate limited: attach tri-lingual message
     if (error.response?.status === 429) {
       (error as any).rateLimited = true;
+      const lang = getCurrentLanguage();
+      const msg = translate(lang, 'rateLimited');
+      (error as any).rateLimitedMessage = msg;
     }
     return Promise.reject(error);
   }

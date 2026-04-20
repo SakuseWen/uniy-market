@@ -7,8 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../co
 import { Loader2, ArrowLeft, Mail, KeyRound, CheckCircle } from 'lucide-react';
 import { translate } from '../lib/i18n';
 import { useLanguage } from '../lib/LanguageContext';
-
-const API_BASE = 'http://localhost:3000/api';
+import { getApiUrl } from '../lib/config';
 
 export default function ForgotPasswordPage() {
   const navigate = useNavigate();
@@ -107,7 +106,7 @@ export default function ForgotPasswordPage() {
     setError('');
     setLoading(true);
     try {
-      const res = await fetch(`${API_BASE}/auth/forgot-password/send-code`, {
+      const res = await fetch(getApiUrl('/auth/forgot-password/send-code'), {
         method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email }),
       });
       const data = await res.json();
@@ -124,7 +123,7 @@ export default function ForgotPasswordPage() {
     setError('');
     setLoading(true);
     try {
-      const res = await fetch(`${API_BASE}/auth/forgot-password/verify`, {
+      const res = await fetch(getApiUrl('/auth/forgot-password/verify'), {
         method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, code }),
       });
       const data = await res.json();
@@ -141,7 +140,7 @@ export default function ForgotPasswordPage() {
     if (newPassword !== confirmPassword) { setError(l.mismatch); return; }
     setLoading(true);
     try {
-      const res = await fetch(`${API_BASE}/auth/forgot-password/reset`, {
+      const res = await fetch(getApiUrl('/auth/forgot-password/reset'), {
         method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ resetToken, newPassword }),
       });
       if (!res.ok) { setError(l.resetFailed); return; }

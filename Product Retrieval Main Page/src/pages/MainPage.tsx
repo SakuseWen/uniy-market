@@ -91,6 +91,7 @@ export default function MainPage() {
       'dormFurniture': 4,
       'sports': 5,
       'others': 6,
+      'transportation': 1645,
     };
 
     if (filters.category !== 'all' && categoryIdMap[filters.category]) {
@@ -161,6 +162,15 @@ export default function MainPage() {
       results = results.filter((p) => !p.sold && !inTransactionIds.includes(p.id));
     }
 
+    // Client-side delivery type filter
+    if (filters.deliveryType !== 'all') {
+      results = results.filter((p: any) => {
+        const dt = p.deliveryType;
+        if (Array.isArray(dt)) return dt.includes(filters.deliveryType);
+        return dt === filters.deliveryType;
+      });
+    }
+
     // Client-side sorting for 'nearest' (API doesn't support this)
     if (sortBy === 'nearest') {
       results.sort((a, b) => {
@@ -171,7 +181,7 @@ export default function MainPage() {
     }
 
     return results;
-  }, [apiProducts, filters.availableOnly, sortBy, inTransactionIds]);
+  }, [apiProducts, filters.availableOnly, filters.deliveryType, sortBy, inTransactionIds]);
 
   // Show error toast
   useEffect(() => {
@@ -198,7 +208,16 @@ export default function MainPage() {
       }
     } catch (err: any) {
       console.error('Favorite error:', err);
-      toast.error(err.response?.data?.error || 'Failed to update favorite');
+      const errCode = err.response?.data?.error?.code;
+      if (err?.suspendedMessage) {
+        toast.error(err.suspendedMessage);
+      } else if (errCode === 'ACCOUNT_INACTIVE') {
+        const lang = localStorage.getItem('preferredLanguage') as any || 'en';
+        const msgs: Record<string, string> = { en: 'Your account has been suspended. You cannot perform this action. Please contact the administrator.', zh: '您的账户已被暂停使用，无法执行此操作。请联系管理员。', th: 'บัญชีของคุณถูกระงับ ไม่สามารถดำเนินการนี้ได้ กรุณาติดต่อผู้ดูแลระบบ' };
+        toast.error(msgs[lang] || msgs.en);
+      } else {
+        toast.error(err.response?.data?.error?.message || 'Failed to update favorite');
+      }
     }
   };
 
@@ -293,7 +312,6 @@ export default function MainPage() {
                 <SelectItem value="latest">{t('latest')}</SelectItem>
                 <SelectItem value="priceLowToHigh">{t('priceLowToHigh')}</SelectItem>
                 <SelectItem value="priceHighToLow">{t('priceHighToLow')}</SelectItem>
-                <SelectItem value="nearest">{t('nearest')}</SelectItem>
               </SelectContent>
             </Select>
 
@@ -387,7 +405,7 @@ export default function MainPage() {
             </Button>
           </div>
         ) : viewMode === 'grid' ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 pb-32">
+          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-6 pb-32">
             {filteredProducts.map((product) => (
               <div key={product.id} onClick={() => handleProductClick(product)} className="cursor-pointer">
                 <ProductCard
@@ -396,7 +414,8 @@ export default function MainPage() {
                   onFavorite={handleFavorite}
                   onCompare={handleCompare}
                   onContact={handleContact}
-                  onBuy={!product.sold ? handleBuy : undefined}
+                  onBuy={!product.sold && product.seller?.id !== user?.userID ? handleBuy : undefined}
+                  onEdit={product.seller?.id === user?.userID ? (id: string) => navigate(`/edit-product/${id}`) : undefined}
                   isFavorited={favoritedIds.includes(product.id)}
                   isInComparison={isInComparison(product.id)}
                   inTransaction={inTransactionIds.includes(product.id)}

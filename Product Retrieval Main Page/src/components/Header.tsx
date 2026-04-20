@@ -8,7 +8,7 @@
  * 彻底移除轮询，改为 WebSocket notification 事件实时驱动
  * Polling removed entirely; driven by WebSocket notification events in real-time
  */
-import { Bell, User, LogOut, MessageCircle, ShoppingBag, Shield } from 'lucide-react';
+import { Bell, User, LogOut, MessageCircle, ShoppingBag, Shield, Menu, Home, HelpCircle, Package } from 'lucide-react';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
@@ -28,11 +28,12 @@ import apiClient from '../services/api';
 import { chatService, ChatSummary } from '../services/chatService';
 import { useChatNotification } from '../services/ChatNotificationContext';
 import { io, Socket } from 'socket.io-client';
+import { WS_URL, getImageUrl } from '../lib/config';
 
 const SOCKET_URL =
   (import.meta as any).env?.VITE_SOCKET_URL ||
   (import.meta as any).env?.VITE_WS_URL ||
-  'http://localhost:3000';
+  BACKEND_URL;
 
 interface HeaderProps {
   language: Language;
@@ -260,8 +261,8 @@ export function Header({ language, onLanguageChange }: HeaderProps) {
           {/* ── 右侧区域 / Right section ─────────────────────────────────── */}
           <div className="flex items-center gap-4">
 
-            {/* 学校认证徽章 / Edu verification badge */}
-            <div className="hidden sm:block">
+            {/* 学校认证徽章 / Edu verification badge — 移动端隐藏 */}
+            <div className="hidden md:block">
               {user?.eduVerified ? (
                 <Badge variant="secondary" className="gap-1">
                   <span className="text-green-600">✓</span>
@@ -328,7 +329,7 @@ export function Header({ language, onLanguageChange }: HeaderProps) {
                           >
                             <div className="relative flex-shrink-0">
                               <Avatar className="w-10 h-10">
-                                <AvatarImage src={other.image ? `http://localhost:3000${other.image}` : ''} />
+                                <AvatarImage src={other.image ? getImageUrl(other.image) : ''} />
                                 <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white text-xs">
                                   {other.name ? other.name.slice(0, 2).toUpperCase() : '??'}
                                 </AvatarFallback>
@@ -412,7 +413,7 @@ export function Header({ language, onLanguageChange }: HeaderProps) {
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="sm" className="w-8 h-8 p-0 rounded-full">
                     <Avatar className="w-8 h-8">
-                      <AvatarImage src={user?.profileImage ? `http://localhost:3000${user.profileImage}` : ''} />
+                      <AvatarImage src={user?.profileImage ? getImageUrl(user.profileImage) : ''} />
                       <AvatarFallback>{user?.name?.charAt(0).toUpperCase() || 'U'}</AvatarFallback>
                     </Avatar>
                   </Button>
@@ -443,12 +444,49 @@ export function Header({ language, onLanguageChange }: HeaderProps) {
               className="hidden lg:flex bg-gradient-to-r from-blue-500 to-purple-600 hover:shadow-lg hover:scale-105 transition-all duration-200"
               onClick={() => {
                 if (!user) { navigate('/login'); return; }
+                if ((user as any).status === 'suspended') { toast.error(t('accountSuspended')); return; }
                 if (!user.eduVerified) { toast.error(t('eduRequiredToPost')); return; }
                 navigate('/create-product');
               }}
             >
               {t('postItemCTA')}
             </Button>
+
+            {/* 汉堡菜单 — 仅移动端显示 / Hamburger — mobile only */}
+            <div className="flex md:!hidden items-center">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button type="button" className="inline-flex items-center justify-center rounded-md p-2 hover:bg-gray-100" aria-label="Menu">
+                    <Menu className="w-5 h-5" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48">
+                  <DropdownMenuItem onClick={() => navigate('/')}>
+                    <Home className="w-4 h-4 mr-2" />{t('home')}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate('/my-page')}>
+                    <User className="w-4 h-4 mr-2" />{t('myPage')}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate('/help')}>
+                    <HelpCircle className="w-4 h-4 mr-2" />{t('helpCenter')}
+                  </DropdownMenuItem>
+                  {isAuthenticated && (
+                    <DropdownMenuItem onClick={() => {
+                      if ((user as any)?.status === 'suspended') { toast.error(t('accountSuspended')); return; }
+                      if (!user?.eduVerified) { toast.error(t('eduRequiredToPost')); return; }
+                      navigate('/create-product');
+                    }}>
+                      <Package className="w-4 h-4 mr-2" />{t('postItem')}
+                    </DropdownMenuItem>
+                  )}
+                  {user?.isAdmin && (
+                    <DropdownMenuItem onClick={() => navigate('/admin')}>
+                      <Shield className="w-4 h-4 mr-2" />Admin
+                    </DropdownMenuItem>
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
           </div>
         </div>
       </div>

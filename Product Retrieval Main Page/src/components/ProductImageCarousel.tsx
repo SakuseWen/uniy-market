@@ -126,14 +126,6 @@ export function ProductImageCarousel({ images, title, badges, language }: Produc
               alt={`${title} - Full size`}
               className="w-full h-full object-contain"
             />
-            <Button
-              size="icon"
-              variant="secondary"
-              className="absolute top-4 right-4"
-              onClick={() => setIsZoomed(false)}
-            >
-              <X className="w-4 h-4" />
-            </Button>
             {images.length > 1 && (
               <>
                 <Button

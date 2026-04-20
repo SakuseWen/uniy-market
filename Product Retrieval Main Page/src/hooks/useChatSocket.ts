@@ -11,12 +11,13 @@
 import { useEffect, useRef, useCallback } from 'react';
 import { io, Socket } from 'socket.io-client';
 import type { MessageDetail } from '../services/chatService';
+import { BACKEND_URL, WS_URL } from '../lib/config';
 
 // Read WebSocket server URL from env / 从环境变量读取 WebSocket 服务器地址
 const SOCKET_URL =
   (import.meta as any).env?.VITE_SOCKET_URL ||
   (import.meta as any).env?.VITE_WS_URL ||
-  'http://localhost:3000';
+  BACKEND_URL;
 
 interface UseChatSocketOptions {
   /** Called when a new message arrives from the server / 收到服务器推送的新消息时调用 */

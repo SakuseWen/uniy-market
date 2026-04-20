@@ -25,6 +25,7 @@ import { useCategories } from '../hooks';
 import { useAuth } from '../services/authContext';
 import { compressImages } from '../lib/imageUtils';
 import { LocationPicker } from '../components/LocationPicker';
+import { getImageUrl } from '../lib/config';
 
 interface ProductImage {
   imageID: string;
@@ -496,7 +497,7 @@ export default function EditProductPage() {
                       .map(image => {
                         const imageUrl = image.imagePath.startsWith('http') 
                           ? image.imagePath 
-                          : `http://localhost:3000${image.imagePath}`;
+                          : getImageUrl(image.imagePath);
                         
                         return (
                           <div key={image.imageID} className="relative flex-shrink-0" style={{ width: 200, height: 200 }}>

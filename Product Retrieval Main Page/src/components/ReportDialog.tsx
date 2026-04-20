@@ -119,7 +119,7 @@ export function ReportDialog({ open, onOpenChange, language, reportType, targetI
 
   return (
     <Dialog open={open} onOpenChange={(v: boolean) => { if (!v) resetForm(); onOpenChange(v); }}>
-      <DialogContent className="max-w-md max-h-[85vh] overflow-y-auto">
+      <DialogContent className="w-full h-full sm:h-auto sm:max-w-md rounded-none sm:rounded-lg max-h-screen sm:max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{t('reportListing')}</DialogTitle>
           <DialogDescription>{targetName || targetId}</DialogDescription>

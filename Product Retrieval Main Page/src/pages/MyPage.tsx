@@ -34,6 +34,7 @@ import {
   AlertDialogTitle,
 } from '../components/ui/alert-dialog';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../components/ui/dialog';
+import { getImageUrl } from '../lib/config';
 
 interface UserProduct {
   listingID: string;
@@ -473,7 +474,7 @@ function MyPage() {
               <div className="flex items-center gap-6">
                 <div className="relative flex-shrink-0">
                   <Avatar className="w-20 h-20">
-                    <AvatarImage src={user?.profileImage ? `http://localhost:3000${user.profileImage}` : ''} />
+                    <AvatarImage src={user?.profileImage ? getImageUrl(user.profileImage) : ''} />
                     <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white text-xl">
                       {user?.name ? user.name.substring(0, 2).toUpperCase() : 'U'}
                     </AvatarFallback>
@@ -525,7 +526,7 @@ function MyPage() {
             /* View Mode */
             <div className="flex items-center gap-6">
               <Avatar className="w-20 h-20 flex-shrink-0">
-                <AvatarImage src={user?.profileImage ? `http://localhost:3000${user.profileImage}` : ''} />
+                <AvatarImage src={user?.profileImage ? getImageUrl(user.profileImage) : ''} />
                 <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white text-xl">
                   {user?.name ? user.name.substring(0, 2).toUpperCase() : 'U'}
                 </AvatarFallback>
@@ -571,13 +572,13 @@ function MyPage() {
 
         {/* 8.1: Tabs — value 绑定到 URL 参数 / Tabs value bound to URL param */}
         <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
-          <TabsList className="w-full mb-4">
-            <TabsTrigger value="chat-history" className="flex-1">{t('chatHistory')}</TabsTrigger>
-            <TabsTrigger value="my-products" className="flex-1">{t('myProducts')}</TabsTrigger>
-            <TabsTrigger value="favorites" className="flex-1" onClick={loadFavorites}>{t('favorites')}</TabsTrigger>
-            <TabsTrigger value="deals" className="flex-1" onClick={loadDeals}>{t('deals')}</TabsTrigger>
-            <TabsTrigger value="my-reviews" className="flex-1" onClick={loadMyReviews}>{t('myReviews')}</TabsTrigger>
-            <TabsTrigger value="my-reports" className="flex-1" onClick={loadMyReports}>{t('myReports') || 'My Reports'}</TabsTrigger>
+          <TabsList className="w-full mb-4 flex overflow-x-auto flex-nowrap px-1 [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: 'none' }}>
+            <TabsTrigger value="chat-history" className="flex-shrink-0 whitespace-nowrap text-xs sm:text-sm">{t('chatHistory')}</TabsTrigger>
+            <TabsTrigger value="my-products" className="flex-shrink-0 whitespace-nowrap text-xs sm:text-sm">{t('myProducts')}</TabsTrigger>
+            <TabsTrigger value="favorites" className="flex-shrink-0 whitespace-nowrap text-xs sm:text-sm" onClick={loadFavorites}>{t('favorites')}</TabsTrigger>
+            <TabsTrigger value="deals" className="flex-shrink-0 whitespace-nowrap text-xs sm:text-sm" onClick={loadDeals}>{t('deals')}</TabsTrigger>
+            <TabsTrigger value="my-reviews" className="flex-shrink-0 whitespace-nowrap text-xs sm:text-sm" onClick={loadMyReviews}>{t('myReviews')}</TabsTrigger>
+            <TabsTrigger value="my-reports" className="flex-shrink-0 whitespace-nowrap text-xs sm:text-sm" onClick={loadMyReports}>{t('myReports') || 'My Reports'}</TabsTrigger>
           </TabsList>
 
           {/* 8.3: Chat History Tab — 真实数据 / Real chat data */}
@@ -619,7 +620,7 @@ function MyPage() {
                         onClick={() => navigate(`/chat/${chat.chatID}`)}
                       >
                         <Avatar className="w-12 h-12 flex-shrink-0">
-                          <AvatarImage src={other.image ? `http://localhost:3000${other.image}` : ''} />
+                          <AvatarImage src={other.image ? getImageUrl(other.image) : ''} />
                           <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white text-sm">
                             {other.name ? other.name.substring(0, 2).toUpperCase() : '??'}
                           </AvatarFallback>
@@ -668,6 +669,7 @@ function MyPage() {
                   </div>
                   <Button
                     onClick={() => {
+                      if ((user as any)?.status === 'suspended') { toast.error(t('accountSuspended')); return; }
                       if (!user?.eduVerified) { toast.error(t('eduRequiredToPost')); return; }
                       navigate('/create-product');
                     }}
@@ -697,6 +699,7 @@ function MyPage() {
                   <p className="text-gray-600 mb-6">{t('startSelling')}</p>
                   <Button
                     onClick={() => {
+                      if ((user as any)?.status === 'suspended') { toast.error(t('accountSuspended')); return; }
                       if (!user?.eduVerified) { toast.error(t('eduRequiredToPost')); return; }
                       navigate('/create-product');
                     }}
@@ -715,7 +718,7 @@ function MyPage() {
                         <div className="flex-shrink-0">
                           {product.images && product.images.length > 0 ? (
                             <img
-                              src={`http://localhost:3000${product.images[0].imagePath}`}
+                              src={getImageUrl(product.images[0].imagePath)}
                               alt={product.title}
                               className="w-32 h-32 object-cover rounded-lg"
                               onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
@@ -819,7 +822,7 @@ function MyPage() {
                         <div className="flex-shrink-0">
                           {fav.images && fav.images.length > 0 ? (
                             <img
-                              src={`http://localhost:3000${fav.images[0].imagePath}`}
+                              src={getImageUrl(fav.images[0].imagePath)}
                               alt={fav.title}
                               className="w-32 h-32 object-cover rounded-lg"
                               onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
@@ -890,7 +893,7 @@ function MyPage() {
                           <div className="flex-shrink-0">
                             {deal.images && deal.images.length > 0 ? (
                               <img
-                                src={`http://localhost:3000${deal.images[0].imagePath}`}
+                                src={getImageUrl(deal.images[0].imagePath)}
                                 alt={deal.title}
                                 className="w-32 h-32 object-cover rounded-lg"
                                 onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
@@ -919,7 +922,7 @@ function MyPage() {
                         {isSeller && deal.buyerName && (
                           <div className="flex items-center gap-2 mb-2 cursor-pointer" onClick={(e) => { e.stopPropagation(); navigate(`/seller/${deal.buyerID}`); }}>
                             <Avatar className="w-7 h-7">
-                              <AvatarImage src={deal.buyerProfileImage?.startsWith('/') ? `http://localhost:3000${deal.buyerProfileImage}` : ''} />
+                              <AvatarImage src={deal.buyerProfileImage?.startsWith('/') ? getImageUrl(deal.buyerProfileImage) : ''} />
                               <AvatarFallback className="text-xs bg-gradient-to-br from-blue-500 to-purple-600 text-white">{deal.buyerName?.substring(0, 2).toUpperCase()}</AvatarFallback>
                             </Avatar>
                             <span className="text-blue-600 hover:underline font-medium">{t('buyer')}: {deal.buyerName}</span>
@@ -1014,28 +1017,28 @@ function MyPage() {
                 ) : (
                   <div className="grid gap-4">
                     {myReviews.map((review: any) => (
-                      <Card key={review.reviewID}>
+                      <Card key={review.reviewID} className="w-full overflow-hidden">
                         <CardContent className="p-4">
-                          <div className="flex items-start gap-3">
+                          <div className="flex items-start gap-3 min-w-0">
                             <Avatar className="w-8 h-8 flex-shrink-0">
-                              <AvatarImage src={review.reviewerProfileImage?.startsWith('/') ? `http://localhost:3000${review.reviewerProfileImage}` : ''} />
+                              <AvatarImage src={review.reviewerProfileImage?.startsWith('/') ? getImageUrl(review.reviewerProfileImage) : ''} />
                               <AvatarFallback className="text-xs bg-gradient-to-br from-blue-500 to-purple-600 text-white">{review.reviewerName?.substring(0, 2).toUpperCase() || 'U'}</AvatarFallback>
                             </Avatar>
-                            <div className="flex-1">
-                              <div className="flex items-center gap-2 mb-1">
+                            <div className="flex-1 min-w-0 overflow-hidden">
+                              <div className="flex flex-wrap items-center gap-2 mb-1">
                                 <span className="font-semibold text-sm">{review.reviewerName}</span>
                                 <StarRating rating={review.rating} size={14} />
                                 <span className="text-xs text-gray-400">{new Date(review.createdAt).toLocaleDateString()}</span>
                               </div>
-                              {review.comment && <p className="text-sm text-gray-700">{review.comment}</p>}
+                              {review.comment && <p className="text-base sm:text-sm text-gray-700 break-all overflow-hidden">{review.comment}</p>}
                               {/* 评价翻译按钮 / Review translate button */}
                               {review.comment && (
                                 <TranslateButton text={review.comment} language={language} />
                               )}
                               {review.images && review.images.length > 0 && (
-                                <div className="flex gap-2 mt-2">
+                                <div className="flex flex-wrap gap-3 mt-2">
                                   {review.images.map((img: any) => (
-                                    <img key={img.imageID} src={`http://localhost:3000${img.imagePath}`} alt="" style={{ width: 80, height: 80, objectFit: 'cover', borderRadius: 6 }} />
+                                    <img key={img.imageID} src={getImageUrl(img.imagePath)} alt="" className="w-24 h-24 sm:w-20 sm:h-20 object-cover rounded-md" />
                                   ))}
                                 </div>
                               )}
@@ -1072,8 +1075,8 @@ function MyPage() {
                   const images = report.evidence_images ? JSON.parse(report.evidence_images) : [];
                   return (
                     <Card key={report.report_id}>
-                      <CardContent className="p-4">
-                        <div className="flex items-start justify-between mb-2">
+                      <CardContent className="p-3 sm:p-4">
+                        <div className="flex flex-wrap items-start justify-between gap-2 mb-2">
                           <div>
                             <Badge variant="outline" className="mr-2">{t(report.report_type) || report.report_type}</Badge>
                             <Badge variant="outline">{t(report.category) || report.category.replace(/_/g, ' ')}</Badge>
@@ -1082,11 +1085,11 @@ function MyPage() {
                             {t(report.status) || report.status}
                           </Badge>
                         </div>
-                        <p className="text-sm text-gray-700 mb-2">{report.reason}</p>
+                        <p className="text-base sm:text-sm text-gray-700 mb-2 break-all">{report.reason}</p>
                         {images.length > 0 && (
-                          <div className="flex gap-2 mb-2">
+                          <div className="flex flex-wrap gap-3 mb-2">
                             {images.map((img: string, i: number) => (
-                              <img key={i} src={`http://localhost:3000${img}`} alt="" className="w-16 h-16 object-cover rounded border" />
+                              <img key={i} src={getImageUrl(img)} alt="" className="w-24 h-24 sm:w-16 sm:h-16 object-cover rounded-md border" />
                             ))}
                           </div>
                         )}

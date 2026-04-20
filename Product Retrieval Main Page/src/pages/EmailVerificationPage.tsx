@@ -7,6 +7,7 @@ import { CheckCircle, Mail } from 'lucide-react';
 import { translate } from '../lib/i18n';
 import { useLanguage } from '../lib/LanguageContext';
 import { useAuth } from '../services/authContext';
+import { getApiUrl } from '../lib/config';
 
 export default function EmailVerificationPage() {
   const navigate = useNavigate();
@@ -40,7 +41,7 @@ export default function EmailVerificationPage() {
 
     setIsLoading(true);
     try {
-      const response = await fetch('http://localhost:3000/api/auth/verify-code', {
+      const response = await fetch(getApiUrl('/auth/verify-code'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, code }),
@@ -78,7 +79,7 @@ export default function EmailVerificationPage() {
     setIsResending(true);
     setError('');
     try {
-      const response = await fetch('http://localhost:3000/api/auth/resend-code', {
+      const response = await fetch(getApiUrl('/auth/resend-code'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email }),

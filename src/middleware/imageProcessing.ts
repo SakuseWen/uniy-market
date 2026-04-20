@@ -220,8 +220,6 @@ export async function processUploadedImages(req: Request, res: Response, next: N
  */
 export async function deleteImageFile(imagePath: string): Promise<boolean> {
   try {
-    // imagePath is like /uploads/products/filename
-    // We need to construct the full path: ../public/uploads/products/filename
     const fullPath = path.join(__dirname, '../../public', imagePath);
     await fs.unlink(fullPath);
     return true;
@@ -229,4 +227,38 @@ export async function deleteImageFile(imagePath: string): Promise<boolean> {
     console.error(`Failed to delete image file ${imagePath}:`, error);
     return false;
   }
+}
+
+/**
+ * 压缩单张上传图片（用于聊天和举报）/ Compress single uploaded image (for chat & report)
+ * 最大宽度 1024px，JPEG 质量 80
+ */
+export async function compressSingleImage(req: Request, _res: Response, next: NextFunction): Promise<void> {
+  try {
+    const file = (req as any).file as Express.Multer.File | undefined;
+    if (!file) return next();
+    await optimizeImage(file.path);
+  } catch (err) {
+    console.warn('[ImageCompress] Single image compression skipped:', err);
+  }
+  next();
+}
+
+/**
+ * 压缩多张上传图片（用于举报证据）/ Compress multiple uploaded images (for report evidence)
+ * 最大宽度 1024px，JPEG 质量 80
+ */
+export async function compressMultipleImages(req: Request, _res: Response, next: NextFunction): Promise<void> {
+  try {
+    const files = req.files as Express.Multer.File[] | undefined;
+    if (!files || files.length === 0) return next();
+    for (const file of files) {
+      try { await optimizeImage(file.path); } catch (err) {
+        console.warn(`[ImageCompress] Skipped ${file.originalname}:`, err);
+      }
+    }
+  } catch (err) {
+    console.warn('[ImageCompress] Multiple image compression skipped:', err);
+  }
+  next();
 }

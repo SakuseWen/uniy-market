@@ -481,6 +481,7 @@ export class DatabaseManager {
       },
       { name: 'Sports', nameEn: 'Sports', nameTh: 'กีฬา', nameZh: '体育用品' },
       { name: 'Other', nameEn: 'Other', nameTh: 'อื่นๆ', nameZh: '其他' },
+      { name: 'Transportation', nameEn: 'Transportation', nameTh: 'ยานพาหนะ', nameZh: '交通工具' },
     ];
 
     for (const category of categories) {

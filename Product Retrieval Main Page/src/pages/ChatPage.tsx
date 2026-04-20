@@ -36,6 +36,7 @@ import { chatService } from '../services/chatService';
 import type { MessageDetail, ChatSummary } from '../services/chatService';
 import { useChatSocket } from '../hooks/useChatSocket';
 import { useChatNotification } from '../services/ChatNotificationContext';
+import { getImageUrl } from '../lib/config';
 
 // ─── 常量 / Constants ─────────────────────────────────────────────────────────
 
@@ -402,7 +403,7 @@ export default function ChatPage() {
             <div className="flex items-center gap-3">
               {chatInfo.productImage ? (
                 <img
-                  src={chatInfo.productImage.startsWith('http') ? chatInfo.productImage : `http://localhost:3000${chatInfo.productImage}`}
+                  src={chatInfo.productImage.startsWith('http') ? chatInfo.productImage : getImageUrl(chatInfo.productImage)}
                   alt={chatInfo.productTitle}
                   className="w-12 h-12 object-cover rounded flex-shrink-0"
                 />
@@ -494,11 +495,11 @@ export default function ChatPage() {
                         {/* 图片消息 / Image message */}
                         {msg.messageType === 'image' ? (
                           <img
-                            src={`http://localhost:3000${msg.messageText}`}
+                            src={getImageUrl(msg.messageText)}
                             alt="图片消息"
                             className="max-w-[240px] max-h-[240px] rounded-lg object-contain cursor-pointer"
                             onClick={() =>
-                              setPreviewImage(`http://localhost:3000${msg.messageText}`)
+                              setPreviewImage(getImageUrl(msg.messageText))
                             }
                           />
                         ) : (

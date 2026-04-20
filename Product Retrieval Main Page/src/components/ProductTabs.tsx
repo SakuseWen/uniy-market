@@ -11,6 +11,7 @@ import { useAuth } from '../services/authContext';
 import apiClient from '../services/api';
 import { Loader2, MessageCircle, Reply } from 'lucide-react';
 import { TranslateButton } from './TranslateButton';
+import { getImageUrl } from '../lib/config';
 
 interface Comment {
   commentID: string;
@@ -88,7 +89,7 @@ export function ProductTabs({ description, specifications, language, listingID, 
   const renderComment = (comment: Comment, isReply = false) => (
     <div key={comment.commentID} className={`flex gap-3 ${isReply ? 'ml-12 mt-3' : 'py-4 border-b last:border-b-0'}`}>
       <Avatar className="w-8 h-8 flex-shrink-0">
-        <AvatarImage src={comment.profileImage?.startsWith('/') ? `http://localhost:3000${comment.profileImage}` : comment.profileImage || ''} />
+        <AvatarImage src={comment.profileImage?.startsWith('/') ? getImageUrl(comment.profileImage) : comment.profileImage || ''} />
         <AvatarFallback className="text-xs bg-gradient-to-br from-blue-500 to-purple-600 text-white">
           {comment.name?.substring(0, 2).toUpperCase() || 'U'}
         </AvatarFallback>
