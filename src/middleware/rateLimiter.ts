@@ -10,11 +10,20 @@ import { Request, Response } from 'express';
 
 /** 获取客户端真实 IP / Get client real IP */
 function getClientIp(req: Request): string {
-  // X-Forwarded-For 可能是逗号分隔的多个 IP，第一个是真实客户端 IP
+  // 优先使用 Nginx 设置的 X-Real-IP
+  const realIp = req.headers['x-real-ip'];
+  if (typeof realIp === 'string' && realIp) return realIp;
+
+  // 其次使用 X-Forwarded-For 的第一个 IP
   const forwarded = req.headers['x-forwarded-for'];
-  if (typeof forwarded === 'string') return forwarded.split(',')[0].trim();
+  if (typeof forwarded === 'string' && forwarded) return forwarded.split(',')[0].trim();
   if (Array.isArray(forwarded) && forwarded.length > 0) return forwarded[0].split(',')[0].trim();
-  return req.ip || req.socket?.remoteAddress || 'unknown';
+
+  // 最后使用 Express 的 req.ip（受 trust proxy 影响）
+  const ip = req.ip || req.socket?.remoteAddress || 'unknown';
+  
+  // 去掉 IPv6 前缀 ::ffff:
+  return ip.replace(/^::ffff:/, '');
 }
 
 /**

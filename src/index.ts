@@ -55,7 +55,8 @@ handleUnhandledRejection();
 handleUncaughtException();
 
 const app = express();
-app.set('trust proxy', 1);
+// Trust all proxies (AWS ALB + Nginx) to correctly read X-Forwarded-For
+app.set('trust proxy', true);
 const httpServer = createServer(app);
 const config = getProductionConfig();
 const loggingConfig = getLoggingConfig();
@@ -187,6 +188,16 @@ app.get('/api', (_req, res) => {
 });
 
 // Mount API routes
+// Debug: log client IP for rate limiter diagnosis (remove after confirming)
+app.use('/api', (req, _res, next) => {
+  const realIp = req.headers['x-real-ip'];
+  const forwarded = req.headers['x-forwarded-for'];
+  const expressIp = req.ip;
+  if (Math.random() < 0.01) { // Log 1% of requests to avoid spam
+    console.log(`[IP Debug] x-real-ip=${realIp} x-forwarded-for=${forwarded} req.ip=${expressIp}`);
+  }
+  next();
+});
 app.use('/api/auth', authLimiter, authRoutes);
 app.use('/api/auth', authLimiter, authPasswordRoutes);
 app.use('/api/products', apiLimiter, productRoutes);
