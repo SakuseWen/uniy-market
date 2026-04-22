@@ -9,6 +9,7 @@ import { useState } from 'react';
 import { Loader2 } from 'lucide-react';
 import { Language, translate } from '../lib/i18n';
 import apiClient from '../services/api';
+import { toast } from 'sonner';
 
 interface TranslateButtonProps {
   /** 待翻译的原始文本 / Original text to translate */
@@ -46,8 +47,10 @@ export function TranslateButton({ text, language, className = '' }: TranslateBut
         targetLanguage: langMap[language],
       });
       setTranslatedText(res.data.data?.translatedText || '');
-    } catch {
-      // 静默失败，不影响原文显示 / Fail silently
+    } catch (err: any) {
+      if (err?.response?.status === 401) {
+        toast.error(t('loginToTranslate'));
+      }
     } finally {
       setLoading(false);
     }

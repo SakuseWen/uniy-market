@@ -461,6 +461,16 @@ export function ProductDetailPage({
           products={relatedProducts}
           language={language}
           onProductClick={onProductClick}
+          onFavorite={async (id: string) => {
+            if (!user) { navigate('/login'); return; }
+            try {
+              await favoriteService.addFavorite(id);
+              toast.success(t('addedToFavorites'));
+            } catch (err: any) {
+              if (err?.suspendedMessage) toast.error(err.suspendedMessage);
+              else toast.error(err.response?.data?.error?.message || 'Failed');
+            }
+          }}
         />
       </div>
 

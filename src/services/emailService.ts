@@ -22,7 +22,7 @@ export function generateVerificationCode(): string {
 export async function sendVerificationEmail(to: string, code: string): Promise<boolean> {
   try {
     const { error } = await getResend().emails.send({
-      from: 'Uniy Market <onboarding@resend.dev>',
+      from: 'Uniy Market <emailService@uniymarket.com>',
       to: [to],
       subject: 'Uniy Market - Email Verification Code',
       html: `
