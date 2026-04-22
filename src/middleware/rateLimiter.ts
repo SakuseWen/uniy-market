@@ -30,7 +30,7 @@ const commonOpts = {
 export const apiLimiter = rateLimit({
   ...commonOpts,
   windowMs: 15 * 60 * 1000,
-  max: 5000,
+  max: 10000,
   handler: (_req: Request, res: Response) => {
     res.status(429).json({ success: false, error: { code: 'RATE_LIMITED', message: 'Too many requests, please try again later.', statusCode: 429 } });
   },
