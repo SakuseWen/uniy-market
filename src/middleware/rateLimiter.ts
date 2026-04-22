@@ -30,7 +30,7 @@ const commonOpts = {
 export const apiLimiter = rateLimit({
   ...commonOpts,
   windowMs: 15 * 60 * 1000,
-  max: 2000,
+  max: 5000,
   handler: (_req: Request, res: Response) => {
     res.status(429).json({ success: false, error: { code: 'RATE_LIMITED', message: 'Too many requests, please try again later.', statusCode: 429 } });
   },
@@ -39,7 +39,7 @@ export const apiLimiter = rateLimit({
 export const authLimiter = rateLimit({
   ...commonOpts,
   windowMs: 15 * 60 * 1000,
-  max: 30,
+  max: 50,
   skipSuccessfulRequests: true,
   handler: (_req: Request, res: Response) => {
     res.status(429).json({ success: false, error: { code: 'RATE_LIMITED', message: 'Too many login attempts, please try again after 15 minutes.', statusCode: 429 } });
@@ -49,7 +49,7 @@ export const authLimiter = rateLimit({
 export const uploadLimiter = rateLimit({
   ...commonOpts,
   windowMs: 60 * 60 * 1000,
-  max: 50,
+  max: 100,
   handler: (_req: Request, res: Response) => {
     res.status(429).json({ success: false, error: { code: 'RATE_LIMITED', message: 'Upload limit exceeded, please try again later.', statusCode: 429 } });
   },
@@ -58,7 +58,7 @@ export const uploadLimiter = rateLimit({
 export const searchLimiter = rateLimit({
   ...commonOpts,
   windowMs: 1 * 60 * 1000,
-  max: 60,
+  max: 120,
   handler: (_req: Request, res: Response) => {
     res.status(429).json({ success: false, error: { code: 'RATE_LIMITED', message: 'Search rate limit exceeded.', statusCode: 429 } });
   },
@@ -67,7 +67,7 @@ export const searchLimiter = rateLimit({
 export const messageLimiter = rateLimit({
   ...commonOpts,
   windowMs: 1 * 60 * 1000,
-  max: 40,
+  max: 60,
   handler: (_req: Request, res: Response) => {
     res.status(429).json({ success: false, error: { code: 'RATE_LIMITED', message: 'Message rate limit exceeded.', statusCode: 429 } });
   },
@@ -76,7 +76,7 @@ export const messageLimiter = rateLimit({
 export const adminLimiter = rateLimit({
   ...commonOpts,
   windowMs: 5 * 60 * 1000,
-  max: 100,
+  max: 200,
   handler: (_req: Request, res: Response) => {
     res.status(429).json({ success: false, error: { code: 'RATE_LIMITED', message: 'Admin action rate limit exceeded.', statusCode: 429 } });
   },
