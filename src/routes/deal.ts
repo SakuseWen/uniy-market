@@ -653,6 +653,36 @@ router.get('/product/:listingID/status', async (req: Request, res: Response) => 
 });
 
 /**
+ * POST /api/deals/batch-status
+ * 批量检查多个商品的交易状态（一次请求替代 N 次单独请求）
+ * Batch check transaction status for multiple products (replaces N individual requests)
+ */
+router.post('/batch-status', async (req: Request, res: Response) => {
+  try {
+    const { listingIDs } = req.body;
+    if (!Array.isArray(listingIDs) || listingIDs.length === 0) {
+      return res.json({ success: true, data: {} });
+    }
+    // 限制单次最多 100 个 / Limit to 100 per request
+    const ids = listingIDs.slice(0, 100);
+    const db = (await import('../config/database')).DatabaseManager.getInstance().getDatabase();
+    const placeholders = ids.map(() => '?').join(',');
+    const deals = await db.all(
+      `SELECT listingID FROM Deal WHERE listingID IN (${placeholders}) AND status = 'pending' AND notes = 'accepted'`,
+      ids
+    );
+    const inTransactionSet = new Set(deals.map((d: any) => d.listingID));
+    const result: Record<string, boolean> = {};
+    for (const id of ids) {
+      result[id] = inTransactionSet.has(id);
+    }
+    res.json({ success: true, data: result });
+  } catch (error: any) {
+    res.status(500).json({ success: false, data: {} });
+  }
+});
+
+/**
  * GET /api/deals/product/:listingID
  * Get active deal for a product
  */

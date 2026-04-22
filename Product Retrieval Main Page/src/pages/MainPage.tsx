@@ -141,16 +141,16 @@ export default function MainPage() {
     }).catch(() => {});
   }, [user, apiProducts]);
 
-  // Track products in transaction (public, works for all users)
+  // Track products in transaction — 批量接口，一次请求替代 N 次
   useEffect(() => {
     if (apiProducts.length === 0) return;
-    Promise.all(
-      apiProducts.map(p =>
-        apiClient.get(`/deals/product/${p.id}/status`).then(r => r.data.inTransaction ? p.id : null).catch(() => null)
-      )
-    ).then(results => {
-      setInTransactionIds(results.filter(Boolean) as string[]);
-    });
+    const ids = apiProducts.map(p => p.id);
+    apiClient.post('/deals/batch-status', { listingIDs: ids })
+      .then(r => {
+        const data = r.data.data || {};
+        setInTransactionIds(Object.entries(data).filter(([, v]) => v).map(([k]) => k));
+      })
+      .catch(() => {});
   }, [apiProducts]);
 
   // Filter products (client-side filtering for advanced filters)
