@@ -196,7 +196,7 @@ export class ChatModel extends BaseModel {
     const chat = await this.getChatById(chatID);
     if (!chat) return false;
 
-    const existing = chat.hiddenFor ? chat.hiddenFor.split(',').filter(Boolean) : [];
+    const existing = (chat as any).hiddenFor ? (chat as any).hiddenFor.split(',').filter(Boolean) : [];
     if (!existing.includes(userID)) {
       existing.push(userID);
     }

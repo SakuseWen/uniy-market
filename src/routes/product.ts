@@ -571,8 +571,8 @@ router.get('/',
           let sellerRating = 5;
           try {
             const ratingData = await getReviewModel().getAverageRating(product.sellerID);
-            if (ratingData && ratingData.count > 0) {
-              sellerRating = ratingData.average;
+            if (ratingData && ratingData.totalReviews > 0) {
+              sellerRating = ratingData.averageRating;
             }
           } catch (_e) {}
 

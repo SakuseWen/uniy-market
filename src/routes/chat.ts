@@ -1115,9 +1115,7 @@ router.post('/:chatId/share-location', authenticateToken, async (req: Request, r
         success: false,
         error: {
           message: validation.reason || 'Invalid location format',
-          field: 'generalArea',
-          guidelines: locationService.getLocationPrivacyGuidelines()
-        },
+        } as any,
         timestamp: new Date().toISOString()
       };
       return res.status(400).json(response);
