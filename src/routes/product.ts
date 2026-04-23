@@ -119,7 +119,11 @@ router.post('/',
         location: req.body.location,
         categoryID: req.body.categoryID,
         sellerID: user.userID,
-        status: 'active' as const
+        status: 'active' as const,
+        latitude: req.body.latitude,
+        longitude: req.body.longitude,
+        address: req.body.address,
+        deliveryType: req.body.deliveryType,
       };
 
       const product = await getProductModel().createProduct(productData);

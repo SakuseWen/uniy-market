@@ -13,8 +13,9 @@ export class ProductModel extends BaseModel {
     const result = await this.execute(
       `INSERT INTO ProductListing (
         listingID, title, description, price, stock, condition, location,
-        categoryID, sellerID, status, views, createdAt, updatedAt
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        categoryID, sellerID, status, views, deliveryType, latitude, longitude, address,
+        createdAt, updatedAt
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         listingID,
         productData.title,
@@ -27,6 +28,10 @@ export class ProductModel extends BaseModel {
         productData.sellerID,
         productData.status,
         0, // initial views
+        (productData as any).deliveryType || 'faceToFace',
+        (productData as any).latitude || null,
+        (productData as any).longitude || null,
+        (productData as any).address || null,
         now,
         now
       ]

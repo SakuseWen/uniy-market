@@ -1,14 +1,14 @@
 {
   "_comment": "Meilisearch 同义词配置 — 三语互通（中英泰），每个词的同义词列表必须包含其他两种语言的对应词",
 
-  "手机": ["phone", "smartphone", "mobile", "โทรศัพท์", "มือถือ", "iphone", "华为", "小米", "三星", "samsung", "oppo", "vivo"],
-  "phone": ["手机", "smartphone", "mobile", "โทรศัพท์", "มือถือ", "iphone"],
-  "smartphone": ["手机", "phone", "mobile", "โทรศัพท์", "มือถือ"],
-  "โทรศัพท์": ["手机", "phone", "smartphone", "mobile", "มือถือ", "iphone"],
-  "มือถือ": ["手机", "phone", "smartphone", "mobile", "โทรศัพท์", "iphone"],
-  "iphone": ["手机", "phone", "smartphone", "โทรศัพท์", "มือถือ", "apple", "苹果"],
-  "华为": ["huawei", "手机", "phone", "โทรศัพท์"],
-  "小米": ["xiaomi", "redmi", "手机", "phone", "โทรศัพท์"],
+  "手机": ["phone", "smartphone", "mobile", "โทรศัพท์", "มือถือ", "iphone", "华为", "小米", "三星", "samsung", "oppo", "vivo", "Huawei", "红米"],
+  "phone": ["手机", "smartphone", "mobile", "โทรศัพท์", "มือถือ", "iphone", "华为", "小米", "三星", "samsung", "oppo", "vivo", "Huawei", "红米"],
+  "smartphone": ["手机", "phone", "mobile", "โทรศัพท์", "มือถือ", "华为", "小米", "三星", "samsung", "oppo", "vivo", "Huawei", "红米"],
+  "โทรศัพท์": ["手机", "phone", "smartphone", "mobile", "มือถือ", "iphone", "华为", "小米", "三星", "samsung", "oppo", "vivo", "Huawei", "红米"],
+  "มือถือ": ["手机", "phone", "smartphone", "mobile", "โทรศัพท์", "iphone", "华为", "小米", "三星", "samsung", "oppo", "vivo", "Huawei", "红米"],
+  "iphone": ["手机", "phone", "smartphone", "โทรศัพท์", "มือถือ", "apple", "苹果", "华为", "小米", "三星", "samsung", "oppo", "vivo", "Huawei", "红米"],
+  "华为": ["huawei", "手机", "phone", "โทรศัพท์", "Huawei"],
+  "小米": ["xiaomi", "redmi", "手机", "phone", "โทรศัพท์", "红米", "Xiaomi", "Redmi"],
   "三星": ["samsung", "galaxy", "手机", "phone", "โทรศัพท์"],
   "samsung": ["三星", "galaxy", "手机", "phone", "โทรศัพท์"],
 
