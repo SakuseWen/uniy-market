@@ -68,8 +68,8 @@ export default function CreateProductPage() {
     location: '',
     categoryID: '',
     deliveryType: 'faceToFace',
-    latitude: 0,
-    longitude: 0,
+    latitude: 13.7942,
+    longitude: 100.3250,
     address: '',
   });
 
