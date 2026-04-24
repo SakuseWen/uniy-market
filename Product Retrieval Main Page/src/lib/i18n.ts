@@ -439,6 +439,9 @@ export const translations = {
     reviewFailed: 'Failed to submit review',
     accountSuspended: 'Your account has been suspended. You cannot perform this action. Please contact the administrator.',
     rateLimited: 'Too many requests. Please try again later.',
+    loginToTranslate: 'Please login to use the translation feature.',
+    extras: 'Extras',
+    action: 'Action',
   },
   zh: {
     // Header
@@ -878,6 +881,9 @@ export const translations = {
     reviewFailed: '评价提交失败',
     accountSuspended: '您的账户已被暂停使用，无法执行此操作。请联系管理员。',
     rateLimited: '请求过于频繁，请稍后再试。',
+    loginToTranslate: '请登录后使用翻译功能。',
+    extras: '附加信息',
+    action: '操作',
   },
   th: {
     // Header
@@ -1118,7 +1124,7 @@ export const translations = {
     delete: 'ลบ',
     unlist: 'ถอดออก',
     relist: 'วางขายอีกครั้ง',
-    active: 'ใช้งานอยู่',
+    active: 'มีสินค้า',
     inactive: 'ไม่ได้ใช้งาน',
     mAgo: 'ที่แล้ว',
     manageListings: 'จัดการรายการสินค้าของคุณ',
@@ -1317,6 +1323,9 @@ export const translations = {
     reviewFailed: 'ส่งรีวิวล้มเหลว',
     accountSuspended: 'บัญชีของคุณถูกระงับ ไม่สามารถดำเนินการนี้ได้ กรุณาติดต่อผู้ดูแลระบบ',
     rateLimited: 'คำขอมากเกินไป กรุณาลองอีกครั้งในภายหลัง',
+    loginToTranslate: 'กรุณาเข้าสู่ระบบเพื่อใช้ฟีเจอร์แปลภาษา',
+    extras: 'ข้อมูลเพิ่มเติม',
+    action: 'การดำเนินการ',
   },
 };
 

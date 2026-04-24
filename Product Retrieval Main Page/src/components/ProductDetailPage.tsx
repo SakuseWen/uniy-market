@@ -52,6 +52,7 @@ export function ProductDetailPage({
   const location = useLocation();
   const { user } = useAuth();
   const [isFavorite, setIsFavorite] = useState(false);
+  const [relatedFavIds, setRelatedFavIds] = useState<string[]>([]);
   const [deal, setDeal] = useState<any>(null);
   const [dealLoading, setDealLoading] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
@@ -67,17 +68,23 @@ export function ProductDetailPage({
   // Load deal status (public check for all users, detailed for logged-in)
   useEffect(() => {
     if (!product.id) return;
-    // Public check
     apiClient.get(`/deals/product/${product.id}/status`).then(r => {
       if (r.data.inTransaction) {
         setDeal({ status: 'pending', notes: 'accepted' });
       }
     }).catch(() => {});
-    // Detailed check for logged-in user
     if (user) {
       dealService.getDealForProduct(product.id).then(d => { if (d) setDeal(d); }).catch(() => {});
     }
   }, [user, product.id]);
+
+  // Load favorite status for related products
+  useEffect(() => {
+    if (!user || relatedProducts.length === 0) return;
+    favoriteService.checkBatch(relatedProducts.map(p => p.id)).then(result => {
+      setRelatedFavIds(Object.entries(result).filter(([, v]) => v).map(([k]) => k));
+    }).catch(() => {});
+  }, [user, relatedProducts]);
 
   const handleBuy = async () => {
     if (!user) { navigate('/login'); return; }
@@ -461,6 +468,24 @@ export function ProductDetailPage({
           products={relatedProducts}
           language={language}
           onProductClick={onProductClick}
+          favoritedIds={relatedFavIds}
+          onFavorite={async (id: string) => {
+            if (!user) { navigate('/login'); return; }
+            try {
+              if (relatedFavIds.includes(id)) {
+                await favoriteService.removeFavorite(id);
+                setRelatedFavIds(prev => prev.filter(fId => fId !== id));
+                toast.success(t('removedFromFavorites'));
+              } else {
+                await favoriteService.addFavorite(id);
+                setRelatedFavIds(prev => [...prev, id]);
+                toast.success(t('addedToFavorites'));
+              }
+            } catch (err: any) {
+              if (err?.suspendedMessage) toast.error(err.suspendedMessage);
+              else toast.error(err.response?.data?.error?.message || 'Failed');
+            }
+          }}
         />
       </div>
 

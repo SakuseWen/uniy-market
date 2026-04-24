@@ -2,160 +2,93 @@ import rateLimit from 'express-rate-limit';
 import { Request, Response } from 'express';
 
 /**
- * Rate Limiting Middleware
- * Protects against brute force and DDoS attacks
+ * Rate Limiting Middleware — 基于真实客户端 IP
+ * 通过 X-Real-IP / X-Forwarded-For 获取 Nginx 反向代理后的真实 IP
  */
 
-/**
- * General API rate limiter
- */
+/** 获取客户端真实 IP / Get client real IP */
+function getClientIp(req: Request): string {
+  const realIp = req.headers['x-real-ip'];
+  if (typeof realIp === 'string' && realIp) return realIp;
+
+  const forwarded = req.headers['x-forwarded-for'];
+  if (typeof forwarded === 'string' && forwarded) return forwarded.split(',')[0].trim();
+  if (Array.isArray(forwarded) && forwarded.length > 0) return forwarded[0].split(',')[0].trim();
+
+  const ip = req.ip || req.socket?.remoteAddress || 'unknown';
+  return ip.replace(/^::ffff:/, '');
+}
+
+/** 公共配置：禁用 express-rate-limit v7 的 X-Forwarded-For 校验（我们自己处理） */
+const commonOpts = {
+  keyGenerator: getClientIp,
+  standardHeaders: true,
+  legacyHeaders: false,
+  validate: { xForwardedForHeader: false } as any,
+};
+
 export const apiLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 500, // Limit each IP to 500 requests per windowMs
-  message: 'Too many requests from this IP, please try again later.',
-  standardHeaders: true,
-  legacyHeaders: false,
+  ...commonOpts,
+  windowMs: 15 * 60 * 1000,
+  max: 10000,
   handler: (_req: Request, res: Response) => {
-    res.status(429).json({
-      success: false,
-      error: {
-        message: 'Too many requests, please try again later.',
-        statusCode: 429,
-        retryAfter: undefined,
-      },
-    });
+    res.status(429).json({ success: false, error: { code: 'RATE_LIMITED', message: 'Too many requests, please try again later.', statusCode: 429 } });
   },
 });
 
-/**
- * Strict rate limiter for authentication endpoints
- */
 export const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 20, // Limit each IP to 20 login attempts per windowMs
-  message: 'Too many login attempts, please try again later.',
+  ...commonOpts,
+  windowMs: 15 * 60 * 1000,
+  max: 50,
   skipSuccessfulRequests: true,
-  standardHeaders: true,
-  legacyHeaders: false,
   handler: (_req: Request, res: Response) => {
-    res.status(429).json({
-      success: false,
-      error: {
-        message: 'Too many login attempts, please try again after 15 minutes.',
-        statusCode: 429,
-        retryAfter: undefined,
-      },
-    });
+    res.status(429).json({ success: false, error: { code: 'RATE_LIMITED', message: 'Too many login attempts, please try again after 15 minutes.', statusCode: 429 } });
   },
 });
 
-/**
- * Rate limiter for file uploads
- */
 export const uploadLimiter = rateLimit({
-  windowMs: 60 * 60 * 1000, // 1 hour
-  max: 20, // Limit each IP to 20 uploads per hour
-  message: 'Too many file uploads, please try again later.',
-  standardHeaders: true,
-  legacyHeaders: false,
+  ...commonOpts,
+  windowMs: 60 * 60 * 1000,
+  max: 100,
   handler: (_req: Request, res: Response) => {
-    res.status(429).json({
-      success: false,
-      error: {
-        message: 'Upload limit exceeded, please try again later.',
-        statusCode: 429,
-        retryAfter: undefined,
-      },
-    });
+    res.status(429).json({ success: false, error: { code: 'RATE_LIMITED', message: 'Upload limit exceeded, please try again later.', statusCode: 429 } });
   },
 });
 
-/**
- * Rate limiter for search endpoints
- */
 export const searchLimiter = rateLimit({
-  windowMs: 1 * 60 * 1000, // 1 minute
-  max: 30, // Limit each IP to 30 searches per minute
-  message: 'Too many search requests, please slow down.',
-  standardHeaders: true,
-  legacyHeaders: false,
+  ...commonOpts,
+  windowMs: 1 * 60 * 1000,
+  max: 120,
   handler: (_req: Request, res: Response) => {
-    res.status(429).json({
-      success: false,
-      error: {
-        message: 'Search rate limit exceeded, please try again in a moment.',
-        statusCode: 429,
-        retryAfter: undefined,
-      },
-    });
+    res.status(429).json({ success: false, error: { code: 'RATE_LIMITED', message: 'Search rate limit exceeded.', statusCode: 429 } });
   },
 });
 
-/**
- * Rate limiter for message sending
- */
 export const messageLimiter = rateLimit({
-  windowMs: 1 * 60 * 1000, // 1 minute
-  max: 20, // Limit each IP to 20 messages per minute
-  message: 'Too many messages sent, please slow down.',
-  standardHeaders: true,
-  legacyHeaders: false,
+  ...commonOpts,
+  windowMs: 1 * 60 * 1000,
+  max: 60,
   handler: (_req: Request, res: Response) => {
-    res.status(429).json({
-      success: false,
-      error: {
-        message: 'Message rate limit exceeded, please wait before sending more messages.',
-        statusCode: 429,
-        retryAfter: undefined,
-      },
-    });
+    res.status(429).json({ success: false, error: { code: 'RATE_LIMITED', message: 'Message rate limit exceeded.', statusCode: 429 } });
   },
 });
 
-/**
- * Rate limiter for admin actions
- */
 export const adminLimiter = rateLimit({
-  windowMs: 5 * 60 * 1000, // 5 minutes
-  max: 50, // Limit each IP to 50 admin actions per 5 minutes
-  message: 'Too many admin actions, please slow down.',
-  standardHeaders: true,
-  legacyHeaders: false,
+  ...commonOpts,
+  windowMs: 5 * 60 * 1000,
+  max: 200,
   handler: (_req: Request, res: Response) => {
-    res.status(429).json({
-      success: false,
-      error: {
-        message: 'Admin action rate limit exceeded.',
-        statusCode: 429,
-        retryAfter: undefined,
-      },
-    });
+    res.status(429).json({ success: false, error: { code: 'RATE_LIMITED', message: 'Admin action rate limit exceeded.', statusCode: 429 } });
   },
 });
 
-/**
- * Create custom rate limiter
- */
-export const createRateLimiter = (
-  windowMs: number,
-  max: number,
-  message: string = 'Too many requests'
-) => {
+export const createRateLimiter = (windowMs: number, max: number, message: string = 'Too many requests') => {
   return rateLimit({
+    ...commonOpts,
     windowMs,
     max,
-    message,
-    standardHeaders: true,
-    legacyHeaders: false,
     handler: (_req: Request, res: Response) => {
-      res.status(429).json({
-        success: false,
-        error: {
-          message,
-          statusCode: 429,
-          retryAfter: undefined,
-        },
-      });
+      res.status(429).json({ success: false, error: { code: 'RATE_LIMITED', message, statusCode: 429 } });
     },
   });
 };

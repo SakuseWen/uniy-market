@@ -7,7 +7,11 @@
  */
 
 /** 后端服务器基础地址（不含 /api）/ Backend server base URL (without /api) */
-export const BACKEND_URL = (import.meta as any).env?.VITE_BACKEND_URL || 'http://localhost:3000';
+const envBackend = (import.meta as any).env?.VITE_BACKEND_URL;
+const envApi = (import.meta as any).env?.VITE_API_URL;
+// 如果 VITE_API_URL 是相对路径（如 /api），说明同域部署，BACKEND_URL 为空
+export const BACKEND_URL = envBackend !== undefined ? envBackend : (envApi && envApi.startsWith('/') ? '' : 'http://localhost:3000');
+
 
 /** API 基础地址（含 /api）/ API base URL (with /api) */
 export const API_BASE_URL = (import.meta as any).env?.VITE_API_URL || `${BACKEND_URL}/api`;

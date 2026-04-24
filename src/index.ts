@@ -55,6 +55,8 @@ handleUnhandledRejection();
 handleUncaughtException();
 
 const app = express();
+// Trust all proxies (AWS ALB + Nginx) to correctly read X-Forwarded-For
+app.set('trust proxy', true);
 const httpServer = createServer(app);
 const config = getProductionConfig();
 const loggingConfig = getLoggingConfig();

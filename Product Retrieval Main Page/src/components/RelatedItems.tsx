@@ -10,9 +10,11 @@ interface RelatedItemsProps {
   products: Product[];
   language: Language;
   onProductClick: (product: Product) => void;
+  onFavorite?: (id: string) => void;
+  favoritedIds?: string[];
 }
 
-export function RelatedItems({ products, language, onProductClick }: RelatedItemsProps) {
+export function RelatedItems({ products, language, onProductClick, onFavorite, favoritedIds = [] }: RelatedItemsProps) {
   const t = (key: any) => translate(language, key);
   const [startIndex, setStartIndex] = useState(0);
   const itemsPerView = 4;
@@ -61,10 +63,10 @@ export function RelatedItems({ products, language, onProductClick }: RelatedItem
                 product={product}
                 language={language}
                 onCompare={() => {}}
-                onFavorite={() => {}}
+                onFavorite={onFavorite || (() => {})}
                 onContact={() => {}}
                 isInComparison={false}
-                isFavorited={false}
+                isFavorited={favoritedIds.includes(product.id)}
               />
             </div>
           ))}

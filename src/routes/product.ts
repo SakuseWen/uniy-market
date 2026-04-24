@@ -119,7 +119,11 @@ router.post('/',
         location: req.body.location,
         categoryID: req.body.categoryID,
         sellerID: user.userID,
-        status: 'active' as const
+        status: 'active' as const,
+        latitude: req.body.latitude,
+        longitude: req.body.longitude,
+        address: req.body.address,
+        deliveryType: req.body.deliveryType,
       };
 
       const product = await getProductModel().createProduct(productData);
@@ -571,8 +575,8 @@ router.get('/',
           let sellerRating = 5;
           try {
             const ratingData = await getReviewModel().getAverageRating(product.sellerID);
-            if (ratingData && ratingData.count > 0) {
-              sellerRating = ratingData.average;
+            if (ratingData && ratingData.totalReviews > 0) {
+              sellerRating = ratingData.averageRating;
             }
           } catch (_e) {}
 

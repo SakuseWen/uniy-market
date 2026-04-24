@@ -232,7 +232,7 @@ export function ComparisonBar({
                   ))}
                 </tr>
                 <tr className="border-b">
-                  <td className="p-3 sticky left-0 bg-white">Extras</td>
+                  <td className="p-3 sticky left-0 bg-white">{t('extras')}</td>
                   {selectedProducts.map((product) => (
                     <td key={product.id} className="p-3">
                       <div className="flex flex-wrap gap-1">
@@ -246,7 +246,7 @@ export function ComparisonBar({
                   ))}
                 </tr>
                 <tr>
-                  <td className="p-3 sticky left-0 bg-white">Action</td>
+                  <td className="p-3 sticky left-0 bg-white">{t('action')}</td>
                   {selectedProducts.map((product) => (
                     <td key={product.id} className="p-3">
                       <Button
