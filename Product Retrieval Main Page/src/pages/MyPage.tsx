@@ -1229,69 +1229,34 @@ function MyPage() {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* 8.4: 删除对话三选项弹窗 / Delete chat dialog with three options */}
+      {/* 8.4: 删除对话确认弹窗（仅单方隐藏）/ Delete chat confirmation (soft delete only) */}
       <Dialog open={!!deleteChatTarget} onOpenChange={(v: boolean) => { if (!v) setDeleteChatTarget(null); }}>
         <DialogContent className="sm:max-w-sm">
           <DialogHeader>
             <DialogTitle>{t('delete')} {t('chatHistory')}</DialogTitle>
           </DialogHeader>
-          <div className="flex flex-col gap-3 pt-2">
-            {/* 选项1: 隐藏/关闭 / Option 1: Hide/close */}
+          <p className="text-sm text-gray-600">
+            {language === 'zh' ? '删除后此对话将从您的列表中移除，对方不受影响。' : language === 'th' ? 'หลังจากลบ การสนทนานี้จะถูกลบออกจากรายการของคุณ อีกฝ่ายจะไม่ได้รับผลกระทบ' : 'This chat will be removed from your list. The other party will not be affected.'}
+          </p>
+          <div className="flex gap-3 justify-end pt-2">
+            <Button variant="ghost" onClick={() => setDeleteChatTarget(null)}>
+              {t('cancel')}
+            </Button>
             <Button
-              variant="outline"
-              className="w-full justify-start"
+              className="bg-red-600 hover:bg-red-700 text-white"
               onClick={async () => {
                 const chatId = deleteChatTarget!;
                 setDeleteChatTarget(null);
                 try {
                   await chatService.hideChat(chatId);
                   setChats((prev) => prev.filter((c) => c.chatID !== chatId));
-                  toast.success(t('productUnlisted')); // reuse "unlisted" success key
+                  toast.success(t('productDeleted'));
                 } catch (err) {
                   toast.error(t('networkError'));
                 }
               }}
             >
-              {/* 隐藏对话（软删除）/ Hide chat (soft delete) */}
-              🙈 {language === 'zh' ? '隐藏对话' : language === 'th' ? 'ซ่อนการสนทนา' : 'Hide Chat'}
-            </Button>
-
-            {/* 选项2: 永久删除 / Option 2: Hard delete */}
-            <Button
-              variant="outline"
-              className="w-full justify-start text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700"
-              onClick={async () => {
-                const chatId = deleteChatTarget!;
-                // 二次确认 / Secondary confirmation
-                const confirmed = window.confirm(
-                  language === 'zh'
-                    ? '确定要永久删除此对话吗？所有消息将被清除，无法恢复。'
-                    : language === 'th'
-                    ? 'คุณแน่ใจหรือไม่ว่าต้องการลบการสนทนานี้อย่างถาวร?'
-                    : 'Permanently delete this chat? All messages will be removed and cannot be recovered.'
-                );
-                if (!confirmed) return;
-                setDeleteChatTarget(null);
-                try {
-                  await chatService.hardDeleteChat(chatId);
-                  setChats((prev) => prev.filter((c) => c.chatID !== chatId));
-                  toast.success(t('productDeleted')); // reuse "deleted" success key
-                } catch (err) {
-                  toast.error(t('networkError'));
-                }
-              }}
-            >
-              {/* 永久删除 / Permanently delete */}
-              🗑️ {language === 'zh' ? '永久删除' : language === 'th' ? 'ลบถาวร' : 'Delete Permanently'}
-            </Button>
-
-            {/* 选项3: 取消 / Option 3: Cancel */}
-            <Button
-              variant="ghost"
-              className="w-full"
-              onClick={() => setDeleteChatTarget(null)}
-            >
-              {t('cancel')}
+              {t('delete')}
             </Button>
           </div>
         </DialogContent>
