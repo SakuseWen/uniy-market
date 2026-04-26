@@ -296,10 +296,10 @@ export function ProductDetailPage({
                 <Badge variant="secondary">{t('negotiable')}</Badge>
               )}
               <div className="flex gap-1 ml-auto">
-                {(['THB', 'CNY', 'USD'] as CurrencyCode[]).map(c => (
+                {(['CNY', 'USD'] as CurrencyCode[]).map(c => (
                   <button
                     key={c}
-                    onClick={() => setCurrency(c)}
+                    onClick={() => setCurrency(currency === c ? 'THB' : c)}
                     className={`px-2 py-0.5 text-xs rounded border transition-colors ${currency === c ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-600 border-gray-300 hover:border-blue-400'}`}
                   >
                     {LABELS[c]}
