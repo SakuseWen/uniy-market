@@ -219,9 +219,7 @@ export function ProductDetailPage({
   };
 
   const formatPrice = (price: number) => {
-    if (language === 'th') return `฿${price.toLocaleString()}`;
-    if (language === 'zh') return `¥${price.toLocaleString()}`;
-    return `$${price.toLocaleString()}`;
+    return `฿${price.toLocaleString()}`;
   };
 
   const formatDate = (dateString: string) => {
@@ -261,7 +259,7 @@ export function ProductDetailPage({
         {/* Back Button */}
         <Button variant="ghost" onClick={onBack} className="mb-4">
           <ChevronLeft className="w-4 h-4 mr-1" />
-          Back to listings
+          {t('backToProducts')}
         </Button>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
