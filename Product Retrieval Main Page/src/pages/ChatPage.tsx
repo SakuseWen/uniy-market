@@ -415,7 +415,7 @@ export default function ChatPage() {
               <div className="flex-1">
                 <p className="font-semibold text-sm">{chatInfo.productTitle}</p>
                 <p className="text-blue-600 font-semibold">
-                  ${chatInfo.productPrice}
+                  ฿{chatInfo.productPrice}
                 </p>
               </div>
               <Badge variant="secondary" className="text-xs">

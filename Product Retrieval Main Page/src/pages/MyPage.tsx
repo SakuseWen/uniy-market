@@ -735,7 +735,7 @@ function MyPage() {
                           <div className="flex items-start justify-between mb-2">
                             <div>
                               <h3 className="text-lg font-semibold">{product.title}</h3>
-                              <p className="text-2xl font-bold text-blue-600 mt-1">${product.price.toFixed(2)}</p>
+                              <p className="text-2xl font-bold text-blue-600 mt-1">฿{product.price.toFixed(2)}</p>
                             </div>
                             <Badge className={getStatusColor(product.status)}>
                               {getStatusLabel(product.status)}
@@ -837,7 +837,7 @@ function MyPage() {
                         </div>
                         <div className="flex-1">
                           <h3 className="font-semibold">{fav.title}</h3>
-                          <p className="text-lg font-bold text-blue-600 mt-1">${fav.price?.toFixed(2)}</p>
+                          <p className="text-lg font-bold text-blue-600 mt-1">฿{fav.price?.toFixed(2)}</p>
                           <span className="text-sm text-gray-500">{fav.condition === 'new' ? t('new') : fav.condition === 'like_new' ? t('ninetyNew') : t('eightyNew')}</span>
                         </div>
                         <Button
@@ -926,6 +926,15 @@ function MyPage() {
                               <AvatarFallback className="text-xs bg-gradient-to-br from-blue-500 to-purple-600 text-white">{deal.buyerName?.substring(0, 2).toUpperCase()}</AvatarFallback>
                             </Avatar>
                             <span className="text-blue-600 hover:underline font-medium">{t('buyer')}: {deal.buyerName}</span>
+                          </div>
+                        )}
+                        {!isSeller && deal.sellerName && (
+                          <div className="flex items-center gap-2 mb-2 cursor-pointer" onClick={(e) => { e.stopPropagation(); navigate(`/seller/${deal.sellerID}`); }}>
+                            <Avatar className="w-7 h-7">
+                              <AvatarImage src={deal.sellerProfileImage?.startsWith('/') ? getImageUrl(deal.sellerProfileImage) : ''} />
+                              <AvatarFallback className="text-xs bg-gradient-to-br from-blue-500 to-purple-600 text-white">{deal.sellerName?.substring(0, 2).toUpperCase()}</AvatarFallback>
+                            </Avatar>
+                            <span className="text-blue-600 hover:underline font-medium">{t('seller')}: {deal.sellerName}</span>
                           </div>
                         )}
                         <div className="flex gap-2">

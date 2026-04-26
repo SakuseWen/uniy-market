@@ -285,7 +285,7 @@ export default function SellerProfilePage() {
                     </div>
                     <div className="flex-1">
                       <h3 className="font-semibold">{product.title}</h3>
-                      <p className="text-lg font-bold text-blue-600 mt-1">${product.price.toFixed(2)}</p>
+                      <p className="text-lg font-bold text-blue-600 mt-1">฿{product.price.toFixed(2)}</p>
                       <div className="flex gap-3 text-sm text-gray-500 mt-1">
                         <span>{t('condition')}: {getConditionLabel(product.condition)}</span>
                         <span>{t('posted')}: {new Date(product.createdAt).toLocaleDateString()}</span>

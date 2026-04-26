@@ -98,7 +98,7 @@ export function ComparisonBar({
                       <div className="flex-1 min-w-0">
                         <p className="text-sm truncate">{getTitle(product)}</p>
                         <div className="flex items-center gap-2 text-xs text-gray-600">
-                          <span className="text-blue-600">${product.price}</span>
+                          <span className="text-blue-600">฿{product.price}</span>
                           <span>•</span>
                           <span>{t(product.condition as any)}</span>
                           <span>•</span>
@@ -170,7 +170,7 @@ export function ComparisonBar({
                   <td className="p-3 sticky left-0 bg-white">{t('price')}</td>
                   {selectedProducts.map((product) => (
                     <td key={product.id} className="p-3">
-                      <span className="text-blue-600">${product.price}</span>
+                      <span className="text-blue-600">฿{product.price}</span>
                       {product.negotiable && (
                         <Badge variant="outline" className="ml-2 text-xs">
                           {t('negotiable')}

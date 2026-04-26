@@ -266,7 +266,7 @@ export default function AdminPage() {
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="font-semibold truncate">{p.title}</p>
-                          <p className="text-sm text-gray-500">${p.price} · {p.condition} · Seller: {p.sellerName || p.sellerID}</p>
+                          <p className="text-sm text-gray-500">฿{p.price} · {p.condition} · Seller: {p.sellerName || p.sellerID}</p>
                         </div>
                         <Badge className={p.status === 'active' ? 'bg-green-100 text-green-700' : p.status === 'sold' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-600'}>
                           {p.status}
@@ -280,7 +280,7 @@ export default function AdminPage() {
                           <p>ID: {p.listingID}</p>
                           <p>Title: {p.title}</p>
                           <p>Description: {p.description || 'N/A'}</p>
-                          <p>Price: ${p.price}</p>
+                          <p>Price: ฿{p.price}</p>
                           <p>Condition: {p.condition}</p>
                           <p>Status: {p.status}</p>
                           <p>Location: {p.location || 'N/A'}</p>

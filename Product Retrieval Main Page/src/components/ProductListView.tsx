@@ -73,7 +73,7 @@ export function ProductListView({
 
             {/* Price and Badges */}
             <div className="flex items-center gap-3 mb-2">
-              <span className="text-blue-600">${product.price}</span>
+              <span className="text-blue-600">฿{product.price}</span>
               {product.negotiable && (
                 <Badge variant="outline" className="text-xs">
                   {t('negotiable')}
