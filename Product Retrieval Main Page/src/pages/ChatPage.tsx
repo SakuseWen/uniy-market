@@ -419,7 +419,7 @@ export default function ChatPage() {
                 </p>
               </div>
               <Badge variant="secondary" className="text-xs">
-                {chatInfo.productStatus}
+                {t(chatInfo.productStatus as any) || chatInfo.productStatus}
               </Badge>
             </div>
           </div>
