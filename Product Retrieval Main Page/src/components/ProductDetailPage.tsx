@@ -19,6 +19,7 @@ import { ProductTabs } from './ProductTabs';
 import { SafetyNotice } from './SafetyNotice';
 import { RelatedItems } from './RelatedItems';
 import { TranslateButton } from './TranslateButton';
+import { CurrencyCode, convertPrice, formatCurrency, LABELS } from '../lib/currency';
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -56,6 +57,8 @@ export function ProductDetailPage({
   const [deal, setDeal] = useState<any>(null);
   const [dealLoading, setDealLoading] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
+  const [currency, setCurrency] = useState<CurrencyCode>('THB');
+  const [convertedPrice, setConvertedPrice] = useState<number | null>(null);
 
   // Check if product is favorited
   useEffect(() => {
@@ -218,6 +221,12 @@ export function ProductDetailPage({
     return product.description;
   };
 
+  // 汇率转换 / Currency conversion
+  useEffect(() => {
+    if (currency === 'THB') { setConvertedPrice(null); return; }
+    convertPrice(product.price, currency).then(setConvertedPrice);
+  }, [currency, product.price]);
+
   const formatPrice = (price: number) => {
     return `฿${price.toLocaleString()}`;
   };
@@ -277,12 +286,26 @@ export function ProductDetailPage({
             <h1 className="mb-1">{getLocalizedTitle()}</h1>
             <TranslateButton text={product.title} language={language} className="mb-4" />
 
-            {/* Price */}
-            <div className="flex items-baseline gap-3 mb-4">
-              <span className="text-blue-600">{formatPrice(product.price)}</span>
+            {/* Price + Currency Switcher */}
+            <div className="flex flex-wrap items-baseline gap-3 mb-4">
+              <span className="text-blue-600 text-2xl font-bold">{formatPrice(product.price)}</span>
+              {convertedPrice !== null && (
+                <span className="text-gray-500 text-lg">≈ {formatCurrency(convertedPrice, currency)}</span>
+              )}
               {product.negotiable && (
                 <Badge variant="secondary">{t('negotiable')}</Badge>
               )}
+              <div className="flex gap-1 ml-auto">
+                {(['THB', 'CNY', 'USD'] as CurrencyCode[]).map(c => (
+                  <button
+                    key={c}
+                    onClick={() => setCurrency(c)}
+                    className={`px-2 py-0.5 text-xs rounded border transition-colors ${currency === c ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-600 border-gray-300 hover:border-blue-400'}`}
+                  >
+                    {LABELS[c]}
+                  </button>
+                ))}
+              </div>
             </div>
 
             {/* Key Info Grid */}
