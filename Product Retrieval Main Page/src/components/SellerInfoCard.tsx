@@ -72,7 +72,7 @@ export function SellerInfoCard({ seller, language, listingId }: SellerInfoCardPr
 
               {seller.totalTrades !== undefined && (
                 <div>
-                  <div className="text-gray-500">Trades</div>
+                  <div className="text-gray-500">{t('successfulTrades')}</div>
                   <div>{seller.totalTrades} {t('successfulTrades')}</div>
                 </div>
               )}
