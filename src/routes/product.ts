@@ -11,6 +11,7 @@ import { validateLocationPrivacy } from '../middleware/locationValidation';
 import { moderateProductContent, logFlaggedContent } from '../middleware/contentModeration';
 import { meilisearchService, toMeiliProduct } from '../services/MeilisearchService';
 import path from 'path';
+import { DatabaseManager } from '../config/database';
 
 const router = express.Router();
 let productModel: ProductModel | null = null;
@@ -197,6 +198,19 @@ router.get('/:id', async (req, res) => {
     // Get seller reputation
     const sellerReputation = await getUserModel().getUserReputation(seller.userID);
 
+    // Get seller completed trade count
+    let totalTrades = 0;
+    try {
+      const db = DatabaseManager.getInstance().getDatabase();
+      const tradeRow = await db.get(
+        `SELECT COUNT(*) as cnt FROM Deal WHERE (buyerID = ? OR sellerID = ?) AND status = 'completed'`,
+        [seller.userID, seller.userID]
+      );
+      totalTrades = tradeRow?.cnt || 0;
+    } catch (err) {
+      console.error('Failed to get seller trade count:', err);
+    }
+
     // Get product images
     const images = await getProductModel().getProductImages(product.listingID);
 
@@ -214,7 +228,9 @@ router.get('/:id', async (req, res) => {
       name: seller.name,
       profileImage: seller.profileImage,
       isVerified: seller.isVerified,
-      reputation: sellerReputation
+      reputation: sellerReputation,
+      totalTrades,
+      createdAt: seller.createdAt,
     };
 
     return res.json({

@@ -49,8 +49,8 @@ export function ComparisonBar({
         setShowComparison(false);
         navigate(`/chat/${chatID}`, { state: { from: location.pathname + location.search } });
       }
-    } catch {
-      toast.error('无法发起对话，请稍后重试');
+    } catch (err: any) {
+      toast.error(err?.friendlyMessage || err?.suspendedMessage || '无法发起对话，请稍后重试');
     } finally {
       setContactingId(null);
     }

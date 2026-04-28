@@ -249,7 +249,7 @@ export default function MainPage() {
       const chatID = res.data.data?.chatID;
       navigate(`/chat/${chatID}`);
     } catch (err: any) {
-      toast.error(err?.suspendedMessage || '无法发起对话，请稍后重试');
+      toast.error(err?.friendlyMessage || err?.suspendedMessage || '无法发起对话，请稍后重试');
     } finally {
       setContactingId(null);
     }

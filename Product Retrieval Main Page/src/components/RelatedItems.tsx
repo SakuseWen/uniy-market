@@ -5,6 +5,11 @@ import { Language, translate } from '../lib/i18n';
 import { ProductCard } from './ProductCard';
 import { Button } from './ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
+import { useComparison } from '../lib/ComparisonContext';
+import { useNavigate, useLocation } from 'react-router';
+import { useAuth } from '../services/authContext';
+import { chatService } from '../services/chatService';
+import { toast } from 'sonner';
 
 interface RelatedItemsProps {
   products: Product[];
@@ -17,7 +22,25 @@ interface RelatedItemsProps {
 export function RelatedItems({ products, language, onProductClick, onFavorite, favoritedIds = [] }: RelatedItemsProps) {
   const t = (key: any) => translate(language, key);
   const [startIndex, setStartIndex] = useState(0);
+  const { toggleProduct, isInComparison } = useComparison();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { user } = useAuth();
   const itemsPerView = 4;
+
+  const handleContact = async (product: Product) => {
+    if (!user) { navigate('/login'); return; }
+    if (!product.seller?.id) return;
+    try {
+      const res = await chatService.createOrGetChat(product.id, product.seller.id);
+      const chatID = res.data.data?.chatID;
+      if (chatID) {
+        navigate(`/chat/${chatID}`, { state: { from: location.pathname } });
+      }
+    } catch (err: any) {
+      toast.error(err?.friendlyMessage || err?.suspendedMessage || err?.response?.data?.error?.message || 'Failed to open chat');
+    }
+  };
 
   const canScrollLeft = startIndex > 0;
   const canScrollRight = startIndex + itemsPerView < products.length;
@@ -62,10 +85,10 @@ export function RelatedItems({ products, language, onProductClick, onFavorite, f
               <ProductCard
                 product={product}
                 language={language}
-                onCompare={() => {}}
+                onCompare={() => toggleProduct(product)}
                 onFavorite={onFavorite || (() => {})}
-                onContact={() => {}}
-                isInComparison={false}
+                onContact={() => handleContact(product)}
+                isInComparison={isInComparison(product.id)}
                 isFavorited={favoritedIds.includes(product.id)}
               />
             </div>

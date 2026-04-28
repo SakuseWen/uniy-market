@@ -436,6 +436,7 @@ export const translations = {
     // Contact links / 联系链接
     contactBuyer: 'Contact Buyer',
     cannotBuyOwnProduct: 'You cannot buy your own product',
+    cannotChatSelf: 'You cannot start a chat with yourself',
     reviewFailed: 'Failed to submit review',
     accountSuspended: 'Your account has been suspended. You cannot perform this action. Please contact the administrator.',
     rateLimited: 'Too many requests. Please try again later.',
@@ -878,6 +879,7 @@ export const translations = {
     // Contact links / 联系链接
     contactBuyer: '联系买家',
     cannotBuyOwnProduct: '您不能购买自己的商品',
+    cannotChatSelf: '您不能与自己发起聊天',
     reviewFailed: '评价提交失败',
     accountSuspended: '您的账户已被暂停使用，无法执行此操作。请联系管理员。',
     rateLimited: '请求过于频繁，请稍后再试。',
@@ -1320,6 +1322,7 @@ export const translations = {
     // Contact links / 联系链接
     contactBuyer: 'ติดต่อผู้ซื้อ',
     cannotBuyOwnProduct: 'คุณไม่สามารถซื้อสินค้าของตัวเองได้',
+    cannotChatSelf: 'คุณไม่สามารถเริ่มแชทกับตัวเองได้',
     reviewFailed: 'ส่งรีวิวล้มเหลว',
     accountSuspended: 'บัญชีของคุณถูกระงับ ไม่สามารถดำเนินการนี้ได้ กรุณาติดต่อผู้ดูแลระบบ',
     rateLimited: 'คำขอมากเกินไป กรุณาลองอีกครั้งในภายหลัง',

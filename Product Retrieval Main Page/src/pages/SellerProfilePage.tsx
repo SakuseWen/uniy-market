@@ -72,8 +72,8 @@ export default function SellerProfilePage() {
       const res = await chatService.createOrGetChat(listingID, sellerId);
       const chatID = res.data.data?.chatID;
       if (chatID) navigate(`/chat/${chatID}`, { state: { from: location.pathname + location.search } });
-    } catch {
-      toast.error(language === 'zh' ? '发起对话失败，请稍后重试' : 'Failed to start chat');
+    } catch (err: any) {
+      toast.error(err?.friendlyMessage || err?.suspendedMessage || (language === 'zh' ? '发起对话失败，请稍后重试' : 'Failed to start chat'));
     } finally {
       setContactingProductId(null);
     }
@@ -109,13 +109,10 @@ export default function SellerProfilePage() {
       const chatID = res.data.data?.chatID;
       if (chatID) navigate(`/chat/${chatID}`, { state: { from: location.pathname + location.search } });
     } catch (err: any) {
-      const status = err?.response?.status;
       if (err?.suspendedMessage) {
         toast.error(err.suspendedMessage);
-      } else if (status === 403) {
-        toast.error(
-          language === 'zh' ? '不能与自己发起对话' : language === 'th' ? 'ไม่สามารถเริ่มแชทกับตัวเองได้' : 'Cannot start a chat with yourself'
-        );
+      } else if (err?.friendlyMessage) {
+        toast.error(err.friendlyMessage);
       } else {
         toast.error(language === 'zh' ? '发起对话失败，请稍后重试' : language === 'th' ? 'เริ่มแชทล้มเหลว กรุณาลองอีกครั้ง' : 'Failed to start chat');
       }

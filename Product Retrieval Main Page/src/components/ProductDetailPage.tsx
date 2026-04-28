@@ -198,13 +198,12 @@ export function ProductDetailPage({
       navigate(`/chat/${chatID}`, { state: { from: location.pathname + location.search } });
     } catch (err: any) {
       // 后端返回 403 表示自聊天被拒绝或账户被暂停 / Backend 403 means self-chat rejected or account suspended
-      const status = err?.response?.status;
       if (err?.suspendedMessage) {
         toast.error(err.suspendedMessage);
-      } else if (status === 403) {
-        toast.error(err?.response?.data?.message || 'Cannot start a chat with yourself');
+      } else if (err?.friendlyMessage) {
+        toast.error(err.friendlyMessage);
       } else {
-        toast.error('Failed to open chat. Please try again.');
+        toast.error(err?.response?.data?.error?.message || 'Failed to open chat');
       }
     }
   };

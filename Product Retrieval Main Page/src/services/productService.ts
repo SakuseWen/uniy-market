@@ -29,6 +29,8 @@ interface BackendProduct {
     profileImage?: string;
     isVerified: boolean;
     rating?: number;
+    totalTrades?: number;
+    createdAt?: string;
   };
   category?: {
     categoryID: number;
@@ -106,13 +108,13 @@ function transformProduct(backendProduct: BackendProduct): Product {
     seller: {
       id: backendProduct.seller?.userID || '',
       name: backendProduct.seller?.name || 'Unknown',
-      avatar: backendProduct.seller?.profileImage || '',
+      avatar: backendProduct.seller?.profileImage ? getImageUrl(backendProduct.seller.profileImage) : '',
       role: 'student' as const,
       verified: backendProduct.seller?.isVerified || false,
       rating: backendProduct.seller?.rating || 5,
-      totalTrades: undefined,
+      totalTrades: backendProduct.seller?.totalTrades,
       responseTime: undefined,
-      joinDate: undefined,
+      joinDate: backendProduct.seller?.createdAt,
     },
     deliveryType: backendProduct.deliveryType ? [backendProduct.deliveryType] : ['faceToFace'],
     badges: [],
