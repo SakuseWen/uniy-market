@@ -11,6 +11,8 @@ import ProductPage from './pages/ProductPage';
 import AdminPage from './pages/AdminPage';
 import HelpCenterPage from './pages/HelpCenterPage';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
+import TermsOfServicePage from './pages/TermsOfServicePage';
+import PrivacyPolicyPage from './pages/PrivacyPolicyPage';
 
 export const router = createBrowserRouter([
   { path: '/', Component: MainPage },
@@ -25,4 +27,6 @@ export const router = createBrowserRouter([
   { path: '/product/:productId', Component: ProductPage },
   { path: '/admin', Component: AdminPage },
   { path: '/help', Component: HelpCenterPage },
+  { path: '/terms', Component: TermsOfServicePage },
+  { path: '/privacy', Component: PrivacyPolicyPage },
 ]);
