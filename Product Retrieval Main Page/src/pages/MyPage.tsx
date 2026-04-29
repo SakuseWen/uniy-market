@@ -524,29 +524,31 @@ function MyPage() {
             </div>
           ) : (
             /* View Mode */
-            <div className="flex items-center gap-6">
-              <Avatar className="w-20 h-20 flex-shrink-0">
-                <AvatarImage src={user?.profileImage ? getImageUrl(user.profileImage) : ''} />
-                <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white text-xl">
-                  {user?.name ? user.name.substring(0, 2).toUpperCase() : 'U'}
-                </AvatarFallback>
-              </Avatar>
-              <div className="flex flex-col justify-center gap-1 flex-1">
-                <p className="text-xl font-bold">{user?.name || 'User'}</p>
-                <p className="text-sm text-gray-500">{user?.email || ''}</p>
-                {user?.bio && <p className="text-sm text-gray-600 mt-1">{user.bio}</p>}
+            <div className="flex flex-col md:flex-row md:items-center gap-4 md:gap-6">
+              <div className="flex items-center gap-4 md:gap-6 flex-1 min-w-0">
+                <Avatar className="w-16 h-16 md:w-20 md:h-20 flex-shrink-0">
+                  <AvatarImage src={user?.profileImage ? getImageUrl(user.profileImage) : ''} />
+                  <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white text-xl">
+                    {user?.name ? user.name.substring(0, 2).toUpperCase() : 'U'}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex flex-col justify-center gap-1 flex-1 min-w-0">
+                  <p className="text-xl font-bold truncate">{user?.name || 'User'}</p>
+                  <p className="text-sm text-gray-500 truncate">{user?.email || ''}</p>
+                  {user?.bio && <p className="text-sm text-gray-600 mt-1 line-clamp-2">{user.bio}</p>}
+                </div>
               </div>
-              <div className="flex flex-col gap-2">
-                <Button variant="outline" size="sm" onClick={() => { setIsEditing(true); setEditName(user?.name || ''); setEditBio(user?.bio || ''); }} className="gap-1">
-                  <Edit2 className="w-4 h-4" /> {t('editProfile')}
+              <div className="flex flex-wrap gap-2 md:flex-col md:flex-nowrap md:flex-shrink-0">
+                <Button variant="outline" size="sm" onClick={() => { setIsEditing(true); setEditName(user?.name || ''); setEditBio(user?.bio || ''); }} className="gap-1 text-xs md:text-sm">
+                  <Edit2 className="w-3.5 h-3.5 md:w-4 md:h-4" /> {t('editProfile')}
                 </Button>
                 {user?.eduVerified ? (
-                  <Badge variant="secondary" className="gap-1 py-1.5 px-3">
-                    <GraduationCap className="w-4 h-4 text-green-600" />
+                  <Badge variant="secondary" className="gap-1 py-1 md:py-1.5 px-2 md:px-3 text-xs md:text-sm">
+                    <GraduationCap className="w-3.5 h-3.5 md:w-4 md:h-4 text-green-600" />
                     <span className="text-green-600">✓</span> {t('eduVerified')}
                   </Badge>
                 ) : (
-                  <Button variant="outline" size="sm" className="gap-1" onClick={() => {
+                  <Button variant="outline" size="sm" className="gap-1 text-xs md:text-sm" onClick={() => {
                     if ((user as any)?.status === 'suspended') {
                       const lang = localStorage.getItem('preferredLanguage') as any || 'en';
                       const msgs: Record<string, string> = {
@@ -559,11 +561,11 @@ function MyPage() {
                     }
                     setEduStep('email');
                   }}>
-                    <GraduationCap className="w-4 h-4" /> {t('eduVerification')}
+                    <GraduationCap className="w-3.5 h-3.5 md:w-4 md:h-4" /> {t('eduVerification')}
                   </Button>
                 )}
-                <Button variant="outline" size="sm" className="gap-1 text-red-500 border-red-200 hover:bg-red-50 hover:text-red-600" onClick={() => setDeleteStep('notice')}>
-                  <UserX className="w-4 h-4" /> {t('deleteAccount')}
+                <Button variant="outline" size="sm" className="gap-1 text-red-500 border-red-200 hover:bg-red-50 hover:text-red-600 text-xs md:text-sm" onClick={() => setDeleteStep('notice')}>
+                  <UserX className="w-3.5 h-3.5 md:w-4 md:h-4" /> {t('deleteAccount')}
                 </Button>
               </div>
             </div>
