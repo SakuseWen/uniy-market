@@ -22,6 +22,8 @@ const SOCKET_URL =
 interface UseChatSocketOptions {
   /** Called when a new message arrives from the server / 收到服务器推送的新消息时调用 */
   onNewMessage: (msg: MessageDetail) => void;
+  /** Called when messages are marked as read by the other party / 对方已读消息时调用 */
+  onMessagesRead?: (data: { userId: string; chatId: string; count: number }) => void;
   /** Called when the WebSocket connection fails / WebSocket 连接失败时调用 */
   onConnectionError?: (err: Error) => void;
 }
@@ -35,17 +37,22 @@ interface UseChatSocketReturn {
 
 export function useChatSocket(
   chatId: string | undefined,
-  { onNewMessage, onConnectionError }: UseChatSocketOptions
+  { onNewMessage, onMessagesRead, onConnectionError }: UseChatSocketOptions
 ): UseChatSocketReturn {
   const socketRef = useRef<Socket | null>(null);
   const isConnectedRef = useRef(false);
 
-  // ─── 11.1 修复闭包陷阱：用 ref 持有最新的 onNewMessage ────────────────────
-  // Fix closure trap: hold the latest onNewMessage in a ref
+  // ─── 11.1 修复闭包陷阱：用 ref 持有最新的回调 ────────────────────
+  // Fix closure trap: hold the latest callbacks in refs
   const onNewMessageRef = useRef(onNewMessage);
   useEffect(() => {
     onNewMessageRef.current = onNewMessage;
   }, [onNewMessage]);
+
+  const onMessagesReadRef = useRef(onMessagesRead);
+  useEffect(() => {
+    onMessagesReadRef.current = onMessagesRead;
+  }, [onMessagesRead]);
 
   useEffect(() => {
     if (!chatId) return;
@@ -74,6 +81,11 @@ export function useChatSocket(
     // Call the latest onNewMessage via ref to avoid stale closure capture
     socket.on('new_message', (msg: MessageDetail) => {
       onNewMessageRef.current(msg);
+    });
+
+    // 监听已读回执 / Listen for read receipt events
+    socket.on('messages_read', (data: { userId: string; chatId: string; count: number }) => {
+      onMessagesReadRef.current?.(data);
     });
 
     // Handle connection errors / 处理连接错误
