@@ -107,7 +107,7 @@ export default function LoginPage() {
   const langLabel = language === 'en' ? 'English' : language === 'zh' ? '中文' : 'ไทย';
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 flex items-center justify-center p-4 pt-20 md:pt-4">
       {/* Logo 和语言切换器 / Logo and Language Switcher */}
       <div className="absolute top-8 left-8 right-8 flex items-center justify-between">
         <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate('/')}>

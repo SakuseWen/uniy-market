@@ -747,9 +747,9 @@ function MyPage() {
                             <span>{t('condition')}: {getConditionLabel(product.condition)}</span>
                             <span>{t('posted')}: {new Date(product.createdAt).toLocaleDateString()}</span>
                           </div>
-                          <div className="flex gap-2">
-                            <Button variant="outline" size="sm" onClick={() => navigate(`/edit-product/${product.listingID}`)} className="gap-2">
-                              <Edit2 className="w-4 h-4" /> {t('edit')}
+                          <div className="flex flex-wrap gap-2">
+                            <Button variant="outline" size="sm" onClick={() => navigate(`/edit-product/${product.listingID}`)} className="gap-1 text-xs md:text-sm md:gap-2">
+                              <Edit2 className="w-3.5 h-3.5 md:w-4 md:h-4" /> {t('edit')}
                             </Button>
                             {product.status === 'active' ? (
                               <Button
@@ -790,8 +790,8 @@ function MyPage() {
                                 {t('relist')}
                               </Button>
                             ) : null}
-                            <Button variant="destructive" size="sm" onClick={() => setDeleteConfirm(product.listingID)} className="gap-2">
-                              <Trash2 className="w-4 h-4" /> {t('delete')}
+                            <Button variant="destructive" size="sm" onClick={() => setDeleteConfirm(product.listingID)} className="gap-1 text-xs md:text-sm md:gap-2">
+                              <Trash2 className="w-3.5 h-3.5 md:w-4 md:h-4" /> {t('delete')}
                             </Button>
                           </div>
                         </div>
