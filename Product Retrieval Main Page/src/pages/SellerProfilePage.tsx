@@ -185,7 +185,7 @@ export default function SellerProfilePage() {
     <div className="min-h-screen bg-gray-50">
       <Toaster position="top-right" />
       <Header language={language} onLanguageChange={setLanguage} unreadMessages={0} />
-      <div className="container mx-auto px-4 py-8 max-w-3xl">
+      <div className="container mx-auto px-4 py-8">
         <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-blue-600 hover:text-blue-700 mb-6">
           <ArrowLeft className="w-4 h-4" />
           {t('back') || 'Back'}

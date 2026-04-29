@@ -161,7 +161,7 @@ export default function HelpCenterPage() {
         <Header language={language} onLanguageChange={setLanguage} />
       </div>
 
-      <div className="container mx-auto px-4 py-8 max-w-3xl space-y-6">
+      <div className="container mx-auto px-4 py-8 space-y-6">
         <div className="text-center mb-2">
           <h1 className="text-2xl font-semibold flex items-center justify-center gap-2"><HelpCircle className="w-6 h-6 text-blue-600" />{c.title}</h1>
           <p className="text-gray-500 mt-1">{c.subtitle}</p>
