@@ -524,29 +524,33 @@ function MyPage() {
             </div>
           ) : (
             /* View Mode */
-            <div className="flex items-center gap-6">
-              <Avatar className="w-20 h-20 flex-shrink-0">
-                <AvatarImage src={user?.profileImage ? getImageUrl(user.profileImage) : ''} />
-                <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white text-xl">
-                  {user?.name ? user.name.substring(0, 2).toUpperCase() : 'U'}
-                </AvatarFallback>
-              </Avatar>
-              <div className="flex flex-col justify-center gap-1 flex-1">
-                <p className="text-xl font-bold">{user?.name || 'User'}</p>
-                <p className="text-sm text-gray-500">{user?.email || ''}</p>
-                {user?.bio && <p className="text-sm text-gray-600 mt-1">{user.bio}</p>}
+            <div className="flex flex-col md:flex-row md:items-center gap-4 md:gap-6">
+              {/* 头像 + 信息 */}
+              <div className="flex items-center gap-4 md:gap-6 flex-1 min-w-0">
+                <Avatar className="w-14 h-14 md:w-20 md:h-20 flex-shrink-0">
+                  <AvatarImage src={user?.profileImage ? getImageUrl(user.profileImage) : ''} />
+                  <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white text-lg md:text-xl">
+                    {user?.name ? user.name.substring(0, 2).toUpperCase() : 'U'}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex flex-col justify-center gap-0.5 md:gap-1 flex-1 min-w-0">
+                  <p className="text-base md:text-xl font-bold truncate">{user?.name || 'User'}</p>
+                  <p className="text-xs md:text-sm text-gray-500 truncate">{user?.email || ''}</p>
+                  {user?.bio && <p className="text-xs md:text-sm text-gray-600 mt-1 line-clamp-2">{user.bio}</p>}
+                </div>
               </div>
-              <div className="flex flex-col gap-2">
-                <Button variant="outline" size="sm" onClick={() => { setIsEditing(true); setEditName(user?.name || ''); setEditBio(user?.bio || ''); }} className="gap-1">
-                  <Edit2 className="w-4 h-4" /> {t('editProfile')}
+              {/* 操作按钮：移动端横排换行，PC端竖排靠右 */}
+              <div className="flex flex-wrap gap-2 md:flex-col md:flex-nowrap md:items-end flex-shrink-0">
+                <Button variant="outline" size="sm" onClick={() => { setIsEditing(true); setEditName(user?.name || ''); setEditBio(user?.bio || ''); }} className="gap-1 text-xs md:text-sm h-7 md:h-9 px-2 md:px-3">
+                  <Edit2 className="w-3.5 h-3.5 md:w-4 md:h-4" /> {t('editProfile')}
                 </Button>
                 {user?.eduVerified ? (
-                  <Badge variant="secondary" className="gap-1 py-1.5 px-3">
-                    <GraduationCap className="w-4 h-4 text-green-600" />
+                  <Badge variant="secondary" className="gap-1 py-1 md:py-1.5 px-2 md:px-3 text-xs md:text-sm">
+                    <GraduationCap className="w-3.5 h-3.5 md:w-4 md:h-4 text-green-600" />
                     <span className="text-green-600">✓</span> {t('eduVerified')}
                   </Badge>
                 ) : (
-                  <Button variant="outline" size="sm" className="gap-1" onClick={() => {
+                  <Button variant="outline" size="sm" className="gap-1 text-xs md:text-sm h-7 md:h-9 px-2 md:px-3" onClick={() => {
                     if ((user as any)?.status === 'suspended') {
                       const lang = localStorage.getItem('preferredLanguage') as any || 'en';
                       const msgs: Record<string, string> = {
@@ -559,11 +563,11 @@ function MyPage() {
                     }
                     setEduStep('email');
                   }}>
-                    <GraduationCap className="w-4 h-4" /> {t('eduVerification')}
+                    <GraduationCap className="w-3.5 h-3.5 md:w-4 md:h-4" /> {t('eduVerification')}
                   </Button>
                 )}
-                <Button variant="outline" size="sm" className="gap-1 text-red-500 border-red-200 hover:bg-red-50 hover:text-red-600" onClick={() => setDeleteStep('notice')}>
-                  <UserX className="w-4 h-4" /> {t('deleteAccount')}
+                <Button variant="outline" size="sm" className="gap-1 text-red-500 border-red-200 hover:bg-red-50 hover:text-red-600 text-xs md:text-sm h-7 md:h-9 px-2 md:px-3" onClick={() => setDeleteStep('notice')}>
+                  <UserX className="w-3.5 h-3.5 md:w-4 md:h-4" /> {t('deleteAccount')}
                 </Button>
               </div>
             </div>
@@ -713,39 +717,39 @@ function MyPage() {
               <div className="grid gap-4">
                 {products.map((product: any) => (
                   <Card key={product.listingID} className="hover:shadow-lg transition-shadow">
-                    <CardContent className="p-6">
-                      <div className="flex gap-6">
+                    <CardContent className="p-3 md:p-6">
+                      <div className="flex gap-3 md:gap-6">
                         <div className="flex-shrink-0">
                           {product.images && product.images.length > 0 ? (
                             <img
                               src={getImageUrl(product.images[0].imagePath)}
                               alt={product.title}
-                              className="w-32 h-32 object-cover rounded-lg"
+                              className="w-24 h-24 md:w-32 md:h-32 object-cover rounded-lg"
                               onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
                                 (e.target as HTMLImageElement).src = '/placeholder-product.jpg';
                               }}
                             />
                           ) : (
-                            <div className="w-32 h-32 bg-gray-200 rounded-lg flex items-center justify-center">
+                            <div className="w-24 h-24 md:w-32 md:h-32 bg-gray-200 rounded-lg flex items-center justify-center">
                               <span className="text-gray-400">{t('noImage')}</span>
                             </div>
                           )}
                         </div>
-                        <div className="flex-1">
-                          <div className="flex items-start justify-between mb-2">
-                            <div>
-                              <h3 className="text-lg font-semibold">{product.title}</h3>
-                              <p className="text-2xl font-bold text-blue-600 mt-1">฿{product.price.toFixed(2)}</p>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-start justify-between mb-2 gap-2">
+                            <div className="min-w-0">
+                              <h3 className="text-sm md:text-lg font-semibold truncate">{product.title}</h3>
+                              <p className="text-lg md:text-2xl font-bold text-blue-600 mt-1">฿{product.price.toFixed(2)}</p>
                             </div>
-                            <Badge className={getStatusColor(product.status)}>
+                            <Badge className={`${getStatusColor(product.status)} flex-shrink-0 text-xs`}>
                               {getStatusLabel(product.status)}
                             </Badge>
                           </div>
-                          <div className="flex gap-4 text-sm text-gray-600 mb-4">
+                          <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-xs md:text-sm text-gray-600 mb-3 md:mb-4">
                             <span>{t('condition')}: {getConditionLabel(product.condition)}</span>
                             <span>{t('posted')}: {new Date(product.createdAt).toLocaleDateString()}</span>
                           </div>
-                          <div className="flex gap-2">
+                          <div className="flex flex-wrap gap-2">
                             <Button variant="outline" size="sm" onClick={() => navigate(`/edit-product/${product.listingID}`)} className="gap-2">
                               <Edit2 className="w-4 h-4" /> {t('edit')}
                             </Button>
