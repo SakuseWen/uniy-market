@@ -16,14 +16,11 @@ export const sanitizeString = (input: string): string => {
   // Remove HTML tags
   let sanitized = input.replace(/<[^>]*>/g, '');
 
-  // Escape special characters
+  // Escape special characters (only truly dangerous ones)
   sanitized = sanitized
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#x27;')
-    .replace(/\//g, '&#x2F;');
+    .replace(/>/g, '&gt;');
 
   // Remove null bytes
   sanitized = sanitized.replace(/\0/g, '');

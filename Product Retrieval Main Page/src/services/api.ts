@@ -57,6 +57,12 @@ apiClient.interceptors.response.use(
         // 将三语提示附加到 error 上，方便前端直接使用
         (error as any).suspendedMessage = msg;
       }
+      // 不能与自己聊天 / Cannot chat with yourself
+      const errMsg = data?.error?.message || '';
+      if (errMsg.toLowerCase().includes('cannot create a chat with yourself')) {
+        const lang = getCurrentLanguage();
+        (error as any).friendlyMessage = translate(lang, 'cannotChatSelf');
+      }
     }
     // 请求频率限制：附加三语提示 / Rate limited: attach tri-lingual message
     if (error.response?.status === 429) {

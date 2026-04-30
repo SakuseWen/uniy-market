@@ -48,9 +48,12 @@ export default function MainPage() {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   
   // Search and filter state
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState(() => sessionStorage.getItem('searchQuery') || '');
   const [filters, setFilters] = useState(() => {
-    const savedAvailableOnly = sessionStorage.getItem('availableOnly');
+    const saved = sessionStorage.getItem('mainFilters');
+    if (saved) {
+      try { return JSON.parse(saved); } catch {}
+    }
     return {
       campus: 'all',
       category: 'all',
@@ -59,14 +62,17 @@ export default function MainPage() {
       condition: 'all',
       deliveryType: 'all',
       itemLanguage: 'all',
-      availableOnly: savedAvailableOnly !== null ? savedAvailableOnly === 'true' : true,
+      availableOnly: true,
     };
   });
 
-  // Persist availableOnly to sessionStorage
+  // Persist filters and search to sessionStorage
   useEffect(() => {
-    sessionStorage.setItem('availableOnly', String(filters.availableOnly));
-  }, [filters.availableOnly]);
+    sessionStorage.setItem('mainFilters', JSON.stringify(filters));
+  }, [filters]);
+  useEffect(() => {
+    sessionStorage.setItem('searchQuery', searchQuery);
+  }, [searchQuery]);
 
   // Sorting
   const [sortBy, setSortBy] = useState('relevance');
@@ -243,7 +249,7 @@ export default function MainPage() {
       const chatID = res.data.data?.chatID;
       navigate(`/chat/${chatID}`);
     } catch (err: any) {
-      toast.error(err?.suspendedMessage || '无法发起对话，请稍后重试');
+      toast.error(err?.friendlyMessage || err?.suspendedMessage || '无法发起对话，请稍后重试');
     } finally {
       setContactingId(null);
     }

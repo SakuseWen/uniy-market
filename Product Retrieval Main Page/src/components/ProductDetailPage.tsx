@@ -19,6 +19,7 @@ import { ProductTabs } from './ProductTabs';
 import { SafetyNotice } from './SafetyNotice';
 import { RelatedItems } from './RelatedItems';
 import { TranslateButton } from './TranslateButton';
+import { CurrencyCode, convertPrice, formatCurrency, LABELS } from '../lib/currency';
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -56,6 +57,8 @@ export function ProductDetailPage({
   const [deal, setDeal] = useState<any>(null);
   const [dealLoading, setDealLoading] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
+  const [currency, setCurrency] = useState<CurrencyCode>('THB');
+  const [convertedPrice, setConvertedPrice] = useState<number | null>(null);
 
   // Check if product is favorited
   useEffect(() => {
@@ -195,13 +198,12 @@ export function ProductDetailPage({
       navigate(`/chat/${chatID}`, { state: { from: location.pathname + location.search } });
     } catch (err: any) {
       // 后端返回 403 表示自聊天被拒绝或账户被暂停 / Backend 403 means self-chat rejected or account suspended
-      const status = err?.response?.status;
       if (err?.suspendedMessage) {
         toast.error(err.suspendedMessage);
-      } else if (status === 403) {
-        toast.error(err?.response?.data?.message || 'Cannot start a chat with yourself');
+      } else if (err?.friendlyMessage) {
+        toast.error(err.friendlyMessage);
       } else {
-        toast.error('Failed to open chat. Please try again.');
+        toast.error(err?.response?.data?.error?.message || 'Failed to open chat');
       }
     }
   };
@@ -218,10 +220,14 @@ export function ProductDetailPage({
     return product.description;
   };
 
+  // 汇率转换 / Currency conversion
+  useEffect(() => {
+    if (currency === 'THB') { setConvertedPrice(null); return; }
+    convertPrice(product.price, currency).then(setConvertedPrice);
+  }, [currency, product.price]);
+
   const formatPrice = (price: number) => {
-    if (language === 'th') return `฿${price.toLocaleString()}`;
-    if (language === 'zh') return `¥${price.toLocaleString()}`;
-    return `$${price.toLocaleString()}`;
+    return `฿${price.toLocaleString()}`;
   };
 
   const formatDate = (dateString: string) => {
@@ -261,7 +267,7 @@ export function ProductDetailPage({
         {/* Back Button */}
         <Button variant="ghost" onClick={onBack} className="mb-4">
           <ChevronLeft className="w-4 h-4 mr-1" />
-          Back to listings
+          {t('backToProducts')}
         </Button>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
@@ -279,12 +285,26 @@ export function ProductDetailPage({
             <h1 className="mb-1">{getLocalizedTitle()}</h1>
             <TranslateButton text={product.title} language={language} className="mb-4" />
 
-            {/* Price */}
-            <div className="flex items-baseline gap-3 mb-4">
-              <span className="text-blue-600">{formatPrice(product.price)}</span>
+            {/* Price + Currency Switcher */}
+            <div className="flex flex-wrap items-baseline gap-3 mb-4">
+              <span className="text-blue-600 text-2xl font-bold">{formatPrice(product.price)}</span>
+              {convertedPrice !== null && (
+                <span className="text-gray-500 text-lg">≈ {formatCurrency(convertedPrice, currency)}</span>
+              )}
               {product.negotiable && (
                 <Badge variant="secondary">{t('negotiable')}</Badge>
               )}
+              <div className="flex gap-1 ml-auto">
+                {(['CNY', 'USD'] as CurrencyCode[]).map(c => (
+                  <button
+                    key={c}
+                    onClick={() => setCurrency(currency === c ? 'THB' : c)}
+                    className={`px-2 py-0.5 text-xs rounded border transition-colors ${currency === c ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-600 border-gray-300 hover:border-blue-400'}`}
+                  >
+                    {LABELS[c]}
+                  </button>
+                ))}
+              </div>
             </div>
 
             {/* Key Info Grid */}

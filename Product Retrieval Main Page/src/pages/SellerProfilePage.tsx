@@ -72,8 +72,8 @@ export default function SellerProfilePage() {
       const res = await chatService.createOrGetChat(listingID, sellerId);
       const chatID = res.data.data?.chatID;
       if (chatID) navigate(`/chat/${chatID}`, { state: { from: location.pathname + location.search } });
-    } catch {
-      toast.error(language === 'zh' ? '发起对话失败，请稍后重试' : 'Failed to start chat');
+    } catch (err: any) {
+      toast.error(err?.friendlyMessage || err?.suspendedMessage || (language === 'zh' ? '发起对话失败，请稍后重试' : 'Failed to start chat'));
     } finally {
       setContactingProductId(null);
     }
@@ -109,13 +109,10 @@ export default function SellerProfilePage() {
       const chatID = res.data.data?.chatID;
       if (chatID) navigate(`/chat/${chatID}`, { state: { from: location.pathname + location.search } });
     } catch (err: any) {
-      const status = err?.response?.status;
       if (err?.suspendedMessage) {
         toast.error(err.suspendedMessage);
-      } else if (status === 403) {
-        toast.error(
-          language === 'zh' ? '不能与自己发起对话' : language === 'th' ? 'ไม่สามารถเริ่มแชทกับตัวเองได้' : 'Cannot start a chat with yourself'
-        );
+      } else if (err?.friendlyMessage) {
+        toast.error(err.friendlyMessage);
       } else {
         toast.error(language === 'zh' ? '发起对话失败，请稍后重试' : language === 'th' ? 'เริ่มแชทล้มเหลว กรุณาลองอีกครั้ง' : 'Failed to start chat');
       }
@@ -188,7 +185,7 @@ export default function SellerProfilePage() {
     <div className="min-h-screen bg-gray-50">
       <Toaster position="top-right" />
       <Header language={language} onLanguageChange={setLanguage} unreadMessages={0} />
-      <div className="container mx-auto px-4 py-8 max-w-3xl">
+      <div className="container mx-auto px-4 py-8">
         <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-blue-600 hover:text-blue-700 mb-6">
           <ArrowLeft className="w-4 h-4" />
           {t('back') || 'Back'}
@@ -285,7 +282,7 @@ export default function SellerProfilePage() {
                     </div>
                     <div className="flex-1">
                       <h3 className="font-semibold">{product.title}</h3>
-                      <p className="text-lg font-bold text-blue-600 mt-1">${product.price.toFixed(2)}</p>
+                      <p className="text-lg font-bold text-blue-600 mt-1">฿{product.price.toFixed(2)}</p>
                       <div className="flex gap-3 text-sm text-gray-500 mt-1">
                         <span>{t('condition')}: {getConditionLabel(product.condition)}</span>
                         <span>{t('posted')}: {new Date(product.createdAt).toLocaleDateString()}</span>

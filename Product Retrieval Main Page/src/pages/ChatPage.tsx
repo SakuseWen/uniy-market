@@ -132,7 +132,25 @@ export default function ChatPage() {
       if (prev.some((m) => m.messageID === msg.messageID)) return prev;
       return [...prev, msg];
     });
-  }, []);
+    // 如果是对方发的消息且当前在聊天页面，自动标记已读
+    // If the message is from the other party and we're on the chat page, auto mark as read
+    if (chatId && user && msg.senderID !== user.userID) {
+      chatService.markAsRead(chatId).catch(() => {});
+    }
+  }, [chatId, user]);
+
+  // 收到已读回执时，将自己发的消息标记为已读
+  // When receiving read receipt, mark own sent messages as read
+  const handleMessagesRead = useCallback((data: { userId: string; chatId: string }) => {
+    if (!user || data.userId === user.userID) return; // 忽略自己的已读事件
+    setMessages((prev) =>
+      prev.map((msg) =>
+        msg.senderID === user.userID && !msg.isRead
+          ? { ...msg, isRead: 1 as any }
+          : msg
+      )
+    );
+  }, [user]);
 
   const handleConnectionError = useCallback(() => {
     setWsError(true);
@@ -140,6 +158,7 @@ export default function ChatPage() {
 
   useChatSocket(chatId, {
     onNewMessage: handleNewMessage,
+    onMessagesRead: handleMessagesRead,
     onConnectionError: handleConnectionError,
   });
 
@@ -261,8 +280,9 @@ export default function ChatPage() {
     const hours = Math.floor(diff / 3600000);
     const minutes = Math.floor(diff / 60000);
 
-    if (hours < 1) return `${minutes}m ${t('mAgo')}`;
-    if (hours < 24) return `${hours}h ${t('mAgo')}`;
+    if (minutes < 1) return t('justNow');
+    if (hours < 1) return `${minutes} ${t('minuteUnit')}${t('mAgo')}`;
+    if (hours < 24) return `${hours} ${t('hourUnit')}${t('mAgo')}`;
     return date.toLocaleDateString();
   };
 
@@ -415,11 +435,11 @@ export default function ChatPage() {
               <div className="flex-1">
                 <p className="font-semibold text-sm">{chatInfo.productTitle}</p>
                 <p className="text-blue-600 font-semibold">
-                  ${chatInfo.productPrice}
+                  ฿{chatInfo.productPrice}
                 </p>
               </div>
               <Badge variant="secondary" className="text-xs">
-                {chatInfo.productStatus}
+                {t(chatInfo.productStatus as any) || chatInfo.productStatus}
               </Badge>
             </div>
           </div>
@@ -570,7 +590,7 @@ export default function ChatPage() {
                         }`}
                       >
                         {formatTime(msg.timestamp)}
-                        {isMine && msg.isRead && ' • Read'}
+                        {isMine && !!msg.isRead && ` • ${t('messageRead')}`}
                       </div>
                     </div>
                   </div>

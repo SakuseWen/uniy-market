@@ -264,6 +264,7 @@ function MyPage() {
         targetUserID,
         dealID: reviewDeal.dealID,
         reviewType,
+        images: reviewImages.length > 0 ? reviewImages : undefined,
       });
       toast.success(t('reviewSubmitted') || 'Review submitted');
       setReviewDeal(null);
@@ -367,7 +368,8 @@ function MyPage() {
     } catch (error: any) {
       if (error?.suspendedMessage) { toast.error(error.suspendedMessage); return; }
       const code = error.response?.data?.error?.code;
-      if (code === 'NOT_EDU_EMAIL') toast.error(t('notEduEmail'));
+      if (code === 'EDU_REVOKED') toast.error(t('eduRevoked'));
+      else if (code === 'NOT_EDU_EMAIL') toast.error(t('notEduEmail'));
       else if (code === 'ALREADY_EDU_VERIFIED') toast.error(t('alreadyEduVerified'));
       else if (code === 'EDU_EMAIL_ALREADY_USED') toast.error(t('eduEmailAlreadyUsed'));
       else toast.error(t('eduCodeFailed'));
@@ -456,7 +458,7 @@ function MyPage() {
         unreadMessages={0}
       />
 
-      <div className="container mx-auto px-4 py-8 max-w-3xl">
+      <div className="container mx-auto px-4 py-8">
         {/* Back Button */}
         <button
           onClick={() => navigate('/')}
@@ -524,29 +526,31 @@ function MyPage() {
             </div>
           ) : (
             /* View Mode */
-            <div className="flex items-center gap-6">
-              <Avatar className="w-20 h-20 flex-shrink-0">
-                <AvatarImage src={user?.profileImage ? getImageUrl(user.profileImage) : ''} />
-                <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white text-xl">
-                  {user?.name ? user.name.substring(0, 2).toUpperCase() : 'U'}
-                </AvatarFallback>
-              </Avatar>
-              <div className="flex flex-col justify-center gap-1 flex-1">
-                <p className="text-xl font-bold">{user?.name || 'User'}</p>
-                <p className="text-sm text-gray-500">{user?.email || ''}</p>
-                {user?.bio && <p className="text-sm text-gray-600 mt-1">{user.bio}</p>}
+            <div className="flex flex-col md:flex-row md:items-center gap-4 md:gap-6">
+              <div className="flex items-center gap-4 md:gap-6 flex-1 min-w-0">
+                <Avatar className="w-16 h-16 md:w-20 md:h-20 flex-shrink-0">
+                  <AvatarImage src={user?.profileImage ? getImageUrl(user.profileImage) : ''} />
+                  <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white text-xl">
+                    {user?.name ? user.name.substring(0, 2).toUpperCase() : 'U'}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex flex-col justify-center gap-1 flex-1 min-w-0">
+                  <p className="text-xl font-bold truncate">{user?.name || 'User'}</p>
+                  <p className="text-sm text-gray-500 truncate">{user?.email || ''}</p>
+                  {user?.bio && <p className="text-sm text-gray-600 mt-1 line-clamp-2">{user.bio}</p>}
+                </div>
               </div>
-              <div className="flex flex-col gap-2">
-                <Button variant="outline" size="sm" onClick={() => { setIsEditing(true); setEditName(user?.name || ''); setEditBio(user?.bio || ''); }} className="gap-1">
-                  <Edit2 className="w-4 h-4" /> {t('editProfile')}
+              <div className="flex flex-wrap gap-2 md:flex-col md:flex-nowrap md:flex-shrink-0">
+                <Button variant="outline" size="sm" onClick={() => { setIsEditing(true); setEditName(user?.name || ''); setEditBio(user?.bio || ''); }} className="gap-1 text-xs md:text-sm">
+                  <Edit2 className="w-3.5 h-3.5 md:w-4 md:h-4" /> {t('editProfile')}
                 </Button>
                 {user?.eduVerified ? (
-                  <Badge variant="secondary" className="gap-1 py-1.5 px-3">
-                    <GraduationCap className="w-4 h-4 text-green-600" />
+                  <Badge variant="secondary" className="gap-1 py-1 md:py-1.5 px-2 md:px-3 text-xs md:text-sm">
+                    <GraduationCap className="w-3.5 h-3.5 md:w-4 md:h-4 text-green-600" />
                     <span className="text-green-600">✓</span> {t('eduVerified')}
                   </Badge>
                 ) : (
-                  <Button variant="outline" size="sm" className="gap-1" onClick={() => {
+                  <Button variant="outline" size="sm" className="gap-1 text-xs md:text-sm" onClick={() => {
                     if ((user as any)?.status === 'suspended') {
                       const lang = localStorage.getItem('preferredLanguage') as any || 'en';
                       const msgs: Record<string, string> = {
@@ -559,11 +563,11 @@ function MyPage() {
                     }
                     setEduStep('email');
                   }}>
-                    <GraduationCap className="w-4 h-4" /> {t('eduVerification')}
+                    <GraduationCap className="w-3.5 h-3.5 md:w-4 md:h-4" /> {t('eduVerification')}
                   </Button>
                 )}
-                <Button variant="outline" size="sm" className="gap-1 text-red-500 border-red-200 hover:bg-red-50 hover:text-red-600" onClick={() => setDeleteStep('notice')}>
-                  <UserX className="w-4 h-4" /> {t('deleteAccount')}
+                <Button variant="outline" size="sm" className="gap-1 text-red-500 border-red-200 hover:bg-red-50 hover:text-red-600 text-xs md:text-sm" onClick={() => setDeleteStep('notice')}>
+                  <UserX className="w-3.5 h-3.5 md:w-4 md:h-4" /> {t('deleteAccount')}
                 </Button>
               </div>
             </div>
@@ -735,7 +739,7 @@ function MyPage() {
                           <div className="flex items-start justify-between mb-2">
                             <div>
                               <h3 className="text-lg font-semibold">{product.title}</h3>
-                              <p className="text-2xl font-bold text-blue-600 mt-1">${product.price.toFixed(2)}</p>
+                              <p className="text-2xl font-bold text-blue-600 mt-1">฿{product.price.toFixed(2)}</p>
                             </div>
                             <Badge className={getStatusColor(product.status)}>
                               {getStatusLabel(product.status)}
@@ -745,9 +749,9 @@ function MyPage() {
                             <span>{t('condition')}: {getConditionLabel(product.condition)}</span>
                             <span>{t('posted')}: {new Date(product.createdAt).toLocaleDateString()}</span>
                           </div>
-                          <div className="flex gap-2">
-                            <Button variant="outline" size="sm" onClick={() => navigate(`/edit-product/${product.listingID}`)} className="gap-2">
-                              <Edit2 className="w-4 h-4" /> {t('edit')}
+                          <div className="flex flex-wrap gap-2">
+                            <Button variant="outline" size="sm" onClick={() => navigate(`/edit-product/${product.listingID}`)} className="gap-1 text-xs md:text-sm md:gap-2">
+                              <Edit2 className="w-3.5 h-3.5 md:w-4 md:h-4" /> {t('edit')}
                             </Button>
                             {product.status === 'active' ? (
                               <Button
@@ -788,8 +792,8 @@ function MyPage() {
                                 {t('relist')}
                               </Button>
                             ) : null}
-                            <Button variant="destructive" size="sm" onClick={() => setDeleteConfirm(product.listingID)} className="gap-2">
-                              <Trash2 className="w-4 h-4" /> {t('delete')}
+                            <Button variant="destructive" size="sm" onClick={() => setDeleteConfirm(product.listingID)} className="gap-1 text-xs md:text-sm md:gap-2">
+                              <Trash2 className="w-3.5 h-3.5 md:w-4 md:h-4" /> {t('delete')}
                             </Button>
                           </div>
                         </div>
@@ -837,7 +841,7 @@ function MyPage() {
                         </div>
                         <div className="flex-1">
                           <h3 className="font-semibold">{fav.title}</h3>
-                          <p className="text-lg font-bold text-blue-600 mt-1">${fav.price?.toFixed(2)}</p>
+                          <p className="text-lg font-bold text-blue-600 mt-1">฿{fav.price?.toFixed(2)}</p>
                           <span className="text-sm text-gray-500">{fav.condition === 'new' ? t('new') : fav.condition === 'like_new' ? t('ninetyNew') : t('eightyNew')}</span>
                         </div>
                         <Button
@@ -926,6 +930,15 @@ function MyPage() {
                               <AvatarFallback className="text-xs bg-gradient-to-br from-blue-500 to-purple-600 text-white">{deal.buyerName?.substring(0, 2).toUpperCase()}</AvatarFallback>
                             </Avatar>
                             <span className="text-blue-600 hover:underline font-medium">{t('buyer')}: {deal.buyerName}</span>
+                          </div>
+                        )}
+                        {!isSeller && deal.sellerName && (
+                          <div className="flex items-center gap-2 mb-2 cursor-pointer" onClick={(e) => { e.stopPropagation(); navigate(`/seller/${deal.sellerID}`); }}>
+                            <Avatar className="w-7 h-7">
+                              <AvatarImage src={deal.sellerProfileImage?.startsWith('/') ? getImageUrl(deal.sellerProfileImage) : ''} />
+                              <AvatarFallback className="text-xs bg-gradient-to-br from-blue-500 to-purple-600 text-white">{deal.sellerName?.substring(0, 2).toUpperCase()}</AvatarFallback>
+                            </Avatar>
+                            <span className="text-blue-600 hover:underline font-medium">{t('seller')}: {deal.sellerName}</span>
                           </div>
                         )}
                         <div className="flex gap-2">
@@ -1220,69 +1233,34 @@ function MyPage() {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* 8.4: 删除对话三选项弹窗 / Delete chat dialog with three options */}
+      {/* 8.4: 删除对话确认弹窗（仅单方隐藏）/ Delete chat confirmation (soft delete only) */}
       <Dialog open={!!deleteChatTarget} onOpenChange={(v: boolean) => { if (!v) setDeleteChatTarget(null); }}>
         <DialogContent className="sm:max-w-sm">
           <DialogHeader>
             <DialogTitle>{t('delete')} {t('chatHistory')}</DialogTitle>
           </DialogHeader>
-          <div className="flex flex-col gap-3 pt-2">
-            {/* 选项1: 隐藏/关闭 / Option 1: Hide/close */}
+          <p className="text-sm text-gray-600">
+            {language === 'zh' ? '删除后此对话将从您的列表中移除，对方不受影响。' : language === 'th' ? 'หลังจากลบ การสนทนานี้จะถูกลบออกจากรายการของคุณ อีกฝ่ายจะไม่ได้รับผลกระทบ' : 'This chat will be removed from your list. The other party will not be affected.'}
+          </p>
+          <div className="flex gap-3 justify-end pt-2">
+            <Button variant="ghost" onClick={() => setDeleteChatTarget(null)}>
+              {t('cancel')}
+            </Button>
             <Button
-              variant="outline"
-              className="w-full justify-start"
+              className="bg-red-600 hover:bg-red-700 text-white"
               onClick={async () => {
                 const chatId = deleteChatTarget!;
                 setDeleteChatTarget(null);
                 try {
                   await chatService.hideChat(chatId);
                   setChats((prev) => prev.filter((c) => c.chatID !== chatId));
-                  toast.success(t('productUnlisted')); // reuse "unlisted" success key
+                  toast.success(t('productDeleted'));
                 } catch (err) {
                   toast.error(t('networkError'));
                 }
               }}
             >
-              {/* 隐藏对话（软删除）/ Hide chat (soft delete) */}
-              🙈 {language === 'zh' ? '隐藏对话' : language === 'th' ? 'ซ่อนการสนทนา' : 'Hide Chat'}
-            </Button>
-
-            {/* 选项2: 永久删除 / Option 2: Hard delete */}
-            <Button
-              variant="outline"
-              className="w-full justify-start text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700"
-              onClick={async () => {
-                const chatId = deleteChatTarget!;
-                // 二次确认 / Secondary confirmation
-                const confirmed = window.confirm(
-                  language === 'zh'
-                    ? '确定要永久删除此对话吗？所有消息将被清除，无法恢复。'
-                    : language === 'th'
-                    ? 'คุณแน่ใจหรือไม่ว่าต้องการลบการสนทนานี้อย่างถาวร?'
-                    : 'Permanently delete this chat? All messages will be removed and cannot be recovered.'
-                );
-                if (!confirmed) return;
-                setDeleteChatTarget(null);
-                try {
-                  await chatService.hardDeleteChat(chatId);
-                  setChats((prev) => prev.filter((c) => c.chatID !== chatId));
-                  toast.success(t('productDeleted')); // reuse "deleted" success key
-                } catch (err) {
-                  toast.error(t('networkError'));
-                }
-              }}
-            >
-              {/* 永久删除 / Permanently delete */}
-              🗑️ {language === 'zh' ? '永久删除' : language === 'th' ? 'ลบถาวร' : 'Delete Permanently'}
-            </Button>
-
-            {/* 选项3: 取消 / Option 3: Cancel */}
-            <Button
-              variant="ghost"
-              className="w-full"
-              onClick={() => setDeleteChatTarget(null)}
-            >
-              {t('cancel')}
+              {t('delete')}
             </Button>
           </div>
         </DialogContent>

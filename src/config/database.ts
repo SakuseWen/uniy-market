@@ -368,6 +368,9 @@ export class DatabaseManager {
     try {
       await this.db.exec('ALTER TABLE User ADD COLUMN eduEmail TEXT');
     } catch (_e) { /* ignore */ }
+    try {
+      await this.db.exec('ALTER TABLE User ADD COLUMN eduRevoked BOOLEAN DEFAULT FALSE');
+    } catch (_e) { /* ignore */ }
 
     // Migration: add deliveryType column to ProductListing
     try {

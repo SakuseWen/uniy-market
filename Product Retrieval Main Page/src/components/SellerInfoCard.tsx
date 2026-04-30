@@ -72,24 +72,15 @@ export function SellerInfoCard({ seller, language, listingId }: SellerInfoCardPr
 
               {seller.totalTrades !== undefined && (
                 <div>
-                  <div className="text-gray-500">Trades</div>
-                  <div>{seller.totalTrades} {t('successfulTrades')}</div>
-                </div>
-              )}
-
-              {seller.responseTime && (
-                <div>
-                  <div className="text-gray-500">{t('responseTime')}</div>
-                  <div>
-                    {t('usuallyReplies')} {seller.responseTime}
-                  </div>
+                  <div className="text-gray-500">{t('successfulTrades')}</div>
+                  <div>{seller.totalTrades}</div>
                 </div>
               )}
 
               {seller.joinDate && (
                 <div>
                   <div className="text-gray-500">{t('joinDate')}</div>
-                  <div>{seller.joinDate}</div>
+                  <div>{new Date(seller.joinDate).toLocaleDateString(language === 'zh' ? 'zh-CN' : language === 'th' ? 'th-TH' : 'en-US', { year: 'numeric', month: 'short' })}</div>
                 </div>
               )}
             </div>
@@ -108,7 +99,7 @@ export function SellerInfoCard({ seller, language, listingId }: SellerInfoCardPr
                     const chatID = res.data.data?.chatID;
                     if (chatID) navigate(`/chat/${chatID}`, { state: { from: location.pathname } });
                   } catch (err: any) {
-                    toast.error(err?.suspendedMessage || err?.response?.data?.error?.message || 'Failed to open chat');
+                    toast.error(err?.friendlyMessage || err?.suspendedMessage || err?.response?.data?.error?.message || 'Failed to open chat');
                   } finally {
                     setSendingMessage(false);
                   }

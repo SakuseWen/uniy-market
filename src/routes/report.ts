@@ -113,7 +113,19 @@ router.get('/', authenticateToken, async (req: Request, res: Response) => {
       status: status as string, category: category as string, report_type: report_type as string,
       limit: parseInt(limit as string), offset: parseInt(offset as string)
     });
-    res.json({ reports });
+
+    // Enrich reports with product title / 为举报附加商品标题
+    const { DatabaseManager } = await import('../config/database');
+    const db = DatabaseManager.getInstance().getDatabase();
+    const enriched = await Promise.all(reports.map(async (r: any) => {
+      if (r.product_id) {
+        const product = await db.get('SELECT title FROM ProductListing WHERE listingID = ?', [r.product_id]);
+        r.product_title = product?.title || null;
+      }
+      return r;
+    }));
+
+    res.json({ reports: enriched });
   } catch (error) {
     console.error('Error fetching reports:', error);
     res.status(500).json({ error: 'Failed to fetch reports' });

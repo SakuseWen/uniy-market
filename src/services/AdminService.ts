@@ -3,6 +3,7 @@ import { ProductModel } from '../models/ProductModel';
 import { ReportModel } from '../models/ReportModel';
 import { AuditLogModel } from '../models/AuditLogModel';
 import { DatabaseManager } from '../config/database';
+import { meilisearchService, toMeiliProduct } from './MeilisearchService';
 import fs from 'fs';
 import path from 'path';
 
@@ -211,8 +212,13 @@ export class AdminService {
       throw new Error('Product not found');
     }
 
-    // Update product status to reported/inactive
-    await this.productModel.updateProduct(productId, { status: 'reported' });
+    // Hard delete: remove from database (CASCADE deletes images)
+    await this.productModel.deleteProduct(productId);
+
+    // 同步 Meilisearch：删除该商品索引 / Sync Meilisearch: remove from index
+    meilisearchService.deleteProduct(productId).catch(err => {
+      console.error('[Admin] Meilisearch delete sync failed:', productId, err);
+    });
 
     // Log the action
     await this.auditLogModel.create({

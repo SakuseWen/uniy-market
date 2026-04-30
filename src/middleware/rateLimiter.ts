@@ -24,7 +24,7 @@ const commonOpts = {
   keyGenerator: getClientIp,
   standardHeaders: true,
   legacyHeaders: false,
-  validate: { xForwardedForHeader: false } as any,
+  validate: { xForwardedForHeader: false, keyGeneratorIpFallback: false } as any,
 };
 
 export const apiLimiter = rateLimit({

@@ -122,7 +122,7 @@ export function ProductCard({
 
         {/* Price */}
         <div className="flex items-baseline gap-2 mb-3">
-          <span className="text-blue-600">${product.price}</span>
+          <span className="text-blue-600">฿{product.price}</span>
           {product.negotiable && (
             <Badge variant="outline" className="text-xs">
               {t('negotiable')}

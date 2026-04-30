@@ -13,12 +13,14 @@ import { Textarea } from '../components/ui/textarea';
 import { Loader2, Search, Shield, Users, Package, Flag, ArrowLeft, Trash2, CheckCircle, XCircle, GraduationCap } from 'lucide-react';
 import { toast } from 'sonner';
 import { Toaster } from '../components/ui/sonner';
+import { useLanguage } from '../lib/LanguageContext';
 import { useAuth } from '../services/authContext';
 import { adminService } from '../services/adminService';
 import { getImageUrl } from '../lib/config';
 
 export default function AdminPage() {
   const navigate = useNavigate();
+  const { language } = useLanguage();
   const [searchParams, setSearchParams] = useSearchParams();
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'users');
@@ -266,7 +268,7 @@ export default function AdminPage() {
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="font-semibold truncate">{p.title}</p>
-                          <p className="text-sm text-gray-500">${p.price} · {p.condition} · Seller: {p.sellerName || p.sellerID}</p>
+                          <p className="text-sm text-gray-500">฿{p.price} · {p.condition} · Seller: {p.sellerName || p.sellerID}</p>
                         </div>
                         <Badge className={p.status === 'active' ? 'bg-green-100 text-green-700' : p.status === 'sold' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-600'}>
                           {p.status}
@@ -280,7 +282,7 @@ export default function AdminPage() {
                           <p>ID: {p.listingID}</p>
                           <p>Title: {p.title}</p>
                           <p>Description: {p.description || 'N/A'}</p>
-                          <p>Price: ${p.price}</p>
+                          <p>Price: ฿{p.price}</p>
                           <p>Condition: {p.condition}</p>
                           <p>Status: {p.status}</p>
                           <p>Location: {p.location || 'N/A'}</p>
@@ -349,7 +351,7 @@ export default function AdminPage() {
                         )}
                         <div className="text-xs text-gray-400 mb-3">
                           Reporter: {r.reporter_name || r.reporter_id} · {new Date(r.created_at).toLocaleString()}
-                          {r.product_id ? ` · Product: ${r.product_id}` : null}
+                          {r.product_id ? ` · Product: ${r.product_title || (language === 'zh' ? '(已删除)' : language === 'th' ? '(ถูกลบแล้ว)' : '(deleted)')}` : null}
                           {r.reported_user_id ? ` · Reported user: ${r.reported_user_name || r.reported_user_id}` : null}
                         </div>
                         {(r.status === 'pending' || r.status === 'under_review') ? (
