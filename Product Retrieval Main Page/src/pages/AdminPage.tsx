@@ -349,7 +349,7 @@ export default function AdminPage() {
                         )}
                         <div className="text-xs text-gray-400 mb-3">
                           Reporter: {r.reporter_name || r.reporter_id} · {new Date(r.created_at).toLocaleString()}
-                          {r.product_id ? ` · Product: ${r.product_title || r.product_id}` : null}
+                          {r.product_id ? ` · Product: ${r.product_title || (language === 'zh' ? '(已删除)' : language === 'th' ? '(ถูกลบแล้ว)' : '(deleted)')}` : null}
                           {r.reported_user_id ? ` · Reported user: ${r.reported_user_name || r.reported_user_id}` : null}
                         </div>
                         {(r.status === 'pending' || r.status === 'under_review') ? (
