@@ -264,6 +264,7 @@ function MyPage() {
         targetUserID,
         dealID: reviewDeal.dealID,
         reviewType,
+        images: reviewImages.length > 0 ? reviewImages : undefined,
       });
       toast.success(t('reviewSubmitted') || 'Review submitted');
       setReviewDeal(null);
