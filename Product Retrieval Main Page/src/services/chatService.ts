@@ -95,9 +95,13 @@ export const chatService = {
    * Send an image message (multipart/form-data)
    * 发送图片消息（multipart/form-data）
    */
-  sendImageMessage: (chatId: string, file: File) => {
+  sendImageMessage: async (chatId: string, file: File) => {
+    // 上传前压缩图片 / Compress image before upload
+    const { compressImage } = await import('../lib/imageUtils');
+    const compressed = await compressImage(file);
+
     const form = new FormData();
-    form.append('image', file);
+    form.append('image', compressed);
     form.append('messageType', 'image');
     return apiClient.post<{ success: boolean; data: MessageDetail }>(
       `/chats/${chatId}/messages`,
