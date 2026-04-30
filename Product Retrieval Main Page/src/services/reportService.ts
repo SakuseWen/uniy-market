@@ -1,4 +1,5 @@
 import apiClient from './api';
+import { compressImages } from '../lib/imageUtils';
 
 export interface CreateReportParams {
   reported_user_id?: string;
@@ -10,14 +11,17 @@ export interface CreateReportParams {
 }
 
 export const reportService = {
-  createReport: (data: CreateReportParams) => {
+  createReport: async (data: CreateReportParams) => {
+    // 上传前压缩图片 / Compress images before upload
+    const compressedImages = await compressImages(data.images);
+
     const form = new FormData();
     form.append('report_type', data.report_type);
     form.append('category', data.category);
     form.append('reason', data.reason);
     if (data.product_id) form.append('product_id', data.product_id);
     if (data.reported_user_id) form.append('reported_user_id', data.reported_user_id);
-    data.images.forEach((img) => form.append('images', img));
+    compressedImages.forEach((img) => form.append('images', img));
     return apiClient.post('/reports', form, { headers: { 'Content-Type': undefined as any } });
   },
 
