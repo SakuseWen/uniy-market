@@ -13,12 +13,14 @@ import { Textarea } from '../components/ui/textarea';
 import { Loader2, Search, Shield, Users, Package, Flag, ArrowLeft, Trash2, CheckCircle, XCircle, GraduationCap } from 'lucide-react';
 import { toast } from 'sonner';
 import { Toaster } from '../components/ui/sonner';
+import { useLanguage } from '../lib/LanguageContext';
 import { useAuth } from '../services/authContext';
 import { adminService } from '../services/adminService';
 import { getImageUrl } from '../lib/config';
 
 export default function AdminPage() {
   const navigate = useNavigate();
+  const { language } = useLanguage();
   const [searchParams, setSearchParams] = useSearchParams();
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'users');
