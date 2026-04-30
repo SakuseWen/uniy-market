@@ -502,6 +502,13 @@ router.post('/edu-verify/send-code',
       const user = (req as any).user;
       const { eduEmail } = req.body;
 
+      // Check if edu verification was revoked by admin
+      const db = DatabaseManager.getInstance().getDatabase();
+      const userRecord = await db.get('SELECT eduRevoked FROM User WHERE userID = ?', [user.userID]);
+      if (userRecord?.eduRevoked) {
+        return res.status(403).json({ success: false, error: { code: 'EDU_REVOKED', message: 'Your education verification has been revoked by an administrator. Please contact the admin for assistance.' } });
+      }
+
       // Check if already edu verified
       if (user.eduVerified) {
         return res.status(400).json({ success: false, error: { code: 'ALREADY_EDU_VERIFIED', message: 'Education already verified' } });
@@ -514,8 +521,6 @@ router.post('/edu-verify/send-code',
       if (!isEduDomain) {
         return res.status(400).json({ success: false, error: { code: 'NOT_EDU_EMAIL', message: 'This does not appear to be an education email address' } });
       }
-
-      const db = DatabaseManager.getInstance().getDatabase();
 
       // Check if this edu email is already verified by another account
       const existingEdu = await db.get(

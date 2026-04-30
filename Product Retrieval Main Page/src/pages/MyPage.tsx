@@ -368,7 +368,8 @@ function MyPage() {
     } catch (error: any) {
       if (error?.suspendedMessage) { toast.error(error.suspendedMessage); return; }
       const code = error.response?.data?.error?.code;
-      if (code === 'NOT_EDU_EMAIL') toast.error(t('notEduEmail'));
+      if (code === 'EDU_REVOKED') toast.error(t('eduRevoked'));
+      else if (code === 'NOT_EDU_EMAIL') toast.error(t('notEduEmail'));
       else if (code === 'ALREADY_EDU_VERIFIED') toast.error(t('alreadyEduVerified'));
       else if (code === 'EDU_EMAIL_ALREADY_USED') toast.error(t('eduEmailAlreadyUsed'));
       else toast.error(t('eduCodeFailed'));
