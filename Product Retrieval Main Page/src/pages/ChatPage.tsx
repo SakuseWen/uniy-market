@@ -494,7 +494,7 @@ export default function ChatPage() {
                       </AvatarFallback>
                     </Avatar>
 
-                    <div className={`relative ${isText ? 'pb-8' : ''}`}>
+                    <div className="relative">
                       {/* 消息气泡 / Message bubble */}
                       <div
                         className={`rounded-lg px-4 py-2 cursor-pointer ${
@@ -529,11 +529,15 @@ export default function ChatPage() {
                         )}
 
                         {/* PC 端翻译按钮（点击消息后显示）/ PC translate button (shown on click) */}
-                        {isText && clickedMsgId === msg.messageID && (
+                      </div>
+
+                      {/* 翻译按钮（内联，点击气泡后显示）/ Translate button (inline, shown on click) */}
+                      {isText && clickedMsgId === msg.messageID && (
+                        <div className={`flex mt-1 ${isMine ? 'justify-end' : 'justify-start'}`}>
                           <button
-                            className={`absolute -bottom-7 ${isMine ? 'right-0' : 'left-0'} mt-2 border border-gray-200 rounded px-2 py-0.5 text-xs text-gray-500 bg-white hover:bg-gray-50 transition-colors flex items-center gap-1 shadow-sm`}
+                            className="border border-gray-200 rounded px-2 py-0.5 text-xs text-gray-500 bg-white hover:bg-gray-50 transition-colors flex items-center gap-1 shadow-sm"
                             onClick={(e) => {
-                              e.stopPropagation(); // 防止触发气泡的 onClick
+                              e.stopPropagation();
                               handleTranslate(msg.messageID);
                               setClickedMsgId(null);
                             }}
@@ -546,10 +550,8 @@ export default function ChatPage() {
                             )}
                             <span>{translateLabel}</span>
                           </button>
-                        )}
-                      </div>
-
-                      {/* 翻译结果 / Translation result */}
+                        </div>
+                      )}
                       {translatedText && (
                         <p
                           className={`text-xs text-gray-400 italic mt-1 px-1 ${
