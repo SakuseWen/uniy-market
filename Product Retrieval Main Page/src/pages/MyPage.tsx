@@ -1254,7 +1254,7 @@ function MyPage() {
                 try {
                   await chatService.hideChat(chatId);
                   setChats((prev) => prev.filter((c) => c.chatID !== chatId));
-                  toast.success(t('productDeleted'));
+                  toast.success(t('chatDeleted'));
                 } catch (err) {
                   toast.error(t('networkError'));
                 }
