@@ -83,8 +83,8 @@ export default function ChatPage() {
   const [translations, setTranslations] = useState<Record<string, string>>({});
   // 正在翻译的消息 ID 集合 / Set of message IDs currently being translated
   const [translatingIds, setTranslatingIds] = useState<Set<string>>(new Set());
-  // PC 端：当前 hover 的消息 ID / PC: currently hovered message ID
-  const [hoveredMsgId, setHoveredMsgId] = useState<string | null>(null);
+  // PC 端：当前点击展开翻译按钮的消息 ID / PC: message ID with translate button shown
+  const [clickedMsgId, setClickedMsgId] = useState<string | null>(null);
   // 移动端：长按计时器 / Mobile: long-press timer ref
   const longPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   // 移动端：当前显示翻译菜单的消息 ID / Mobile: message ID showing translation menu
@@ -494,17 +494,19 @@ export default function ChatPage() {
                       </AvatarFallback>
                     </Avatar>
 
-                    <div className={`relative ${isText ? 'pb-8' : ''}`}
-                      onMouseEnter={() => isText && setHoveredMsgId(msg.messageID)}
-                      onMouseLeave={() => setHoveredMsgId(null)}
-                    >
+                    <div className={`relative ${isText ? 'pb-8' : ''}`}>
                       {/* 消息气泡 / Message bubble */}
                       <div
-                        className={`rounded-lg px-4 py-2 ${
+                        className={`rounded-lg px-4 py-2 cursor-pointer ${
                           isMine
                             ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white'
                             : 'bg-white border'
                         }`}
+                        // 点击切换翻译按钮显示 / Click to toggle translate button
+                        onClick={() => {
+                          if (!isText) return;
+                          setClickedMsgId(prev => prev === msg.messageID ? null : msg.messageID);
+                        }}
                         // 移动端长按触发翻译菜单（仅文本消息）
                         // Mobile: long-press to show translation menu (text messages only)
                         onTouchStart={() => isText && handleTouchStart(msg.messageID)}
@@ -526,11 +528,15 @@ export default function ChatPage() {
                           <p className="text-sm">{msg.messageText}</p>
                         )}
 
-                        {/* PC 端翻译按钮（hover 时显示）/ PC translate button (shown on hover) */}
-                        {isText && hoveredMsgId === msg.messageID && (
+                        {/* PC 端翻译按钮（点击消息后显示）/ PC translate button (shown on click) */}
+                        {isText && clickedMsgId === msg.messageID && (
                           <button
-                            className={`absolute -bottom-7 ${isMine ? 'right-0' : 'left-0'} mt-2 border border-gray-200 rounded px-2 py-0.5 text-xs text-gray-500 hover:bg-gray-50 transition-colors flex items-center gap-1`}
-                            onClick={() => handleTranslate(msg.messageID)}
+                            className={`absolute -bottom-7 ${isMine ? 'right-0' : 'left-0'} mt-2 border border-gray-200 rounded px-2 py-0.5 text-xs text-gray-500 bg-white hover:bg-gray-50 transition-colors flex items-center gap-1 shadow-sm`}
+                            onClick={(e) => {
+                              e.stopPropagation(); // 防止触发气泡的 onClick
+                              handleTranslate(msg.messageID);
+                              setClickedMsgId(null);
+                            }}
                             disabled={isTranslating}
                           >
                             {isTranslating ? (
