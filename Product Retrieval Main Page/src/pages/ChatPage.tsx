@@ -494,7 +494,10 @@ export default function ChatPage() {
                       </AvatarFallback>
                     </Avatar>
 
-                    <div className="relative">
+                    <div className={`relative ${isText ? 'pb-8' : ''}`}
+                      onMouseEnter={() => isText && setHoveredMsgId(msg.messageID)}
+                      onMouseLeave={() => setHoveredMsgId(null)}
+                    >
                       {/* 消息气泡 / Message bubble */}
                       <div
                         className={`rounded-lg px-4 py-2 ${
@@ -502,10 +505,6 @@ export default function ChatPage() {
                             ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white'
                             : 'bg-white border'
                         }`}
-                        // PC 端 hover 显示翻译图标（仅文本消息）
-                        // PC: show translate icon on hover (text messages only)
-                        onMouseEnter={() => isText && setHoveredMsgId(msg.messageID)}
-                        onMouseLeave={() => setHoveredMsgId(null)}
                         // 移动端长按触发翻译菜单（仅文本消息）
                         // Mobile: long-press to show translation menu (text messages only)
                         onTouchStart={() => isText && handleTouchStart(msg.messageID)}
