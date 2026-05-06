@@ -146,6 +146,18 @@ router.post('/', authenticateToken, requireActiveUser, async (req: Request, res:
       status: 'active'
     });
 
+    // 如果该聊天对当前用户（买家）是隐藏状态，恢复显示
+    // If chat is hidden for current user (buyer), restore visibility
+    const chatRecord = await chatModel.getChatById(chat.chatID);
+    if (chatRecord && (chatRecord as any).hiddenFor) {
+      const hiddenUsers: string[] = (chatRecord as any).hiddenFor.split(',').filter(Boolean);
+      const updatedHidden = hiddenUsers.filter((id: string) => id !== user.userID);
+      await (chatModel as any).execute(
+        'UPDATE Chat SET hiddenFor = ? WHERE chatID = ?',
+        [updatedHidden.join(',') || null, chat.chatID]
+      );
+    }
+
     // Get chat with details
     const chatWithDetails = await chatModel.getChatWithDetails(chat.chatID);
 
@@ -300,6 +312,17 @@ router.delete('/:chatId', authenticateToken, async (req: Request, res: Response)
         timestamp: new Date().toISOString()
       };
       return res.status(404).json(response);
+    }
+
+    // 如果双方都已隐藏，执行硬删除 / If both parties have hidden, hard delete
+    const updatedChat = await chatModel.getChatById(chatId);
+    if (updatedChat && chatDetails) {
+      const hiddenFor = (updatedChat as any).hiddenFor || '';
+      const hiddenUsers = hiddenFor.split(',').filter(Boolean);
+      const bothHidden = hiddenUsers.includes(chatDetails.buyerID) && hiddenUsers.includes(chatDetails.sellerID);
+      if (bothHidden) {
+        await chatModel.hardDeleteChat(chatId);
+      }
     }
 
     // Notify the other participant via WebSocket
@@ -596,6 +619,21 @@ router.post('/:chatId/messages', authenticateToken, requireActiveUser, upload.si
 
     // Update chat's last message time
     await chatModel.updateLastMessageTime(chatId);
+
+    // 发送消息时，如果聊天对收件方是隐藏状态，恢复显示（让对方能看到新消息）
+    // When sending a message, restore chat visibility for recipient if they had hidden it
+    const chatForRestore = await chatModel.getChatById(chatId);
+    if (chatForRestore && (chatForRestore as any).hiddenFor) {
+      const hiddenUsers: string[] = (chatForRestore as any).hiddenFor.split(',').filter(Boolean);
+      const recipientId = (chatForRestore as any).buyerID === user.userID
+        ? (chatForRestore as any).sellerID
+        : (chatForRestore as any).buyerID;
+      const updatedHidden = hiddenUsers.filter((id: string) => id !== recipientId);
+      await (chatModel as any).execute(
+        'UPDATE Chat SET hiddenFor = ? WHERE chatID = ?',
+        [updatedHidden.join(',') || null, chatId]
+      );
+    }
 
     // Get message with sender details
     const messageWithDetails = await messageModel.getMessageWithDetails(message.messageID);
