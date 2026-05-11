@@ -15,16 +15,16 @@ Uniy Market is a full-stack C2C second-hand trading platform designed for univer
 
 **核心特性 / Key Features:**
 
-- 🌐 **三语界面** — 中文 / English / ไทย 全站切换，覆盖 UI、搜索同义词、错误提示、帮助中心
-- 🔍 **Meilisearch 智能搜索** — 330+ 组三语同义词互通，拼写容错，毫秒级响应，SQL 自动回退
-- 💬 **实时聊天** — Socket.IO 驱动，文本/图片消息、已读回执、在线状态、消息翻译
-- 🔒 **双重认证** — 邮箱验证 + 教育邮箱认证（.edu / .ac.*），确保卖家身份可信
-- 🛒 **完整交易流程** — 请求 → 接受 → 双方确认 → 完成，含评价系统
-- 📊 **管理后台** — 用户管理（暂停/激活/硬删除）、商品审核、举报处理、审计日志
-- 🗺️ **地图定位** — Leaflet + OpenStreetMap，商品发布时可选点标注位置
-- 📱 **移动端适配** — Tailwind CSS v4 JIT 响应式设计
-- 🔑 **忘记密码** — 邮箱验证码三步重置流程
-- 💱 **汇率换算** — 泰铢实时转换人民币/美元（ExchangeRate-API）
+- 🌐 **三语界面** — 中文 / English / ไทย 全站切换，覆盖 UI、搜索同义词、错误提示、帮助中心 / Site-wide switching between Chinese, English, and Thai, covering the UI, search synonyms, error prompts, and the help center
+- 🔍 **Meilisearch 智能搜索** — 330+ 组三语同义词互通，拼写容错，毫秒级响应，SQL 自动回退 / 330+ sets of trilingual interconnected synonyms, typo tolerance, millisecond-level response, and automatic SQL fallback
+- 💬 **实时聊天** — Socket.IO 驱动，文本/图片消息、已读回执、在线状态、消息翻译 / Powered by Socket.IO, supporting text/image messages, read receipts, online status, and message translation
+- 🔒 **双重认证** — 邮箱验证 + 教育邮箱认证（.edu / .ac.*），确保卖家身份可信 / Standard email verification + Educational email certification (.edu / .ac.*) to ensure seller credibility
+- 🛒 **完整交易流程** — 请求 → 接受 → 双方确认 → 完成，含评价系统 / Request → Accept → Mutual Confirmation → Completion, integrated with a rating/review system
+- 📊 **管理后台** — 用户管理（暂停/激活/硬删除）、商品审核、举报处理、审计日志 / User management (suspend/activate/hard delete), product moderation, report handling, and audit logs
+- 🗺️ **地图定位** — Leaflet + OpenStreetMap，商品发布时可选点标注位置 / Leaflet + OpenStreetMap integration, allowing users to pin locations when publishing products
+- 📱 **移动端适配** — Tailwind CSS v4 JIT 响应式设计 / Tailwind CSS v4 JIT responsive design
+- 🔑 **忘记密码** — 邮箱验证码三步重置流程 / Three-step password reset process via email verification code
+- 💱 **汇率换算** — 泰铢实时转换人民币/美元（ExchangeRate-API）/ Real-time exchange rate conversion for THB to CNY/USD (powered by ExchangeRate-API)
 
 ---
 
@@ -237,37 +237,33 @@ npm run build
 ## 🔑 核心功能详解 / Feature Details
 
 ### 搜索系统 / Search System
-- **Meilisearch 优先**：所有搜索请求先走 Meilisearch，失败自动回退 SQL LIKE
-- **330+ 同义词组**：三语互通（搜"手机" = "phone" = "โทรศัพท์"）
-- **双写同步**：商品增删改自动同步 Meilisearch 索引
-- **批量状态查询**：`POST /api/deals/batch-status` 替代 N+1 查询
+- **Meilisearch 优先 / Meilisearch First**：所有搜索请求先走 Meilisearch，失败自动回退 SQL LIKE / All search requests go through Meilisearch first, with automatic fallback to SQL LIKE.
+- **330+ 同义词组 / 330+ Synonym Groups**：三语互通（搜"手机" = "phone" = "โทรศัพท์"）/ Trilingual interconnectivity (Search "手机" = "phone" = "โทรศัพท์").
+- **双写同步 / Double-Write Sync**：商品增删改自动同步 Meilisearch 索引 / Automatic synchronization of Meilisearch indices during product CRUD operations.
+- **批量状态查询 / Batch Status Query**：`POST /api/deals/batch-status` 替代 N+1 查询 / Optimized `POST /api/deals/batch-status` to replace N+1 queries.
 
 ### 认证与安全 / Authentication & Security
-- 邮箱验证码注册（6 位数字，通过 Resend 发送）
-- 教育邮箱认证（.edu / .ac.* 域名）
-- 管理员可撤销教育认证（被撤销用户无法自行重新认证）
-- 被暂停用户可登录但所有写操作被阻止
-- 分级 IP 限流：API 10000/15min、认证 50/15min、上传 100/hr
-- 支持 Nginx 反向代理（`X-Real-IP` / `X-Forwarded-For`）
+- **邮箱验证 / Email Verification**：6 位数字注册验证码，通过 Resend 发送 / 6-digit registration codes sent via Resend.
+- **教育认证 / EDU Verification**：支持教育邮箱域名（.edu / .ac.*）/ Supports educational email domains (.edu / .ac.*).
+- **权限控制 / Permission Control**：被暂停用户可登录但写操作被阻止 / Suspended users can log in but all write operations are blocked.
+- **分级限流 / Multi-level Rate Limiting**：API 10000次/15min、认证 50次/15min、上传 100次/hr / Stratified rate limits for APIs, Auth, and Uploads.
 
 ### 实时聊天 / Real-time Chat
-- Socket.IO WebSocket + JWT 认证
-- 文本与图片消息（上传前客户端自动压缩）
-- 实时已读回执（对方在聊天页面时自动标记已读并推送）
-- Google Cloud Translate 消息翻译
-- 正在输入状态提示
+- **即时通讯 / Instant Messaging**：Socket.IO WebSocket + JWT 认证 / Powered by Socket.IO with JWT authentication.
+- **媒体支持 / Media Support**：文本与图片消息，上传前客户端自动压缩 / Text & image messages with client-side auto-compression.
+- **已读状态 / Read Receipts**：对方在线时自动标记已读并推送 / Automatic read receipts and push notifications when online.
+- **翻译功能 / Message Translation**：集成 Google Cloud Translate / Integrated Google Cloud Translate.
 
 ### 管理后台 / Admin Dashboard
-- 用户管理：暂停、激活、硬删除、教育认证授予/撤销
-- 商品管理：查看所有商品、硬删除（同步从数据库 + Meilisearch 移除）
-- 举报管理：显示商品标题（已删除商品显示三语"已删除"提示）、解决/驳回
-- 搜索索引全量同步
+- **用户管理 / User Management**：暂停、激活、硬删除、教育认证授予/撤销 / Suspend, activate, hard delete, and toggle EDU verification.
+- **内容审核 / Content Moderation**：商品审核、举报处理、搜索索引全量同步 / Product moderation, report handling, and full search index synchronization.
+- **审计日志 / Audit Logs**：追踪管理员操作行为 / Tracking administrative actions.
 
 ### 交易流程 / Deal Lifecycle
-1. 买家发起购买请求
-2. 卖家接受/拒绝
-3. 双方分别确认交易完成
-4. 交易完成，双方可互评
+1. **发起请求 / Initiate**：买家发起购买请求 / Buyer initiates purchase request.
+2. **状态更新 / Status Update**：卖家接受或拒绝 / Seller accepts or rejects.
+3. **确认完成 / Confirmation**：双方分别确认交易完成 / Both parties confirm transaction completion.
+4. **互评系统 / Review System**：交易完成，双方互评 / Mutual rating and review system.
 
 ---
 
