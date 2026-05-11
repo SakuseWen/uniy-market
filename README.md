@@ -26,16 +26,6 @@ Uniy Market is a full-stack C2C second-hand trading platform designed for univer
 - 🔑 **忘记密码** — 邮箱验证码三步重置流程
 - 💱 **汇率换算** — 泰铢实时转换人民币/美元（ExchangeRate-API）
 
-- 🌐 **Trilingual Interface** — Site-wide switching between Chinese, English, and Thai, covering the UI, search synonyms, error prompts, and the help center.
-- 🔍 **Smart Search via Meilisearch** — 330+ sets of trilingual interconnected synonyms, typo tolerance, millisecond-level response, and automatic SQL fallback.
-- 💬 **Real-Time Chat** — Powered by Socket.IO, supporting text/image messages, read receipts, online status, and message translation.
-- 🔒 **Dual Authentication** — Standard email verification + Educational email certification (.edu / .ac.*) to ensure seller credibility.
-- 🛒 **Complete Trading Workflow** — Request → Accept → Mutual Confirmation → Completion, integrated with a rating/review system.
-- 📊 **Admin Dashboard** — User management (suspend/activate/hard delete), product moderation, report handling, and audit logs.
-- 🗺️ **Map Positioning** — Leaflet + OpenStreetMap integration, allowing users to pin locations when publishing products.
-- 📱 **Mobile Responsive** — Tailwind CSS v4 JIT responsive design.
-- 🔑 **Forgot Password** — Three-step password reset process via email verification code.
-- 💱 **Currency Conversion** — Real-time exchange rate conversion for THB to CNY/USD (powered by ExchangeRate-API).
 ---
 
 ## 🛠 技术栈 / Tech Stack
